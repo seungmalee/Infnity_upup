@@ -206,6 +206,28 @@
       font-size: 13px;
     }
 
+    .boost-btn {
+      pointer-events: auto;
+      width: 100%;
+      min-height: 34px;
+      margin-top: 10px;
+      border: 1px solid rgba(240, 189, 91, 0.42);
+      border-radius: 8px;
+      background: rgba(240, 189, 91, 0.16);
+      color: var(--bar-active);
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .boost-btn:disabled {
+      cursor: not-allowed;
+      color: var(--muted);
+      border-color: var(--line);
+      background: rgba(255, 255, 255, 0.05);
+      opacity: 0.78;
+    }
+
     .inventory {
       display: grid;
       grid-template-columns: 1fr;
@@ -461,6 +483,12 @@
         font-size: 18px;
       }
 
+      .boost-btn {
+        min-height: 32px;
+        margin-top: 8px;
+        font-size: 12px;
+      }
+
       .meta,
       .rank-head,
       .rank-row,
@@ -544,9 +572,11 @@
         <span id="block">1구간</span>
         <span id="cooldown">숨기 OK</span>
         <span id="kills">킬 0</span>
+        <span id="gold">0g</span>
         <span id="lives">목숨 0</span>
         <span id="onlineStatus">오프라인</span>
       </div>
+      <button class="boost-btn" id="boostBtn" type="button" disabled>100층 위 시작 - 500g</button>
     </div>
 
     <div class="combo" id="combo">COMBO x0</div>
@@ -605,8 +635,10 @@
       block: document.getElementById("block"),
       cooldown: document.getElementById("cooldown"),
       kills: document.getElementById("kills"),
+      gold: document.getElementById("gold"),
       lives: document.getElementById("lives"),
       onlineStatus: document.getElementById("onlineStatus"),
+      boostBtn: document.getElementById("boostBtn"),
       itemSlots: [
         document.getElementById("item0"),
         document.getElementById("item1"),
@@ -683,6 +715,7 @@
       combo: 0,
       comboLastInputAt: 0,
       kills: 0,
+      gold: 0,
       lives: 0,
       rewardedLifeMilestones: new Set(),
       remotePlayers: [],
@@ -752,6 +785,7 @@
         inventory: state.inventory.map((item) => item ? item.type : null),
         testItemCursor: state.testItemCursor,
         kills: state.kills,
+        gold: state.gold,
         lives: state.lives,
         rewardedMilestones: [...state.rewardedMilestones],
         rewardedLifeMilestones: [...state.rewardedLifeMilestones],
@@ -1004,10 +1038,12 @@
             shieldUntil: Number(player.shieldUntil || 0),
             stunnedUntil: Number(player.stunnedUntil || 0),
             kills: Number(player.kills || 0),
+            gold: Number(player.gold || 0),
             lives: Number(player.lives || 0)
           }));
         const own = data.players.find((player) => player.onlineId === state.online.onlineId);
         if (own && Number(own.kills || 0) > state.kills) state.kills = Number(own.kills || 0);
+        if (own && Number(own.gold || 0) > state.gold) state.gold = Number(own.gold || 0);
         if (own && Number(own.bestFloor || 0) > state.player.bestFloor) state.player.bestFloor = Number(own.bestFloor || 0);
       }
       if (Array.isArray(data.chat)) {
@@ -1045,6 +1081,7 @@
         shieldUntil: state.player.shieldUntil,
         stunnedUntil: state.player.stunnedUntil,
         kills: state.kills,
+        gold: state.gold,
         lives: state.lives
       });
     }
@@ -1062,6 +1099,7 @@
         shieldUntil: state.player.shieldUntil,
         stunnedUntil: state.player.stunnedUntil,
         kills: state.kills,
+        gold: state.gold,
         lives: state.lives
       });
       if (!joined || !joined.onlineId) return;
@@ -1105,6 +1143,12 @@
         reason
       });
       if (result && Number.isFinite(Number(result.kills))) state.kills = Number(result.kills);
+      if (result && Number.isFinite(Number(result.gold))) {
+        const nextGold = Number(result.gold);
+        if (nextGold > state.gold) showNotice(`킬 보상 +100g (보유 ${nextGold}g)`);
+        state.gold = nextGold;
+      }
+      saveSessionProfile();
     }
 
     function stunRemote(target, reason, ms = 3000) {
@@ -1484,6 +1528,34 @@
       syncOnlineState();
     }
 
+    function addKillReward() {
+      state.gold += 100;
+      saveSessionProfile();
+    }
+
+    function useGoldBoost() {
+      if (state.mode !== "play") return;
+      if (state.gold < 500) {
+        showNotice("500g가 필요합니다.");
+        return;
+      }
+      if (performance.now() < state.player.stunnedUntil) {
+        showNotice("스턴 중에는 사용할 수 없습니다.");
+        return;
+      }
+      const previousFloor = state.player.floor;
+      state.gold -= 500;
+      state.player.floor += 100;
+      state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
+      state.player.hidden = false;
+      addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
+      state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 640 };
+      checkItemReward(previousFloor, state.player.floor);
+      checkLifeReward(previousFloor, state.player.floor);
+      showNotice("500g 사용: 100층 위에서 시작합니다.");
+      syncOnlineState();
+    }
+
     function startGame(id, country) {
       state.mode = "play";
       state.player.id = id;
@@ -1491,6 +1563,7 @@
       state.player.floor = 0;
       state.player.bestFloor = 0;
       state.kills = 0;
+      state.gold = 0;
       state.lives = 0;
       resetRunState();
       state.inventory = [null, null, null];
@@ -1523,6 +1596,7 @@
         while (state.inventory.length < 3) state.inventory.push(null);
         state.testItemCursor = Number(profile.testItemCursor || 0);
         state.kills = Number(profile.kills || 0);
+        state.gold = Number(profile.gold || 0);
         state.lives = Number(profile.lives || 0);
         state.rewardedMilestones = new Set(Array.isArray(profile.rewardedMilestones) ? profile.rewardedMilestones : []);
         state.rewardedLifeMilestones = new Set(Array.isArray(profile.rewardedLifeMilestones) ? profile.rewardedLifeMilestones : []);
@@ -1554,7 +1628,8 @@
       bot.hidden = false;
       bot.stunnedUntil = performance.now() + 1800;
       state.kills += 1;
-      showNotice(`${bot.id} ${reason}`);
+      addKillReward();
+      showNotice(`${bot.id} ${reason} / +100g`);
       addChat("SYSTEM", "--", `${bot.id} ${reason}`);
       saveSessionProfile();
     }
@@ -1930,7 +2005,10 @@
       ui.playerLabel.textContent = state.player.id ? `${displayName(state.player)} / ${state.player.country}` : "ID 없음";
       ui.block.textContent = `${Math.floor(state.player.floor / SEGMENT_SIZE) + 1}구간`;
       ui.kills.textContent = `킬 ${state.kills}`;
+      ui.gold.textContent = `${state.gold}g`;
       ui.lives.textContent = `목숨 ${state.lives}`;
+      ui.boostBtn.disabled = state.gold < 500 || state.mode !== "play";
+      ui.boostBtn.textContent = state.gold >= 500 ? "100층 위 시작 - 500g" : `100층 위 시작 - ${state.gold}/500g`;
       ui.onlineStatus.textContent = state.online.connected ? `온라인 ${state.remotePlayers.length + 1}명` : state.online.enabled ? "서버 연결 중" : "오프라인";
       const stunned = Math.max(0, state.player.stunnedUntil - performance.now());
       const shieldLeft = shieldSecondsLeft(state.player);
@@ -1991,6 +2069,8 @@
     ui.rankToggle.addEventListener("click", () => {
       setRankingCollapsed(!state.rankingCollapsed);
     });
+
+    ui.boostBtn.addEventListener("click", useGoldBoost);
 
     resetBots();
     restoreSessionProfile();
