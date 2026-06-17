@@ -161,26 +161,31 @@
     }
 
     .combo {
+      position: absolute;
+      right: clamp(300px, 38vw, 470px);
+      top: 50%;
       display: inline-flex;
       align-items: center;
-      width: fit-content;
-      margin-top: 10px;
-      padding: 5px 9px;
-      border: 1px solid rgba(240, 189, 91, 0.45);
+      justify-content: center;
+      min-width: 118px;
+      padding: 10px 14px;
+      border: 1px solid rgba(240, 189, 91, 0.58);
       border-radius: 8px;
-      background: rgba(240, 189, 91, 0.13);
+      background: rgba(25, 29, 37, 0.82);
       color: var(--bar-active);
-      font-size: 13px;
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.24), 0 0 26px rgba(240, 189, 91, 0.16);
+      backdrop-filter: blur(8px);
+      font-size: 22px;
       font-weight: 900;
       letter-spacing: 0;
       opacity: 0;
-      transform: translateY(-3px);
-      transition: opacity 160ms ease, transform 160ms ease;
+      transform: translateY(-50%) translateX(16px) scale(0.96);
+      transition: opacity 260ms ease, transform 260ms ease;
     }
 
     .combo.active {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(-50%) translateX(0) scale(1);
     }
 
     .meta {
@@ -200,7 +205,7 @@
 
     .item-bar {
       position: absolute;
-      top: 104px;
+      top: 156px;
       left: 14px;
       width: clamp(210px, 25vw, 260px);
       padding: 10px;
@@ -421,7 +426,7 @@
       }
 
       .item-bar {
-        top: 96px;
+        top: 150px;
         padding: 8px;
       }
 
@@ -440,9 +445,11 @@
       }
 
       .combo {
-        margin-top: 8px;
-        padding: 4px 7px;
-        font-size: 12px;
+        right: 10px;
+        top: 50%;
+        min-width: 96px;
+        padding: 8px 10px;
+        font-size: 18px;
       }
 
       .meta,
@@ -531,8 +538,9 @@
         <span id="lives">목숨 0</span>
         <span id="onlineStatus">오프라인</span>
       </div>
-      <div class="combo" id="combo">COMBO x0</div>
     </div>
+
+    <div class="combo" id="combo">COMBO x0</div>
 
     <div class="item-bar">
       <h2 class="panel-title">아이템</h2>
@@ -613,6 +621,7 @@
     const COMBO_TIMEOUT = 3000;
     const SHIELD_DURATION = 5000;
     const LIFE_REWARD_INTERVAL = 200;
+    const PROFILE_KEY = "stairProfile";
     const BOT_DATA = [
       ["NOVA", "US"],
       ["MIN", "KR"],
@@ -673,6 +682,17 @@
       effects: [],
     };
 
+    function flagEmoji(country) {
+      const code = String(country || "").trim().toUpperCase();
+      if (!/^[A-Z]{2}$/.test(code)) return "🏳";
+      return code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
+    }
+
+    function displayName(player) {
+      if (!player || !player.id) return "ID 없음";
+      return `${flagEmoji(player.country)} ${player.id}`;
+    }
+
     function escapeHtml(text) {
       return text.replace(/[&<>"']/g, (char) => ({
         "&": "&amp;",
@@ -681,6 +701,31 @@
         '"': "&quot;",
         "'": "&#039;"
       }[char]));
+    }
+
+    function itemFromType(type) {
+      return ITEMS.find((item) => item.type === type) || null;
+    }
+
+    function saveSessionProfile() {
+      if (!state.player.id) return;
+      sessionStorage.setItem(PROFILE_KEY, JSON.stringify({
+        id: state.player.id,
+        country: state.player.country,
+        floor: state.player.floor,
+        hidden: state.player.hidden,
+        shield: state.player.shield,
+        shieldUntil: state.player.shieldUntil,
+        stunnedUntil: state.player.stunnedUntil,
+        lastHideAt: state.lastHideAt,
+        inventory: state.inventory.map((item) => item ? item.type : null),
+        testItemCursor: state.testItemCursor,
+        kills: state.kills,
+        lives: state.lives,
+        rewardedMilestones: [...state.rewardedMilestones],
+        rewardedLifeMilestones: [...state.rewardedLifeMilestones],
+        onlineId: state.online.onlineId
+      }));
     }
 
     function hashString(text) {
@@ -825,7 +870,7 @@
     }
 
     function opponents() {
-      return state.online.connected ? state.remotePlayers : state.bots;
+      return state.online.enabled ? state.remotePlayers : state.bots;
     }
 
     function applyOnlineSnapshot(data) {
@@ -872,6 +917,7 @@
     }
 
     function syncOnlineState() {
+      saveSessionProfile();
       if (!state.online.connected) return;
       postOnline("/api/state", {
         onlineId: state.online.onlineId,
@@ -887,9 +933,21 @@
 
     async function connectOnline() {
       if (!state.online.enabled || !state.player.id || state.online.connected) return;
-      const joined = await postOnline("/api/join", { id: state.player.id, country: state.player.country });
+      const joined = await postOnline("/api/join", {
+        onlineId: state.online.onlineId,
+        id: state.player.id,
+        country: state.player.country,
+        floor: state.player.floor,
+        hidden: state.player.hidden,
+        shield: state.player.shield,
+        shieldUntil: state.player.shieldUntil,
+        stunnedUntil: state.player.stunnedUntil,
+        kills: state.kills,
+        lives: state.lives
+      });
       if (!joined || !joined.onlineId) return;
       state.online.onlineId = joined.onlineId;
+      saveSessionProfile();
       state.online.connected = true;
       applyOnlineSnapshot(joined);
       if (state.online.events) state.online.events.close();
@@ -1005,6 +1063,7 @@
     function addTrail(entity, floor, color) {
       state.trails.push({
         id: entity.id,
+        country: entity.country,
         floor,
         color,
         start: performance.now(),
@@ -1059,6 +1118,7 @@
       state.inventory[index] = item;
       showNotice(`${item.name} 아이템 획득!`);
       addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 ${item.name} 아이템을 얻었습니다.`);
+      saveSessionProfile();
     }
 
     function grantTestItems() {
@@ -1069,6 +1129,7 @@
         return item;
       });
       showNotice("테스트 아이템 3개 지급!");
+      saveSessionProfile();
     }
 
     function checkItemReward(previousFloor, nextFloor) {
@@ -1167,6 +1228,7 @@
         return;
       }
       state.inventory[index] = null;
+      saveSessionProfile();
 
       if (item.type === "boulder") {
         const minFloor = Math.max(0, state.player.floor - 100);
@@ -1221,12 +1283,14 @@
           showNotice("미사일 대상이 없습니다.");
           addMissileEffect(state.player.floor, state.player.floor + 8, "없음", state.player.floor + 8, false, "bot", state.player.id || "YOU");
           addChat("SYSTEM", "--", "미사일 발동: 대상 없음");
+          saveSessionProfile();
           return;
         }
         addMissileEffect(state.player.floor, target.floor, target.onlineId || target.id, target.floor, false, target.onlineId ? "remote" : "bot", state.player.id || "YOU", target.id);
         showNotice(`${target.id}에게 미사일 발사!`);
         addChat("SYSTEM", "--", `미사일 발사: ${state.player.id || "플레이어"} -> ${target.id}`);
       }
+      saveSessionProfile();
     }
 
     function botUseItem(bot, now) {
@@ -1319,14 +1383,14 @@
       state.lastHideAt = -HIDE_COOLDOWN;
       resetBots();
       joinScreen.classList.add("hidden");
-      sessionStorage.setItem("stairProfile", JSON.stringify({ id, country }));
+      saveSessionProfile();
       showNotice("게임 시작!");
       addChat("SYSTEM", "--", `${id}님이 입장했습니다.`);
       connectOnline();
     }
 
     function restoreSessionProfile() {
-      const saved = sessionStorage.getItem("stairProfile");
+      const saved = sessionStorage.getItem(PROFILE_KEY);
       if (!saved) return false;
       try {
         const profile = JSON.parse(saved);
@@ -1334,16 +1398,38 @@
         state.mode = "play";
         state.player.id = String(profile.id).slice(0, 14);
         state.player.country = String(profile.country).slice(0, 3);
-        state.player.floor = 0;
-        state.kills = 0;
-        state.lives = 0;
-        resetRunState();
+        state.player.floor = Math.max(0, Number(profile.floor || 0));
+        state.player.hidden = false;
+        state.player.shield = Boolean(profile.shield);
+        state.player.shieldUntil = Number(profile.shieldUntil || 0);
+        state.player.stunnedUntil = Number(profile.stunnedUntil || 0);
+        state.lastHideAt = Number.isFinite(Number(profile.lastHideAt)) ? Number(profile.lastHideAt) : -HIDE_COOLDOWN;
+        state.inventory = Array.isArray(profile.inventory) ? profile.inventory.slice(0, 3).map(itemFromType) : [null, null, null];
+        while (state.inventory.length < 3) state.inventory.push(null);
+        state.testItemCursor = Number(profile.testItemCursor || 0);
+        state.kills = Number(profile.kills || 0);
+        state.lives = Number(profile.lives || 0);
+        state.rewardedMilestones = new Set(Array.isArray(profile.rewardedMilestones) ? profile.rewardedMilestones : []);
+        state.rewardedLifeMilestones = new Set(Array.isArray(profile.rewardedLifeMilestones) ? profile.rewardedLifeMilestones : []);
+        state.online.onlineId = String(profile.onlineId || "");
+        resetCombo();
+        state.trails = [];
+        state.effects = [];
+        state.climbFlash = { floor: -1, start: 0, duration: 0 };
+        if (canHide()) {
+          state.lastHideAt = Date.now();
+          state.player.hidden = true;
+          showNotice(`${state.player.floor}층에서 자동 은신했습니다.`);
+        } else {
+          showNotice(`${state.player.floor}층에서 다시 시작합니다.`);
+        }
         joinScreen.classList.add("hidden");
         addChat("SYSTEM", "--", `${state.player.id}님이 세션으로 재입장했습니다.`);
+        saveSessionProfile();
         connectOnline();
         return true;
       } catch (error) {
-        sessionStorage.removeItem("stairProfile");
+        sessionStorage.removeItem(PROFILE_KEY);
         return false;
       }
     }
@@ -1355,6 +1441,7 @@
       state.kills += 1;
       showNotice(`${bot.id} ${reason}`);
       addChat("SYSTEM", "--", `${bot.id} ${reason}`);
+      saveSessionProfile();
     }
 
     function tryHide() {
@@ -1457,7 +1544,7 @@
 
     function updateBots(now) {
       if (state.mode !== "play") return;
-      if (state.online.connected) return;
+      if (state.online.enabled) return;
       for (const bot of state.bots) {
         const nearPlayer = Math.abs(bot.floor - state.player.floor) <= 45;
         if (nearPlayer || Math.random() < 0.01) botUseItem(bot, now);
@@ -1552,7 +1639,7 @@
 
     function drawRunner(entity, x, y, color, alpha = 1, selfView = false) {
       if (entity.hidden && !selfView) return;
-      const label = `${entity.id} ${entity.floor}F`;
+      const label = `${flagEmoji(entity.country)} ${entity.id} ${entity.floor}F`;
       ctx.save();
       ctx.translate(x, y - 22);
       const visibleAlpha = entity.hidden && selfView ? Math.min(alpha, 0.42) : alpha;
@@ -1685,7 +1772,7 @@
         if (Math.abs(trail.floor - focus) > 30) continue;
         const age = (now - trail.start) / trail.duration;
         const p = screenPosition(trail.floor, focus, width, height);
-        drawRunner({ id: trail.id, floor: trail.floor, hidden: false, stunnedUntil: 0 }, p.x, p.y, trail.color, (1 - age) * 0.34);
+        drawRunner({ id: trail.id, country: trail.country || "--", floor: trail.floor, hidden: false, stunnedUntil: 0 }, p.x, p.y, trail.color, (1 - age) * 0.34);
       }
 
       for (const opponent of opponents()) {
@@ -1707,7 +1794,7 @@
       ui.floor.textContent = `${state.player.floor}F`;
       ui.combo.textContent = `COMBO x${state.combo}`;
       ui.combo.classList.toggle("active", state.combo > 0);
-      ui.playerLabel.textContent = state.player.id ? `${state.player.id} / ${state.player.country}` : "ID 없음";
+      ui.playerLabel.textContent = state.player.id ? `${flagEmoji(state.player.country)} ${state.player.id} / ${state.player.country}` : "ID 없음";
       ui.block.textContent = `${Math.floor(state.player.floor / SEGMENT_SIZE) + 1}구간`;
       ui.kills.textContent = `킬 ${state.kills}`;
       ui.lives.textContent = `목숨 ${state.lives}`;
@@ -1728,7 +1815,7 @@
 
       ui.rankRows.innerHTML = players.map((player) => (
         `<div class="rank-row">
-          <span class="rank-id">${escapeHtml(player.id)}</span>
+          <span class="rank-id">${escapeHtml(flagEmoji(player.country))} ${escapeHtml(player.id)}</span>
           <span>${escapeHtml(player.country)}</span>
           <span class="rank-floor">${player.floor}F</span>
         </div>`
