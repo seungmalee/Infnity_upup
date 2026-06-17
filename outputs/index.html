@@ -139,8 +139,14 @@
     .hud {
       position: fixed;
       inset: 0;
+      display: grid;
+      grid-template-columns: minmax(198px, 260px) minmax(180px, 1fr) minmax(260px, 420px);
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 10px 14px;
+      padding: 14px;
       pointer-events: none;
       z-index: 2;
+      overflow: hidden;
     }
 
     .top-left,
@@ -155,10 +161,9 @@
     }
 
     .top-left {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      width: clamp(198px, 24vw, 238px);
+      grid-column: 1;
+      grid-row: 1;
+      width: 100%;
       min-width: 0;
       padding: 12px;
     }
@@ -170,9 +175,9 @@
     }
 
     .combo {
-      position: absolute;
-      right: clamp(300px, 38vw, 470px);
-      top: 50%;
+      grid-column: 2;
+      grid-row: 2 / 4;
+      place-self: center end;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -188,13 +193,13 @@
       font-weight: 900;
       letter-spacing: 0;
       opacity: 0;
-      transform: translateY(-50%) translateX(16px) scale(0.96);
+      transform: translateX(16px) scale(0.96);
       transition: opacity 260ms ease, transform 260ms ease;
     }
 
     .combo.active {
       opacity: 1;
-      transform: translateY(-50%) translateX(0) scale(1);
+      transform: translateX(0) scale(1);
     }
 
     .meta {
@@ -235,10 +240,10 @@
     }
 
     .item-bar {
-      position: absolute;
-      top: 156px;
-      left: 14px;
-      width: clamp(210px, 25vw, 260px);
+      grid-column: 1;
+      grid-row: 2;
+      width: 100%;
+      min-width: 0;
       padding: 10px;
     }
 
@@ -280,15 +285,17 @@
     }
 
     .ranking {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      width: clamp(260px, 32vw, 360px);
+      grid-column: 3;
+      grid-row: 1 / 3;
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
       padding: 12px;
     }
 
     .ranking.collapsed {
       width: auto;
+      justify-self: end;
       padding: 8px;
     }
 
@@ -355,6 +362,11 @@
       border-top: 0;
     }
 
+    .rank-content {
+      max-height: min(34vh, 310px);
+      overflow: auto;
+    }
+
     .rank-id {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -369,10 +381,10 @@
     }
 
     .chat {
-      position: absolute;
-      right: 14px;
-      bottom: 14px;
-      width: clamp(300px, 34vw, 420px);
+      grid-column: 3;
+      grid-row: 4;
+      width: 100%;
+      min-width: 0;
       height: clamp(180px, 28vh, 246px);
       display: flex;
       flex-direction: column;
@@ -422,10 +434,11 @@
     }
 
     .notice {
-      position: absolute;
-      left: 14px;
-      bottom: 14px;
-      width: clamp(260px, 32vw, 360px);
+      grid-column: 1;
+      grid-row: 4;
+      align-self: end;
+      width: 100%;
+      min-width: 0;
       padding: 12px;
       color: var(--muted);
       font-size: 13px;
@@ -437,33 +450,43 @@
     }
 
     @media (max-width: 760px) {
-      .top-left,
-      .item-bar,
-      .notice {
-        left: 10px;
-        width: calc(50vw - 16px);
-      }
-
-      .ranking,
-      .chat {
-        right: 10px;
-        width: calc(50vw - 16px);
-      }
-
-      .top-left,
-      .ranking {
-        top: 10px;
+      .hud {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        gap: 8px;
         padding: 10px;
       }
 
-      .item-bar {
-        top: 150px;
-        padding: 8px;
+      .top-left {
+        grid-column: 1;
+        grid-row: 1;
       }
 
+      .ranking {
+        grid-column: 2;
+        grid-row: 1 / 3;
+      }
+
+      .item-bar {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      .chat {
+        grid-column: 2;
+        grid-row: 4;
+      }
+
+      .notice {
+        grid-column: 1;
+        grid-row: 4;
+      }
+
+      .top-left,
+      .ranking,
+      .item-bar,
       .notice,
       .chat {
-        bottom: 10px;
         padding: 10px;
       }
 
@@ -476,8 +499,9 @@
       }
 
       .combo {
-        right: 10px;
-        top: 50%;
+        grid-column: 1 / -1;
+        grid-row: 3;
+        place-self: center;
         min-width: 96px;
         padding: 8px 10px;
         font-size: 18px;
@@ -526,11 +550,62 @@
 
     @media (max-height: 560px) {
       .chat {
-        height: 140px;
+        height: clamp(92px, 24vh, 140px);
+      }
+
+      .rank-content {
+        max-height: 34vh;
       }
 
       .item-slot {
         height: 40px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .hud {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+      }
+
+      .top-left,
+      .item-bar,
+      .ranking,
+      .notice,
+      .chat,
+      .combo {
+        grid-column: 1;
+      }
+
+      .top-left {
+        grid-row: 1;
+      }
+
+      .item-bar {
+        grid-row: 3;
+      }
+
+      .combo {
+        grid-row: 4;
+      }
+
+      .notice {
+        grid-row: 5;
+      }
+
+      .chat {
+        grid-row: 6;
+        height: 120px;
+      }
+
+      .ranking {
+        grid-row: 2;
+        justify-self: end;
+        width: 100%;
+      }
+
+      .rank-content {
+        max-height: 118px;
       }
     }
   </style>
@@ -669,7 +744,7 @@
     const MISSILE_HIT_AT = 0.9;
     const KILL_GOLD_REWARD = 50;
     const JUMP_DURATION = 240;
-    const BOT_FILLER_COUNT = 3;
+    const BOT_FILLER_COUNT = 0;
     const PROFILE_KEY = "stairProfile";
     const BOT_DATA = [
       ["NOVA", "US"],
