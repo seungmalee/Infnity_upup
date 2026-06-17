@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = __dirname;
 const INDEX = path.join(ROOT, "outputs", "index.html");
+const KILL_GOLD_REWARD = 50;
 
 const players = new Map();
 const clients = new Map();
@@ -243,7 +244,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       attacker.kills += 1;
-      attacker.gold = (attacker.gold || 0) + 100;
+      attacker.gold = (attacker.gold || 0) + KILL_GOLD_REWARD;
       attacker.lastSeen = Date.now();
       const reason = String(body.reason || `${attacker.id}에게 당했습니다.`).slice(0, 120);
       const targetClient = clients.get(targetId);
