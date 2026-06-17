@@ -4,6 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>100층 계단 온라인</title>
+  <meta name="description" content="친구와 실시간으로 계단을 오르고, 숨었다가 기습하며 랭킹을 겨루는 웹 멀티플레이 계단 배틀 게임입니다. 설치 없이 브라우저에서 바로 플레이하세요.">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="100층 계단 온라인">
+  <meta property="og:description" content="숨고, 따라잡고, 떨어뜨리는 실시간 웹 계단 배틀 게임. 친구와 링크로 바로 플레이하세요.">
+  <meta property="og:site_name" content="100층 계단 온라인">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="100층 계단 온라인">
+  <meta name="twitter:description" content="친구와 실시간으로 계단을 오르고 기습하는 웹 멀티플레이 게임입니다.">
   <style>
     :root {
       color-scheme: dark;
@@ -301,7 +310,7 @@
     .rank-head,
     .rank-row {
       display: grid;
-      grid-template-columns: minmax(76px, 1fr) 58px 58px;
+      grid-template-columns: 36px minmax(76px, 1fr) 58px 64px;
       gap: 8px;
       align-items: center;
       min-height: 28px;
@@ -462,7 +471,7 @@
 
       .rank-head,
       .rank-row {
-        grid-template-columns: minmax(48px, 1fr) 42px 48px;
+        grid-template-columns: 28px minmax(48px, 1fr) 36px 48px;
         gap: 5px;
       }
 
@@ -558,9 +567,10 @@
       </div>
       <div class="rank-content">
         <div class="rank-head">
+          <span>순위</span>
           <span>ID</span>
           <span>국가</span>
-          <span>층수</span>
+          <span>최고</span>
         </div>
         <div id="rankRows"></div>
       </div>
@@ -620,7 +630,7 @@
     const REST_INTERVAL = 500;
     const COMBO_TIMEOUT = 3000;
     const SHIELD_DURATION = 5000;
-    const LIFE_REWARD_INTERVAL = 200;
+    const LIFE_REWARD_INTERVAL = 250;
     const PROFILE_KEY = "stairProfile";
     const BOT_DATA = [
       ["NOVA", "US"],
@@ -628,7 +638,12 @@
       ["JIN", "JP"],
       ["SOL", "BR"],
       ["KAI", "DE"],
-      ["LUNA", "FR"]
+      ["LUNA", "FR"],
+      ["AXEL", "GB"],
+      ["MIA", "CA"],
+      ["RIO", "AU"],
+      ["TAN", "CN"],
+      ["YUI", "JP"]
     ];
     const ITEMS = [
       { type: "boulder", name: "낙석" },
@@ -637,19 +652,21 @@
       { type: "hideReset", name: "쿨초기화" },
       { type: "missile", name: "미사일" }
     ];
-    const FOOTSTEP_SOUND_URL = "file:///C:/Users/AICOMPANY/Documents/Splice/Samples/packs/Game%20Footsteps/Epic_Stock_Media_-_Game_Footsteps/one_shot/FS_Wood_Sneakers/ESM_GF_fx_wood_one_shots_footstep_sneakers_walking_slowly_dry_punchy_interior_25.wav";
+    const FOOTSTEP_SOUND_URL = "";
     const TEST_ITEMS_ENABLED = true;
-    const footstepPool = Array.from({ length: 4 }, () => {
+    const footstepPool = FOOTSTEP_SOUND_URL ? Array.from({ length: 4 }, () => {
       const audio = new Audio(FOOTSTEP_SOUND_URL);
       audio.preload = "auto";
       audio.volume = 0.72;
       return audio;
-    });
+    }) : [];
     let footstepIndex = 0;
+    let audioContext = null;
+    let footstepSampleAvailable = Boolean(FOOTSTEP_SOUND_URL);
 
     const state = {
       mode: "join",
-      player: { id: "", country: "KR", floor: 0, hidden: false, shield: false, shieldUntil: 0, stunnedUntil: 0 },
+      player: { id: "", country: "KR", floor: 0, bestFloor: 0, hidden: false, shield: false, shieldUntil: 0, stunnedUntil: 0 },
       bots: [],
       generated: new Map(),
       positions: [{ x: 0, y: 0 }],
@@ -666,6 +683,7 @@
       lives: 0,
       rewardedLifeMilestones: new Set(),
       remotePlayers: [],
+      serverPopulation: 1,
       online: {
         enabled: location.protocol === "http:" || location.protocol === "https:",
         connected: false,
@@ -713,6 +731,7 @@
         id: state.player.id,
         country: state.player.country,
         floor: state.player.floor,
+        bestFloor: state.player.bestFloor,
         hidden: state.player.hidden,
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
@@ -815,12 +834,13 @@
       return state.positions[floor];
     }
 
-    function resetBots() {
+    function resetBots(count = 5) {
       const now = performance.now();
-      state.bots = BOT_DATA.slice(0, 5).map(([id, country], i) => ({
+      state.bots = BOT_DATA.slice(0, count).map(([id, country], i) => ({
         id,
         country,
         floor: 4 + i * 4,
+        bestFloor: 4 + i * 4,
         hidden: false,
         shield: false,
         shieldUntil: 0,
@@ -833,6 +853,33 @@
         nextItemAt: now + 5000 + Math.random() * 10000,
         stunnedUntil: 0
       }));
+    }
+
+    function ensureBotCount(count) {
+      if (state.bots.length >= count) return;
+      const existing = state.bots.length;
+      const now = performance.now();
+      for (let i = existing; i < count; i++) {
+        const [id, country] = BOT_DATA[i % BOT_DATA.length];
+        const floor = 4 + i * 4;
+        state.bots.push({
+          id: i < BOT_DATA.length ? id : `${id}${i + 1}`,
+          country,
+          floor,
+          bestFloor: floor,
+          hidden: false,
+          shield: false,
+          shieldUntil: 0,
+          nextMoveAt: now + 700 + Math.random() * 900,
+          baseSpeed: 620 + Math.random() * 620,
+          rhythm: 0.72 + Math.random() * 0.72,
+          hesitation: 0.08 + Math.random() * 0.12,
+          mistake: 0.025 + Math.random() * 0.045,
+          inventory: [ITEMS[Math.floor(Math.random() * ITEMS.length)]],
+          nextItemAt: now + 5000 + Math.random() * 10000,
+          stunnedUntil: 0
+        });
+      }
     }
 
     function resize() {
@@ -850,10 +897,60 @@
     }
 
     function playFootstep() {
-      const audio = footstepPool[footstepIndex % footstepPool.length];
       footstepIndex += 1;
+      if (!footstepSampleAvailable) {
+        playSyntheticFootstep();
+        return;
+      }
+      const audio = footstepPool[footstepIndex % footstepPool.length];
       audio.currentTime = 0;
-      audio.play().catch(() => {});
+      audio.play().catch(() => {
+        footstepSampleAvailable = false;
+        playSyntheticFootstep();
+      });
+    }
+
+    function playSyntheticFootstep() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      audioContext = audioContext || new AudioContext();
+      if (audioContext.state === "suspended") audioContext.resume();
+      const now = audioContext.currentTime;
+      const thump = audioContext.createOscillator();
+      const noise = audioContext.createBufferSource();
+      const filter = audioContext.createBiquadFilter();
+      const thumpGain = audioContext.createGain();
+      const noiseGain = audioContext.createGain();
+      const mix = audioContext.createGain();
+
+      thump.type = "triangle";
+      thump.frequency.setValueAtTime(130 + Math.random() * 26, now);
+      thump.frequency.exponentialRampToValueAtTime(58, now + 0.085);
+      thumpGain.gain.setValueAtTime(0.0001, now);
+      thumpGain.gain.exponentialRampToValueAtTime(0.16, now + 0.008);
+      thumpGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+      const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.08, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      }
+      noise.buffer = buffer;
+      filter.type = "bandpass";
+      filter.frequency.value = 780;
+      filter.Q.value = 0.9;
+      noiseGain.gain.setValueAtTime(0.0001, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.045, now + 0.006);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.075);
+      mix.gain.value = 0.72;
+
+      thump.connect(thumpGain).connect(mix);
+      noise.connect(filter).connect(noiseGain).connect(mix);
+      mix.connect(audioContext.destination);
+      thump.start(now);
+      thump.stop(now + 0.13);
+      noise.start(now);
+      noise.stop(now + 0.085);
     }
 
     function addChat(id, country, text) {
@@ -870,12 +967,18 @@
     }
 
     function opponents() {
-      return state.online.enabled ? state.remotePlayers : state.bots;
+      if (!state.online.enabled) return state.bots;
+      if (state.serverPopulation <= 5) {
+        ensureBotCount(10);
+        return [...state.remotePlayers, ...state.bots.slice(0, 10)];
+      }
+      return state.remotePlayers;
     }
 
     function applyOnlineSnapshot(data) {
       if (!data) return;
       if (Array.isArray(data.players)) {
+        state.serverPopulation = data.players.length || 1;
         state.remotePlayers = data.players
           .filter((player) => player.onlineId && player.onlineId !== state.online.onlineId)
           .map((player) => ({
@@ -883,6 +986,7 @@
             id: String(player.id || "PLAYER"),
             country: String(player.country || "--"),
             floor: Number(player.floor || 0),
+            bestFloor: Number(player.bestFloor || player.floor || 0),
             hidden: Boolean(player.hidden),
             shield: Boolean(player.shield),
             shieldUntil: Number(player.shieldUntil || 0),
@@ -892,6 +996,7 @@
           }));
         const own = data.players.find((player) => player.onlineId === state.online.onlineId);
         if (own && Number(own.kills || 0) > state.kills) state.kills = Number(own.kills || 0);
+        if (own && Number(own.bestFloor || 0) > state.player.bestFloor) state.player.bestFloor = Number(own.bestFloor || 0);
       }
       if (Array.isArray(data.chat)) {
         state.chat = data.chat.slice(-60);
@@ -922,6 +1027,7 @@
       postOnline("/api/state", {
         onlineId: state.online.onlineId,
         floor: state.player.floor,
+        bestFloor: state.player.bestFloor,
         hidden: state.player.hidden,
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
@@ -938,6 +1044,7 @@
         id: state.player.id,
         country: state.player.country,
         floor: state.player.floor,
+        bestFloor: state.player.bestFloor,
         hidden: state.player.hidden,
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
@@ -1147,8 +1254,9 @@
       const previousMilestone = Math.floor(previousFloor / LIFE_REWARD_INTERVAL);
       const nextMilestone = Math.floor(nextFloor / LIFE_REWARD_INTERVAL);
       for (let milestone = previousMilestone + 1; milestone <= nextMilestone; milestone++) {
-        if (milestone > 0 && !state.rewardedLifeMilestones.has(milestone)) {
-          state.rewardedLifeMilestones.add(milestone);
+        const rewardKey = `${LIFE_REWARD_INTERVAL}:${milestone}`;
+        if (milestone > 0 && !state.rewardedLifeMilestones.has(rewardKey)) {
+          state.rewardedLifeMilestones.add(rewardKey);
           state.lives += 1;
           showNotice(`${milestone * LIFE_REWARD_INTERVAL}층 보너스: 목숨 +1`);
           addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 목숨을 1개 얻었습니다.`);
@@ -1254,6 +1362,7 @@
       if (item.type === "warp") {
         const previousFloor = state.player.floor;
         state.player.floor += 100;
+        state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
         state.player.hidden = false;
         addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
         state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 640 };
@@ -1327,6 +1436,7 @@
       if (item.type === "warp") {
         const previousFloor = bot.floor;
         bot.floor += 100;
+        bot.bestFloor = Math.max(bot.bestFloor || 0, bot.floor);
         bot.hidden = false;
         addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
         addChat("SYSTEM", "--", `${bot.id} 100층 워프`);
@@ -1376,6 +1486,7 @@
       state.player.id = id;
       state.player.country = country;
       state.player.floor = 0;
+      state.player.bestFloor = 0;
       state.kills = 0;
       state.lives = 0;
       resetRunState();
@@ -1399,6 +1510,7 @@
         state.player.id = String(profile.id).slice(0, 14);
         state.player.country = String(profile.country).slice(0, 3);
         state.player.floor = Math.max(0, Number(profile.floor || 0));
+        state.player.bestFloor = Math.max(state.player.floor, Number(profile.bestFloor || 0));
         state.player.hidden = false;
         state.player.shield = Boolean(profile.shield);
         state.player.shieldUntil = Number(profile.shieldUntil || 0);
@@ -1491,6 +1603,7 @@
       }
 
       state.player.floor += 1;
+      state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
       state.player.hidden = false;
       addCombo();
       playFootstep();
@@ -1544,7 +1657,8 @@
 
     function updateBots(now) {
       if (state.mode !== "play") return;
-      if (state.online.enabled) return;
+      if (state.online.enabled && state.serverPopulation > 5) return;
+      if (state.online.enabled) ensureBotCount(10);
       for (const bot of state.bots) {
         const nearPlayer = Math.abs(bot.floor - state.player.floor) <= 45;
         if (nearPlayer || Math.random() < 0.01) botUseItem(bot, now);
@@ -1571,6 +1685,7 @@
           continue;
         }
         bot.floor += 1;
+        bot.bestFloor = Math.max(bot.bestFloor || 0, bot.floor);
         addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
         const cameOut = bot.hidden;
         bot.hidden = false;
@@ -1810,14 +1925,16 @@
 
       const players = [state.player, ...opponents()]
         .filter((player) => player.id)
+        .map((player) => ({ ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)) }))
         .slice()
-        .sort((a, b) => b.floor - a.floor);
+        .sort((a, b) => b.bestFloor - a.bestFloor);
 
-      ui.rankRows.innerHTML = players.map((player) => (
+      ui.rankRows.innerHTML = players.map((player, index) => (
         `<div class="rank-row">
+          <span>${index === 0 ? "👑" : index + 1}</span>
           <span class="rank-id">${escapeHtml(flagEmoji(player.country))} ${escapeHtml(player.id)}</span>
           <span>${escapeHtml(player.country)}</span>
-          <span class="rank-floor">${player.floor}F</span>
+          <span class="rank-floor">${player.bestFloor}F</span>
         </div>`
       )).join("");
 
