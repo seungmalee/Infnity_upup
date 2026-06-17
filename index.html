@@ -161,26 +161,31 @@
     }
 
     .combo {
+      position: absolute;
+      right: clamp(300px, 38vw, 470px);
+      top: 50%;
       display: inline-flex;
       align-items: center;
-      width: fit-content;
-      margin-top: 10px;
-      padding: 5px 9px;
-      border: 1px solid rgba(240, 189, 91, 0.45);
+      justify-content: center;
+      min-width: 118px;
+      padding: 10px 14px;
+      border: 1px solid rgba(240, 189, 91, 0.58);
       border-radius: 8px;
-      background: rgba(240, 189, 91, 0.13);
+      background: rgba(25, 29, 37, 0.82);
       color: var(--bar-active);
-      font-size: 13px;
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.24), 0 0 26px rgba(240, 189, 91, 0.16);
+      backdrop-filter: blur(8px);
+      font-size: 22px;
       font-weight: 900;
       letter-spacing: 0;
       opacity: 0;
-      transform: translateY(-3px);
-      transition: opacity 160ms ease, transform 160ms ease;
+      transform: translateY(-50%) translateX(16px) scale(0.96);
+      transition: opacity 260ms ease, transform 260ms ease;
     }
 
     .combo.active {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateY(-50%) translateX(0) scale(1);
     }
 
     .meta {
@@ -200,7 +205,7 @@
 
     .item-bar {
       position: absolute;
-      top: 104px;
+      top: 156px;
       left: 14px;
       width: clamp(210px, 25vw, 260px);
       padding: 10px;
@@ -421,7 +426,7 @@
       }
 
       .item-bar {
-        top: 96px;
+        top: 150px;
         padding: 8px;
       }
 
@@ -440,9 +445,11 @@
       }
 
       .combo {
-        margin-top: 8px;
-        padding: 4px 7px;
-        font-size: 12px;
+        right: 10px;
+        top: 50%;
+        min-width: 96px;
+        padding: 8px 10px;
+        font-size: 18px;
       }
 
       .meta,
@@ -531,8 +538,9 @@
         <span id="lives">목숨 0</span>
         <span id="onlineStatus">오프라인</span>
       </div>
-      <div class="combo" id="combo">COMBO x0</div>
     </div>
+
+    <div class="combo" id="combo">COMBO x0</div>
 
     <div class="item-bar">
       <h2 class="panel-title">아이템</h2>
