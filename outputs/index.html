@@ -669,6 +669,7 @@
     const MISSILE_HIT_AT = 0.9;
     const KILL_GOLD_REWARD = 50;
     const JUMP_DURATION = 240;
+    const BOT_FILLER_COUNT = 3;
     const PROFILE_KEY = "stairProfile";
     const BOT_DATA = [
       ["NOVA", "US"],
@@ -883,7 +884,7 @@
       return state.positions[floor];
     }
 
-    function resetBots(count = 5) {
+    function resetBots(count = BOT_FILLER_COUNT) {
       const now = performance.now();
       state.bots = BOT_DATA.slice(0, count).map(([id, country], i) => ({
         id,
@@ -1020,8 +1021,8 @@
     function opponents() {
       if (!state.online.enabled) return state.bots;
       if (state.serverPopulation <= 5) {
-        ensureBotCount(10);
-        return [...state.remotePlayers, ...state.bots.slice(0, 10)];
+        ensureBotCount(BOT_FILLER_COUNT);
+        return [...state.remotePlayers, ...state.bots.slice(0, BOT_FILLER_COUNT)];
       }
       return state.remotePlayers;
     }
@@ -1743,7 +1744,7 @@
     function updateBots(now) {
       if (state.mode !== "play") return;
       if (state.online.enabled && state.serverPopulation > 5) return;
-      if (state.online.enabled) ensureBotCount(10);
+      if (state.online.enabled) ensureBotCount(BOT_FILLER_COUNT);
       for (const bot of state.bots) {
         const nearPlayer = Math.abs(bot.floor - state.player.floor) <= 45;
         if (nearPlayer || Math.random() < 0.01) botUseItem(bot, now);
