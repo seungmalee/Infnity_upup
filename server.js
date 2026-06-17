@@ -121,20 +121,21 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === "POST" && url.pathname === "/api/join") {
       const body = await readBody(req);
-      const onlineId = crypto.randomUUID();
+      const requestedId = String(body.onlineId || "");
+      const onlineId = requestedId && players.has(requestedId) ? requestedId : crypto.randomUUID();
       const id = String(body.id || "PLAYER").slice(0, 14).replace(/\s+/g, "_");
       const country = String(body.country || "KR").slice(0, 3);
       players.set(onlineId, {
         onlineId,
         id,
         country,
-        floor: 0,
-        hidden: false,
-        shield: false,
-        shieldUntil: 0,
-        stunnedUntil: 0,
-        kills: 0,
-        lives: 0,
+        floor: Number(body.floor || 0),
+        hidden: Boolean(body.hidden),
+        shield: Boolean(body.shield),
+        shieldUntil: Number(body.shieldUntil || 0),
+        stunnedUntil: Number(body.stunnedUntil || 0),
+        kills: Number(body.kills || 0),
+        lives: Number(body.lives || 0),
         lastSeen: Date.now()
       });
       chat.push({ id: "SYSTEM", country: "--", text: `${id}님이 접속했습니다.` });
@@ -243,7 +244,7 @@ const server = http.createServer(async (req, res) => {
       clients.set(onlineId, res);
       res.write(`data: ${JSON.stringify({ type: "state", players: publicPlayers(), chat })}\n\n`);
       req.on("close", () => {
-        clients.delete(onlineId);
+        if (clients.get(onlineId) === res) clients.delete(onlineId);
       });
       return;
     }
