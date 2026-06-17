@@ -45,6 +45,7 @@ function publicPlayers() {
     id: player.id,
     country: player.country,
     floor: player.floor,
+    bestFloor: player.bestFloor || player.floor || 0,
     hidden: player.hidden,
     shield: player.shield,
     shieldUntil: player.shieldUntil,
@@ -105,6 +106,39 @@ function serveStatic(req, res) {
   });
 }
 
+function siteOrigin(req) {
+  const proto = req.headers["x-forwarded-proto"] || "https";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || `localhost:${PORT}`;
+  return `${proto}://${host}`;
+}
+
+function serveRobots(req, res) {
+  const origin = siteOrigin(req);
+  res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" });
+  res.end([
+    "User-agent: *",
+    "Allow: /",
+    `Sitemap: ${origin}/sitemap.xml`,
+    ""
+  ].join("\n"));
+}
+
+function serveSitemap(req, res) {
+  const origin = siteOrigin(req);
+  const today = new Date().toISOString().slice(0, 10);
+  res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" });
+  res.end(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${origin}/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
+`);
+}
+
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
     res.writeHead(204, {
@@ -119,6 +153,16 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   try {
+    if (req.method === "GET" && url.pathname === "/robots.txt") {
+      serveRobots(req, res);
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/sitemap.xml") {
+      serveSitemap(req, res);
+      return;
+    }
+
     if (req.method === "POST" && url.pathname === "/api/join") {
       const body = await readBody(req);
       const requestedId = String(body.onlineId || "");
@@ -130,6 +174,7 @@ const server = http.createServer(async (req, res) => {
         id,
         country,
         floor: Number(body.floor || 0),
+        bestFloor: Math.max(Number(body.bestFloor || 0), Number(body.floor || 0)),
         hidden: Boolean(body.hidden),
         shield: Boolean(body.shield),
         shieldUntil: Number(body.shieldUntil || 0),
@@ -155,6 +200,10 @@ const server = http.createServer(async (req, res) => {
       for (const key of ["floor", "stunnedUntil", "shieldUntil", "kills", "lives"]) {
         if (Number.isFinite(Number(body[key]))) player[key] = Number(body[key]);
       }
+      if (Number.isFinite(Number(body.bestFloor))) {
+        player.bestFloor = Math.max(player.bestFloor || 0, Number(body.bestFloor));
+      }
+      player.bestFloor = Math.max(player.bestFloor || 0, player.floor || 0);
       for (const key of ["hidden", "shield"]) {
         if (typeof body[key] === "boolean") player[key] = body[key];
       }
