@@ -667,6 +667,8 @@
     const MISSILE_STUN = 3000;
     const MISSILE_DURATION = 1800;
     const MISSILE_HIT_AT = 0.9;
+    const KILL_GOLD_REWARD = 50;
+    const JUMP_DURATION = 240;
     const PROFILE_KEY = "stairProfile";
     const BOT_DATA = [
       ["NOVA", "US"],
@@ -732,6 +734,7 @@
       ],
       flash: 0,
       climbFlash: { floor: -1, start: 0, duration: 0 },
+      jump: { start: 0, duration: 0 },
       trails: [],
       effects: [],
     };
@@ -897,6 +900,7 @@
         mistake: 0.025 + Math.random() * 0.045,
         inventory: [ITEMS[Math.floor(Math.random() * ITEMS.length)]],
         nextItemAt: now + 18000 + Math.random() * 24000,
+        jump: { start: 0, duration: 0 },
         stunnedUntil: 0
       }));
     }
@@ -923,6 +927,7 @@
           mistake: 0.025 + Math.random() * 0.045,
           inventory: [ITEMS[Math.floor(Math.random() * ITEMS.length)]],
           nextItemAt: now + 18000 + Math.random() * 24000,
+          jump: { start: 0, duration: 0 },
           stunnedUntil: 0
         });
       }
@@ -1145,7 +1150,7 @@
       if (result && Number.isFinite(Number(result.kills))) state.kills = Number(result.kills);
       if (result && Number.isFinite(Number(result.gold))) {
         const nextGold = Number(result.gold);
-        if (nextGold > state.gold) showNotice(`킬 보상 +100g (보유 ${nextGold}g)`);
+        if (nextGold > state.gold) showNotice(`킬 보상 +${KILL_GOLD_REWARD}g (보유 ${nextGold}g)`);
         state.gold = nextGold;
       }
       saveSessionProfile();
@@ -1529,7 +1534,7 @@
     }
 
     function addKillReward() {
-      state.gold += 100;
+      state.gold += KILL_GOLD_REWARD;
       saveSessionProfile();
     }
 
@@ -1629,7 +1634,7 @@
       bot.stunnedUntil = performance.now() + 1800;
       state.kills += 1;
       addKillReward();
-      showNotice(`${bot.id} ${reason} / +100g`);
+      showNotice(`${bot.id} ${reason} / +${KILL_GOLD_REWARD}g`);
       addChat("SYSTEM", "--", `${bot.id} ${reason}`);
       saveSessionProfile();
     }
@@ -1684,6 +1689,7 @@
       state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
       state.player.hidden = false;
       addCombo();
+      state.jump = { start: performance.now(), duration: JUMP_DURATION };
       playFootstep();
       addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
       state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 520 };
@@ -1765,6 +1771,7 @@
         }
         bot.floor += 1;
         bot.bestFloor = Math.max(bot.bestFloor || 0, bot.floor);
+        bot.jump = { start: now, duration: JUMP_DURATION };
         addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
         const cameOut = bot.hidden;
         bot.hidden = false;
@@ -1986,12 +1993,22 @@
       for (const opponent of opponents()) {
         if (Math.abs(opponent.floor - focus) > 30) continue;
         const p = screenPosition(opponent.floor, focus, width, height);
-        drawRunner(opponent, p.x, p.y, varColor("--bot"));
+        let opponentJump = 0;
+        if (opponent.jump && opponent.jump.duration > 0) {
+          const jumpT = (now - opponent.jump.start) / opponent.jump.duration;
+          if (jumpT >= 0 && jumpT <= 1) opponentJump = Math.sin(jumpT * Math.PI) * 14;
+        }
+        drawRunner(opponent, p.x, p.y - opponentJump, varColor("--bot"));
       }
 
       const pp = screenPosition(state.player.floor, focus, width, height);
       const playerLabel = state.player.id ? state.player : { id: "YOU", floor: 0, hidden: false };
-      drawRunner(playerLabel, pp.x, pp.y, varColor("--player"), 1, true);
+      let jumpOffset = 0;
+      if (state.jump.duration > 0) {
+        const jumpT = (now - state.jump.start) / state.jump.duration;
+        if (jumpT >= 0 && jumpT <= 1) jumpOffset = Math.sin(jumpT * Math.PI) * 18;
+      }
+      drawRunner(playerLabel, pp.x, pp.y - jumpOffset, varColor("--player"), 1, true);
 
       drawEffects(focus, width, height, now);
     }
