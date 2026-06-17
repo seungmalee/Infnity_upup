@@ -637,15 +637,17 @@
       { type: "hideReset", name: "쿨초기화" },
       { type: "missile", name: "미사일" }
     ];
-    const FOOTSTEP_SOUND_URL = "file:///C:/Users/AICOMPANY/Documents/Splice/Samples/packs/Game%20Footsteps/Epic_Stock_Media_-_Game_Footsteps/one_shot/FS_Wood_Sneakers/ESM_GF_fx_wood_one_shots_footstep_sneakers_walking_slowly_dry_punchy_interior_25.wav";
+    const FOOTSTEP_SOUND_URL = "";
     const TEST_ITEMS_ENABLED = true;
-    const footstepPool = Array.from({ length: 4 }, () => {
+    const footstepPool = FOOTSTEP_SOUND_URL ? Array.from({ length: 4 }, () => {
       const audio = new Audio(FOOTSTEP_SOUND_URL);
       audio.preload = "auto";
       audio.volume = 0.72;
       return audio;
-    });
+    }) : [];
     let footstepIndex = 0;
+    let audioContext = null;
+    let footstepSampleAvailable = Boolean(FOOTSTEP_SOUND_URL);
 
     const state = {
       mode: "join",
@@ -850,10 +852,60 @@
     }
 
     function playFootstep() {
-      const audio = footstepPool[footstepIndex % footstepPool.length];
       footstepIndex += 1;
+      if (!footstepSampleAvailable) {
+        playSyntheticFootstep();
+        return;
+      }
+      const audio = footstepPool[footstepIndex % footstepPool.length];
       audio.currentTime = 0;
-      audio.play().catch(() => {});
+      audio.play().catch(() => {
+        footstepSampleAvailable = false;
+        playSyntheticFootstep();
+      });
+    }
+
+    function playSyntheticFootstep() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      audioContext = audioContext || new AudioContext();
+      if (audioContext.state === "suspended") audioContext.resume();
+      const now = audioContext.currentTime;
+      const thump = audioContext.createOscillator();
+      const noise = audioContext.createBufferSource();
+      const filter = audioContext.createBiquadFilter();
+      const thumpGain = audioContext.createGain();
+      const noiseGain = audioContext.createGain();
+      const mix = audioContext.createGain();
+
+      thump.type = "triangle";
+      thump.frequency.setValueAtTime(130 + Math.random() * 26, now);
+      thump.frequency.exponentialRampToValueAtTime(58, now + 0.085);
+      thumpGain.gain.setValueAtTime(0.0001, now);
+      thumpGain.gain.exponentialRampToValueAtTime(0.16, now + 0.008);
+      thumpGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+
+      const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 0.08, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+      }
+      noise.buffer = buffer;
+      filter.type = "bandpass";
+      filter.frequency.value = 780;
+      filter.Q.value = 0.9;
+      noiseGain.gain.setValueAtTime(0.0001, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.045, now + 0.006);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.075);
+      mix.gain.value = 0.72;
+
+      thump.connect(thumpGain).connect(mix);
+      noise.connect(filter).connect(noiseGain).connect(mix);
+      mix.connect(audioContext.destination);
+      thump.start(now);
+      thump.stop(now + 0.13);
+      noise.start(now);
+      noise.stop(now + 0.085);
     }
 
     function addChat(id, country, text) {
