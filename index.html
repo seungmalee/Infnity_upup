@@ -1,0 +1,1784 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>100층 계단 온라인</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111318;
+      --panel: rgba(22, 25, 32, 0.88);
+      --panel-solid: #191d25;
+      --line: rgba(255, 255, 255, 0.14);
+      --text: #f5f1e8;
+      --muted: #aeb6c4;
+      --bar: #586271;
+      --bar-active: #f0bd5b;
+      --player: #ff646f;
+      --bot: #72b7ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    #game {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background:
+        linear-gradient(180deg, #191c23 0%, #101218 68%, #0c0e13 100%);
+    }
+
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background:
+        radial-gradient(circle at 50% 25%, rgba(240, 189, 91, 0.16), transparent 28%),
+        rgba(10, 12, 16, 0.8);
+      z-index: 10;
+    }
+
+    .screen.hidden {
+      display: none;
+    }
+
+    .join-card {
+      width: min(420px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(25, 29, 37, 0.96);
+      padding: 22px;
+      box-shadow: 0 22px 80px rgba(0, 0, 0, 0.42);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin: 14px 0 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input,
+    select {
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #11141a;
+      color: var(--text);
+      padding: 0 12px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--bar-active);
+    }
+
+    .start-btn {
+      width: 100%;
+      height: 46px;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--bar-active);
+      color: #17110a;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .start-btn:active {
+      transform: translateY(1px);
+    }
+
+    .hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .top-left,
+    .ranking,
+    .chat,
+    .item-bar,
+    .notice {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+    }
+
+    .top-left {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      width: clamp(198px, 24vw, 238px);
+      min-width: 0;
+      padding: 12px;
+    }
+
+    .floor {
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .combo {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 10px;
+      padding: 5px 9px;
+      border: 1px solid rgba(240, 189, 91, 0.45);
+      border-radius: 8px;
+      background: rgba(240, 189, 91, 0.13);
+      color: var(--bar-active);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 0;
+      opacity: 0;
+      transform: translateY(-3px);
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .combo.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .inventory {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .item-bar {
+      position: absolute;
+      top: 104px;
+      left: 14px;
+      width: clamp(210px, 25vw, 260px);
+      padding: 10px;
+    }
+
+    .item-slot {
+      min-width: 0;
+      height: 52px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #11141a;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 7px;
+      padding: 0 10px;
+      font-size: 14px;
+      font-weight: 900;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .item-slot.ready {
+      color: var(--text);
+      border-color: rgba(240, 189, 91, 0.52);
+      background: rgba(240, 189, 91, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(240, 189, 91, 0.18);
+    }
+
+    .item-key {
+      color: var(--bar-active);
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(240, 189, 91, 0.16);
+      flex: 0 0 auto;
+    }
+
+    .ranking {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: clamp(260px, 32vw, 360px);
+      padding: 12px;
+    }
+
+    .ranking.collapsed {
+      width: auto;
+      padding: 8px;
+    }
+
+    .ranking.collapsed .rank-content {
+      display: none;
+    }
+
+    .ranking.collapsed .panel-title {
+      margin: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .panel-title {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .panel-toggle {
+      pointer-events: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #11141a;
+      color: var(--text);
+      min-width: 34px;
+      height: 30px;
+      padding: 0 9px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .rank-head,
+    .rank-row {
+      display: grid;
+      grid-template-columns: minmax(76px, 1fr) 58px 58px;
+      gap: 8px;
+      align-items: center;
+      min-height: 28px;
+      font-size: 13px;
+    }
+
+    .rank-head {
+      color: var(--muted);
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+      font-weight: 800;
+    }
+
+    .rank-row {
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .rank-row:first-of-type {
+      border-top: 0;
+    }
+
+    .rank-id {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 800;
+    }
+
+    .rank-floor {
+      color: var(--bar-active);
+      text-align: right;
+      font-weight: 900;
+    }
+
+    .chat {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      width: clamp(300px, 34vw, 420px);
+      height: clamp(180px, 28vh, 246px);
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      pointer-events: auto;
+    }
+
+    .chat-log {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 4px;
+      font-size: 13px;
+    }
+
+    .chat-row {
+      line-height: 1.35;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .chat-name {
+      color: var(--bar-active);
+      font-weight: 900;
+    }
+
+    .chat form {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chat input {
+      height: 38px;
+    }
+
+    .chat button {
+      width: 58px;
+      border: 0;
+      border-radius: 8px;
+      background: #303744;
+      color: var(--text);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .notice {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      width: clamp(260px, 32vw, 360px);
+      padding: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .notice strong {
+      color: var(--text);
+    }
+
+    @media (max-width: 760px) {
+      .top-left,
+      .item-bar,
+      .notice {
+        left: 10px;
+        width: calc(50vw - 16px);
+      }
+
+      .ranking,
+      .chat {
+        right: 10px;
+        width: calc(50vw - 16px);
+      }
+
+      .top-left,
+      .ranking {
+        top: 10px;
+        padding: 10px;
+      }
+
+      .item-bar {
+        top: 96px;
+        padding: 8px;
+      }
+
+      .notice,
+      .chat {
+        bottom: 10px;
+        padding: 10px;
+      }
+
+      .chat {
+        height: clamp(150px, 30vh, 220px);
+      }
+
+      .floor {
+        font-size: 28px;
+      }
+
+      .combo {
+        margin-top: 8px;
+        padding: 4px 7px;
+        font-size: 12px;
+      }
+
+      .meta,
+      .rank-head,
+      .rank-row,
+      .chat-log,
+      .notice {
+        font-size: 12px;
+      }
+
+      .rank-head,
+      .rank-row {
+        grid-template-columns: minmax(48px, 1fr) 42px 48px;
+        gap: 5px;
+      }
+
+      .item-slot {
+        height: 44px;
+        padding: 0 8px;
+        font-size: 12px;
+      }
+
+      .item-key {
+        width: 20px;
+        height: 20px;
+      }
+
+      .chat input {
+        height: 34px;
+      }
+
+      .chat button {
+        width: 48px;
+        font-size: 12px;
+      }
+    }
+
+    @media (max-height: 560px) {
+      .chat {
+        height: 140px;
+      }
+
+      .item-slot {
+        height: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game" aria-label="계단 게임 화면"></canvas>
+
+  <section class="screen" id="joinScreen">
+    <form class="join-card" id="joinForm">
+      <h1>100층 계단 온라인</h1>
+      <p class="sub">ID와 국가를 정하고 같은 100층 맵에서 올라가세요. 같은 세션에서는 ID가 유지됩니다.</p>
+
+      <label for="playerId">ID</label>
+      <input id="playerId" maxlength="14" autocomplete="off" placeholder="예: stairking" required>
+
+      <label for="country">국가</label>
+      <select id="country" required>
+        <option value="KR">KR - 대한민국</option>
+        <option value="US">US - 미국</option>
+        <option value="JP">JP - 일본</option>
+        <option value="CN">CN - 중국</option>
+        <option value="GB">GB - 영국</option>
+        <option value="FR">FR - 프랑스</option>
+        <option value="DE">DE - 독일</option>
+        <option value="BR">BR - 브라질</option>
+        <option value="CA">CA - 캐나다</option>
+        <option value="AU">AU - 호주</option>
+      </select>
+
+      <button class="start-btn" type="submit">게임 시작</button>
+    </form>
+  </section>
+
+  <div class="hud" id="hud">
+    <div class="top-left">
+      <div class="floor" id="floor">0F</div>
+      <div class="meta">
+        <span id="playerLabel">ID</span>
+        <span id="block">1구간</span>
+        <span id="cooldown">숨기 OK</span>
+        <span id="kills">킬 0</span>
+        <span id="lives">목숨 0</span>
+        <span id="onlineStatus">오프라인</span>
+      </div>
+      <div class="combo" id="combo">COMBO x0</div>
+    </div>
+
+    <div class="item-bar">
+      <h2 class="panel-title">아이템</h2>
+      <div class="inventory">
+        <div class="item-slot" id="item0"><span class="item-key">1</span> 빈칸</div>
+        <div class="item-slot" id="item1"><span class="item-key">2</span> 빈칸</div>
+        <div class="item-slot" id="item2"><span class="item-key">3</span> 빈칸</div>
+      </div>
+    </div>
+
+    <section class="ranking" id="rankingPanel">
+      <div class="panel-header">
+        <h2 class="panel-title" id="rankingTitle">랭킹</h2>
+        <button class="panel-toggle" id="rankToggle" type="button">숨김</button>
+      </div>
+      <div class="rank-content">
+        <div class="rank-head">
+          <span>ID</span>
+          <span>국가</span>
+          <span>층수</span>
+        </div>
+        <div id="rankRows"></div>
+      </div>
+    </section>
+
+    <section class="chat">
+      <h2 class="panel-title">채팅</h2>
+      <div class="chat-log" id="chatLog"></div>
+      <form id="chatForm">
+        <input id="chatInput" maxlength="70" autocomplete="off" placeholder="메시지 입력">
+        <button type="submit">전송</button>
+      </form>
+    </section>
+
+    <div class="notice" id="notice">
+      <strong>조작</strong><br>
+      &larr; 왼쪽 위 계단 / &uarr; 머리 위 계단 / &rarr; 오른쪽 계단 / &darr; 숨기 / 1,2,3 아이템 / 0 테스트 지급
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const joinScreen = document.getElementById("joinScreen");
+    const joinForm = document.getElementById("joinForm");
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const ui = {
+      floor: document.getElementById("floor"),
+      combo: document.getElementById("combo"),
+      playerLabel: document.getElementById("playerLabel"),
+      block: document.getElementById("block"),
+      cooldown: document.getElementById("cooldown"),
+      kills: document.getElementById("kills"),
+      lives: document.getElementById("lives"),
+      onlineStatus: document.getElementById("onlineStatus"),
+      itemSlots: [
+        document.getElementById("item0"),
+        document.getElementById("item1"),
+        document.getElementById("item2")
+      ],
+      rankingPanel: document.getElementById("rankingPanel"),
+      rankToggle: document.getElementById("rankToggle"),
+      rankingTitle: document.getElementById("rankingTitle"),
+      rankRows: document.getElementById("rankRows"),
+      chatLog: document.getElementById("chatLog"),
+      notice: document.getElementById("notice")
+    };
+
+    const SEGMENT_SIZE = 100;
+    const HIDE_COOLDOWN = 10 * 60 * 1000;
+    const GLOBAL_SEED = "one-public-stair-map-v3";
+    const STEP_X = 88;
+    const STEP_Y = 46;
+    const BAR_W = 82;
+    const BAR_H = 16;
+    const REST_INTERVAL = 500;
+    const COMBO_TIMEOUT = 3000;
+    const SHIELD_DURATION = 5000;
+    const LIFE_REWARD_INTERVAL = 200;
+    const BOT_DATA = [
+      ["NOVA", "US"],
+      ["MIN", "KR"],
+      ["JIN", "JP"],
+      ["SOL", "BR"],
+      ["KAI", "DE"],
+      ["LUNA", "FR"]
+    ];
+    const ITEMS = [
+      { type: "boulder", name: "낙석" },
+      { type: "warp", name: "워프" },
+      { type: "shield", name: "보호막" },
+      { type: "hideReset", name: "쿨초기화" },
+      { type: "missile", name: "미사일" }
+    ];
+    const FOOTSTEP_SOUND_URL = "file:///C:/Users/AICOMPANY/Documents/Splice/Samples/packs/Game%20Footsteps/Epic_Stock_Media_-_Game_Footsteps/one_shot/FS_Wood_Sneakers/ESM_GF_fx_wood_one_shots_footstep_sneakers_walking_slowly_dry_punchy_interior_25.wav";
+    const TEST_ITEMS_ENABLED = true;
+    const footstepPool = Array.from({ length: 4 }, () => {
+      const audio = new Audio(FOOTSTEP_SOUND_URL);
+      audio.preload = "auto";
+      audio.volume = 0.72;
+      return audio;
+    });
+    let footstepIndex = 0;
+
+    const state = {
+      mode: "join",
+      player: { id: "", country: "KR", floor: 0, hidden: false, shield: false, shieldUntil: 0, stunnedUntil: 0 },
+      bots: [],
+      generated: new Map(),
+      positions: [{ x: 0, y: 0 }],
+      inventory: [null, null, null],
+      testItemCursor: 0,
+      rewardedMilestones: new Set(),
+      rankingCollapsed: sessionStorage.getItem("rankingCollapsed") === "true",
+      lastHideAt: -HIDE_COOLDOWN,
+      noticeUntil: 0,
+      noticeText: "ID를 만들고 게임을 시작하세요.",
+      combo: 0,
+      comboLastInputAt: 0,
+      kills: 0,
+      lives: 0,
+      rewardedLifeMilestones: new Set(),
+      remotePlayers: [],
+      online: {
+        enabled: location.protocol === "http:" || location.protocol === "https:",
+        connected: false,
+        onlineId: "",
+        events: null,
+        syncTimer: 0
+      },
+      chat: [
+        { id: "SYSTEM", country: "--", text: "채팅창이 준비되었습니다." }
+      ],
+      flash: 0,
+      climbFlash: { floor: -1, start: 0, duration: 0 },
+      trails: [],
+      effects: [],
+    };
+
+    function escapeHtml(text) {
+      return text.replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function hashString(text) {
+      let h = 2166136261;
+      for (let i = 0; i < text.length; i++) {
+        h ^= text.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    }
+
+    function mulberry32(seed) {
+      return function random() {
+        seed |= 0;
+        seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    function segmentDirections(segment) {
+      if (state.generated.has(segment)) return state.generated.get(segment);
+      const random = mulberry32(hashString(`${GLOBAL_SEED}:${segment}`));
+      const dirs = [];
+      const patterns = [
+        { name: "left-run", min: 5, max: 12, weights: { L: 0.74, U: 0.16, R: 0.10 } },
+        { name: "right-run", min: 5, max: 12, weights: { L: 0.10, U: 0.16, R: 0.74 } },
+        { name: "vertical", min: 4, max: 9, weights: { L: 0.18, U: 0.64, R: 0.18 } },
+        { name: "zigzag", min: 6, max: 14, weights: { L: 0.45, U: 0.10, R: 0.45 }, alternate: true },
+        { name: "drift-left", min: 8, max: 16, weights: { L: 0.56, U: 0.30, R: 0.14 } },
+        { name: "drift-right", min: 8, max: 16, weights: { L: 0.14, U: 0.30, R: 0.56 } }
+      ];
+      let x = 0;
+      let last = "U";
+      let lastSide = random() < 0.5 ? "L" : "R";
+
+      function pickDirection(pattern) {
+        if (pattern.alternate) {
+          lastSide = lastSide === "L" ? "R" : "L";
+          return random() < 0.18 ? "U" : lastSide;
+        }
+        const weights = { ...pattern.weights };
+        if (x < -8) weights.R += 0.38;
+        if (x > 8) weights.L += 0.38;
+        if (last === "L") weights.L *= 1.14;
+        if (last === "R") weights.R *= 1.14;
+        const total = weights.L + weights.U + weights.R;
+        const roll = random() * total;
+        if (roll < weights.L) return "L";
+        if (roll < weights.L + weights.U) return "U";
+        return "R";
+      }
+
+      while (dirs.length < SEGMENT_SIZE) {
+        const pattern = patterns[Math.floor(random() * patterns.length)];
+        const length = pattern.min + Math.floor(random() * (pattern.max - pattern.min + 1));
+        for (let i = 0; i < length && dirs.length < SEGMENT_SIZE; i++) {
+          const dir = pickDirection(pattern);
+          dirs.push(dir);
+          x += dir === "L" ? -1 : dir === "R" ? 1 : 0;
+          last = dir;
+        }
+      }
+
+      state.generated.set(segment, dirs);
+      return dirs;
+    }
+
+    function directionForNextFloor(floor) {
+      const segment = Math.floor(floor / SEGMENT_SIZE);
+      return segmentDirections(segment)[floor % SEGMENT_SIZE];
+    }
+
+    function isRestFloor(floor) {
+      return floor > 0 && floor % REST_INTERVAL === 0;
+    }
+
+    function stairPosition(floor) {
+      while (state.positions.length <= floor) {
+        const prevFloor = state.positions.length - 1;
+        const prev = state.positions[prevFloor];
+        const dir = directionForNextFloor(prevFloor);
+        const dx = dir === "L" ? -1 : dir === "R" ? 1 : 0;
+        state.positions.push({ x: prev.x + dx, y: prevFloor + 1 });
+      }
+      return state.positions[floor];
+    }
+
+    function resetBots() {
+      const now = performance.now();
+      state.bots = BOT_DATA.slice(0, 5).map(([id, country], i) => ({
+        id,
+        country,
+        floor: 4 + i * 4,
+        hidden: false,
+        shield: false,
+        shieldUntil: 0,
+        nextMoveAt: now + 700 + Math.random() * 900,
+        baseSpeed: 620 + Math.random() * 620,
+        rhythm: 0.72 + Math.random() * 0.72,
+        hesitation: 0.08 + Math.random() * 0.12,
+        mistake: 0.025 + Math.random() * 0.045,
+        inventory: [ITEMS[Math.floor(Math.random() * ITEMS.length)]],
+        nextItemAt: now + 5000 + Math.random() * 10000,
+        stunnedUntil: 0
+      }));
+    }
+
+    function resize() {
+      const ratio = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function showNotice(text) {
+      state.noticeText = text;
+      state.noticeUntil = performance.now() + 2600;
+      ui.notice.innerHTML = `<strong>알림</strong><br>${escapeHtml(text)}`;
+    }
+
+    function playFootstep() {
+      const audio = footstepPool[footstepIndex % footstepPool.length];
+      footstepIndex += 1;
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    }
+
+    function addChat(id, country, text) {
+      state.chat.push({ id, country, text });
+      state.chat = state.chat.slice(-40);
+      renderChat();
+    }
+
+    function renderChat() {
+      ui.chatLog.innerHTML = state.chat.map((row) => (
+        `<div class="chat-row"><span class="chat-name">[${escapeHtml(row.country)}] ${escapeHtml(row.id)}</span> ${escapeHtml(row.text)}</div>`
+      )).join("");
+      ui.chatLog.scrollTop = ui.chatLog.scrollHeight;
+    }
+
+    function opponents() {
+      return state.online.connected ? state.remotePlayers : state.bots;
+    }
+
+    function applyOnlineSnapshot(data) {
+      if (!data) return;
+      if (Array.isArray(data.players)) {
+        state.remotePlayers = data.players
+          .filter((player) => player.onlineId && player.onlineId !== state.online.onlineId)
+          .map((player) => ({
+            ...player,
+            id: String(player.id || "PLAYER"),
+            country: String(player.country || "--"),
+            floor: Number(player.floor || 0),
+            hidden: Boolean(player.hidden),
+            shield: Boolean(player.shield),
+            shieldUntil: Number(player.shieldUntil || 0),
+            stunnedUntil: Number(player.stunnedUntil || 0),
+            kills: Number(player.kills || 0),
+            lives: Number(player.lives || 0)
+          }));
+        const own = data.players.find((player) => player.onlineId === state.online.onlineId);
+        if (own && Number(own.kills || 0) > state.kills) state.kills = Number(own.kills || 0);
+      }
+      if (Array.isArray(data.chat)) {
+        state.chat = data.chat.slice(-60);
+        renderChat();
+      }
+    }
+
+    async function postOnline(path, body) {
+      if (!state.online.enabled || (!state.online.onlineId && path !== "/api/join")) return null;
+      try {
+        const response = await fetch(path, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+      } catch (error) {
+        state.online.connected = false;
+        ui.onlineStatus.textContent = "오프라인";
+        return null;
+      }
+    }
+
+    function syncOnlineState() {
+      if (!state.online.connected) return;
+      postOnline("/api/state", {
+        onlineId: state.online.onlineId,
+        floor: state.player.floor,
+        hidden: state.player.hidden,
+        shield: state.player.shield,
+        shieldUntil: state.player.shieldUntil,
+        stunnedUntil: state.player.stunnedUntil,
+        kills: state.kills,
+        lives: state.lives
+      });
+    }
+
+    async function connectOnline() {
+      if (!state.online.enabled || !state.player.id || state.online.connected) return;
+      const joined = await postOnline("/api/join", { id: state.player.id, country: state.player.country });
+      if (!joined || !joined.onlineId) return;
+      state.online.onlineId = joined.onlineId;
+      state.online.connected = true;
+      applyOnlineSnapshot(joined);
+      if (state.online.events) state.online.events.close();
+      state.online.events = new EventSource(`/events?id=${encodeURIComponent(state.online.onlineId)}`);
+      state.online.events.onmessage = (event) => {
+        state.online.connected = true;
+        const data = JSON.parse(event.data);
+        if (data.type === "attacked") {
+          respawnAtZero(data.reason || "다른 플레이어에게 당했습니다.");
+          syncOnlineState();
+        }
+        if (data.type === "stunned") {
+          if (applyStun(state.player, Number(data.ms || 3000), data.reason || "스턴")) {
+            showNotice(`${data.reason || "공격"}에 맞아 스턴!`);
+          }
+          syncOnlineState();
+        }
+        applyOnlineSnapshot(data);
+      };
+      state.online.events.onerror = () => {
+        state.online.connected = false;
+        ui.onlineStatus.textContent = "재연결 중";
+      };
+      clearInterval(state.online.syncTimer);
+      state.online.syncTimer = setInterval(syncOnlineState, 900);
+      showNotice("온라인 서버에 접속했습니다.");
+      addChat("SYSTEM", "--", "온라인 모드가 켜졌습니다.");
+      syncOnlineState();
+    }
+
+    async function attackRemote(target, reason) {
+      if (!target || !target.onlineId || !state.online.connected) return;
+      const result = await postOnline("/api/attack", {
+        onlineId: state.online.onlineId,
+        targetId: target.onlineId,
+        reason
+      });
+      if (result && Number.isFinite(Number(result.kills))) state.kills = Number(result.kills);
+    }
+
+    function stunRemote(target, reason, ms = 3000) {
+      if (!target || !target.onlineId || !state.online.connected) return;
+      postOnline("/api/stun", {
+        onlineId: state.online.onlineId,
+        targetId: target.onlineId,
+        reason,
+        ms
+      });
+    }
+
+    function setRankingCollapsed(collapsed) {
+      state.rankingCollapsed = collapsed;
+      sessionStorage.setItem("rankingCollapsed", String(collapsed));
+      ui.rankingPanel.classList.toggle("collapsed", collapsed);
+      ui.rankToggle.textContent = collapsed ? "보기" : "숨김";
+      ui.rankingTitle.textContent = collapsed ? "랭킹 보기" : "랭킹";
+    }
+
+    function cooldownText() {
+      const left = HIDE_COOLDOWN - (Date.now() - state.lastHideAt);
+      if (left <= 0) return "숨기 OK";
+      const min = Math.floor(left / 60000);
+      const sec = Math.ceil((left % 60000) / 1000);
+      return `숨기 ${min}:${String(sec).padStart(2, "0")}`;
+    }
+
+    function canHide() {
+      return Date.now() - state.lastHideAt >= HIDE_COOLDOWN;
+    }
+
+    function resetCombo() {
+      state.combo = 0;
+      state.comboLastInputAt = 0;
+    }
+
+    function touchComboInput() {
+      if (state.combo > 0) state.comboLastInputAt = performance.now();
+    }
+
+    function addCombo() {
+      state.combo += 1;
+      state.comboLastInputAt = performance.now();
+    }
+
+    function updateComboTimeout() {
+      if (state.combo > 0 && performance.now() - state.comboLastInputAt >= COMBO_TIMEOUT) {
+        resetCombo();
+      }
+    }
+
+    function setShield(target) {
+      target.shield = true;
+      target.shieldUntil = performance.now() + SHIELD_DURATION;
+    }
+
+    function clearShield(target) {
+      target.shield = false;
+      target.shieldUntil = 0;
+    }
+
+    function hasShield(target) {
+      if (!target.shield) return false;
+      if (performance.now() <= (target.shieldUntil || 0)) return true;
+      clearShield(target);
+      return false;
+    }
+
+    function shieldSecondsLeft(target) {
+      if (!hasShield(target)) return 0;
+      return Math.max(1, Math.ceil((target.shieldUntil - performance.now()) / 1000));
+    }
+
+    function addTrail(entity, floor, color) {
+      state.trails.push({
+        id: entity.id,
+        floor,
+        color,
+        start: performance.now(),
+        duration: 360
+      });
+      state.trails = state.trails.slice(-36);
+    }
+
+    function addBoulderEffect(fromFloor, toFloor, hits) {
+      state.effects.push({
+        type: "boulder",
+        fromFloor,
+        toFloor,
+        hits,
+        start: performance.now(),
+        duration: 900
+      });
+    }
+
+    function addMissileEffect(fromFloor, targetFloor, targetId, landedFloor, hit, targetKind = "bot", sourceId = "YOU", targetName = targetId) {
+      state.effects.push({
+        type: "missile",
+        fromFloor,
+        targetFloor,
+        targetId,
+        targetName,
+        targetKind,
+        sourceId,
+        landedFloor,
+        hit,
+        resolved: false,
+        start: performance.now(),
+        duration: 920
+      });
+    }
+
+    function resetRunState() {
+      state.player.hidden = false;
+      clearShield(state.player);
+      state.player.stunnedUntil = 0;
+      resetCombo();
+      state.rewardedMilestones.clear();
+      state.rewardedLifeMilestones.clear();
+      state.trails = [];
+      state.effects = [];
+    }
+
+    function addRandomItem() {
+      const item = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+      const emptyIndex = state.inventory.findIndex((slot) => !slot);
+      const index = emptyIndex >= 0 ? emptyIndex : 0;
+      state.inventory[index] = item;
+      showNotice(`${item.name} 아이템 획득!`);
+      addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 ${item.name} 아이템을 얻었습니다.`);
+    }
+
+    function grantTestItems() {
+      if (!TEST_ITEMS_ENABLED) return;
+      state.inventory = [0, 1, 2].map(() => {
+        const item = ITEMS[state.testItemCursor % ITEMS.length];
+        state.testItemCursor += 1;
+        return item;
+      });
+      showNotice("테스트 아이템 3개 지급!");
+    }
+
+    function checkItemReward(previousFloor, nextFloor) {
+      const previousMilestone = Math.floor(previousFloor / 100);
+      const nextMilestone = Math.floor(nextFloor / 100);
+      for (let milestone = previousMilestone + 1; milestone <= nextMilestone; milestone++) {
+        if (milestone > 0 && !state.rewardedMilestones.has(milestone)) {
+          state.rewardedMilestones.add(milestone);
+          addRandomItem();
+        }
+      }
+    }
+
+    function checkLifeReward(previousFloor, nextFloor) {
+      const previousMilestone = Math.floor(previousFloor / LIFE_REWARD_INTERVAL);
+      const nextMilestone = Math.floor(nextFloor / LIFE_REWARD_INTERVAL);
+      for (let milestone = previousMilestone + 1; milestone <= nextMilestone; milestone++) {
+        if (milestone > 0 && !state.rewardedLifeMilestones.has(milestone)) {
+          state.rewardedLifeMilestones.add(milestone);
+          state.lives += 1;
+          showNotice(`${milestone * LIFE_REWARD_INTERVAL}층 보너스: 목숨 +1`);
+          addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 목숨을 1개 얻었습니다.`);
+        }
+      }
+    }
+
+    function applyStun(target, ms, source) {
+      if (hasShield(target)) {
+        clearShield(target);
+        showNotice(`${target.id} 보호막이 ${source}을 막았습니다.`);
+        addChat("SYSTEM", "--", `${target.id} 보호막이 ${source}을 막았습니다.`);
+        return false;
+      }
+      target.stunnedUntil = performance.now() + ms;
+      return true;
+    }
+
+    function nearestLowerSamePositionFloor(fromFloor) {
+      const currentX = stairPosition(fromFloor).x;
+      for (let floor = fromFloor - 1; floor >= 0; floor--) {
+        if (stairPosition(floor).x === currentX) return floor;
+      }
+      return 0;
+    }
+
+    function resolveMissileHit(effect) {
+      if (effect.resolved) return;
+      effect.resolved = true;
+      const target = effect.targetKind === "player"
+        ? state.player
+        : effect.targetKind === "remote"
+          ? state.remotePlayers.find((player) => player.onlineId === effect.targetId)
+          : state.bots.find((bot) => bot.id === effect.targetId);
+      if (!target) {
+        addChat("SYSTEM", "--", `미사일 소멸: ${effect.targetName} 대상 없음`);
+        return;
+      }
+
+      const targetFloor = target.floor;
+      const landedFloor = nearestLowerSamePositionFloor(targetFloor);
+      if (effect.targetKind === "remote") {
+        attackRemote(target, `${effect.sourceId}의 미사일에 맞아 0층으로 떨어졌습니다.`);
+        effect.hit = true;
+        effect.landedFloor = landedFloor;
+        effect.targetFloor = targetFloor;
+        showNotice(`${effect.sourceId} 미사일이 ${target.id}에게 명중!`);
+        addChat("SYSTEM", "--", `미사일 명중: ${effect.sourceId} -> ${target.id}`);
+        return;
+      }
+      if (applyStun(target, 3000, "미사일")) {
+        target.floor = landedFloor;
+        target.hidden = false;
+        if (target === state.player) state.flash = 1;
+        effect.hit = true;
+        effect.landedFloor = landedFloor;
+        effect.targetFloor = targetFloor;
+        showNotice(`${effect.sourceId} 미사일이 ${target.id || "플레이어"}에게 명중!`);
+        addChat("SYSTEM", "--", `미사일 명중: ${effect.sourceId} -> ${target.id || "플레이어"}, ${targetFloor}층에서 ${landedFloor}층으로 추락`);
+      } else {
+        effect.hit = false;
+        effect.landedFloor = targetFloor;
+        effect.targetFloor = targetFloor;
+        addChat("SYSTEM", "--", `미사일 방어: ${target.id || "플레이어"} 보호막`);
+      }
+    }
+
+    function useItem(index) {
+      if (state.mode !== "play") return;
+      if (performance.now() < state.player.stunnedUntil) {
+        showNotice("스턴 중에는 아이템을 쓸 수 없습니다.");
+        return;
+      }
+      const item = state.inventory[index];
+      if (!item) {
+        showNotice(`${index + 1}번 아이템칸이 비어 있습니다.`);
+        return;
+      }
+      state.inventory[index] = null;
+
+      if (item.type === "boulder") {
+        const minFloor = Math.max(0, state.player.floor - 100);
+        let hits = 0;
+        const hitNames = [];
+        for (const target of opponents()) {
+          if (target.floor >= minFloor && target.floor <= state.player.floor) {
+            if (target.onlineId) {
+              stunRemote(target, "낙석", 3000);
+              hits += 1;
+              hitNames.push(target.id);
+            } else if (applyStun(target, 3000, "낙석")) {
+              hits += 1;
+              hitNames.push(target.id);
+            }
+          }
+        }
+        addBoulderEffect(state.player.floor, minFloor, hits);
+        showNotice(`낙석 사용: ${hits}명 스턴`);
+        addChat("SYSTEM", "--", `낙석 발동: ${state.player.floor}층부터 ${minFloor}층까지 타격, ${hits ? hitNames.join(", ") : "명중 없음"}`);
+      }
+
+      if (item.type === "warp") {
+        const previousFloor = state.player.floor;
+        state.player.floor += 100;
+        state.player.hidden = false;
+        addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
+        state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 640 };
+        checkItemReward(previousFloor, state.player.floor);
+        checkLifeReward(previousFloor, state.player.floor);
+        showNotice("100층 위로 워프했습니다.");
+        syncOnlineState();
+      }
+
+      if (item.type === "shield") {
+        setShield(state.player);
+        showNotice("보호막이 5초간 활성화되었습니다.");
+        syncOnlineState();
+      }
+
+      if (item.type === "hideReset") {
+        state.lastHideAt = -HIDE_COOLDOWN;
+        showNotice("숨기 쿨타임이 초기화되었습니다.");
+      }
+
+      if (item.type === "missile") {
+        const target = opponents()
+          .filter((bot) => bot.floor >= state.player.floor)
+          .sort((a, b) => a.floor - b.floor)[0]
+          || opponents().slice().sort((a, b) => Math.abs(a.floor - state.player.floor) - Math.abs(b.floor - state.player.floor))[0];
+        if (!target) {
+          showNotice("미사일 대상이 없습니다.");
+          addMissileEffect(state.player.floor, state.player.floor + 8, "없음", state.player.floor + 8, false, "bot", state.player.id || "YOU");
+          addChat("SYSTEM", "--", "미사일 발동: 대상 없음");
+          return;
+        }
+        addMissileEffect(state.player.floor, target.floor, target.onlineId || target.id, target.floor, false, target.onlineId ? "remote" : "bot", state.player.id || "YOU", target.id);
+        showNotice(`${target.id}에게 미사일 발사!`);
+        addChat("SYSTEM", "--", `미사일 발사: ${state.player.id || "플레이어"} -> ${target.id}`);
+      }
+    }
+
+    function botUseItem(bot, now) {
+      if (!bot.inventory.length || now < bot.nextItemAt || now < bot.stunnedUntil || state.mode !== "play") return;
+      const item = bot.inventory.shift();
+      bot.nextItemAt = now + 12000 + Math.random() * 18000;
+      bot.inventory.push(ITEMS[Math.floor(Math.random() * ITEMS.length)]);
+
+      if (item.type === "boulder") {
+        const minFloor = Math.max(0, bot.floor - 100);
+        const hit = state.player.floor >= minFloor && state.player.floor <= bot.floor;
+        addBoulderEffect(bot.floor, minFloor, hit ? 1 : 0);
+        if (hit && applyStun(state.player, 3000, "낙석")) {
+          showNotice(`${bot.id} 낙석에 맞아 스턴!`);
+          addChat("SYSTEM", "--", `${bot.id} 낙석 발동: 플레이어 스턴`);
+        } else {
+          addChat("SYSTEM", "--", `${bot.id} 낙석 발동: 명중 없음`);
+        }
+      }
+
+      if (item.type === "missile") {
+        const fromFloor = bot.floor;
+        const targetFloor = state.player.floor;
+        addMissileEffect(fromFloor, targetFloor, state.player.id || "YOU", targetFloor, false, "player", bot.id);
+        showNotice(`${bot.id} 미사일 발사!`);
+        addChat("SYSTEM", "--", `${bot.id} 미사일 발사: 플레이어를 향해 날아옵니다.`);
+      }
+
+      if (item.type === "shield") {
+        setShield(bot);
+        addChat("SYSTEM", "--", `${bot.id} 보호막 5초 사용`);
+      }
+
+      if (item.type === "warp") {
+        const previousFloor = bot.floor;
+        bot.floor += 100;
+        bot.hidden = false;
+        addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
+        addChat("SYSTEM", "--", `${bot.id} 100층 워프`);
+      }
+
+      if (item.type === "hideReset") {
+        bot.hidden = true;
+        bot.nextMoveAt = now + 900 + Math.random() * 1200;
+        addChat("SYSTEM", "--", `${bot.id} 은신 준비`);
+      }
+    }
+
+    function absorbDanger(reason) {
+      if (!hasShield(state.player)) return false;
+      clearShield(state.player);
+      state.player.hidden = false;
+      showNotice(`보호막으로 방어했습니다: ${reason}`);
+      addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님의 보호막이 공격을 막았습니다.`);
+      return true;
+    }
+
+    function respawnAtZero(reason) {
+      if (absorbDanger(reason)) return;
+      if (state.lives > 0) {
+        state.lives -= 1;
+        resetCombo();
+        state.player.hidden = false;
+        state.flash = 0.45;
+        showNotice(`목숨을 사용해 버텼습니다. 남은 목숨 ${state.lives}`);
+        addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 목숨을 사용해 추락을 막았습니다.`);
+        syncOnlineState();
+        return;
+      }
+      state.mode = "play";
+      state.player.floor = 0;
+      resetRunState();
+      state.flash = 1;
+      state.climbFlash = { floor: -1, start: 0, duration: 0 };
+      joinScreen.classList.add("hidden");
+      showNotice(reason);
+      addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 0층에서 다시 시작합니다.`);
+      syncOnlineState();
+    }
+
+    function startGame(id, country) {
+      state.mode = "play";
+      state.player.id = id;
+      state.player.country = country;
+      state.player.floor = 0;
+      state.kills = 0;
+      state.lives = 0;
+      resetRunState();
+      state.inventory = [null, null, null];
+      state.lastHideAt = -HIDE_COOLDOWN;
+      resetBots();
+      joinScreen.classList.add("hidden");
+      sessionStorage.setItem("stairProfile", JSON.stringify({ id, country }));
+      showNotice("게임 시작!");
+      addChat("SYSTEM", "--", `${id}님이 입장했습니다.`);
+      connectOnline();
+    }
+
+    function restoreSessionProfile() {
+      const saved = sessionStorage.getItem("stairProfile");
+      if (!saved) return false;
+      try {
+        const profile = JSON.parse(saved);
+        if (!profile.id || !profile.country) return false;
+        state.mode = "play";
+        state.player.id = String(profile.id).slice(0, 14);
+        state.player.country = String(profile.country).slice(0, 3);
+        state.player.floor = 0;
+        state.kills = 0;
+        state.lives = 0;
+        resetRunState();
+        joinScreen.classList.add("hidden");
+        addChat("SYSTEM", "--", `${state.player.id}님이 세션으로 재입장했습니다.`);
+        connectOnline();
+        return true;
+      } catch (error) {
+        sessionStorage.removeItem("stairProfile");
+        return false;
+      }
+    }
+
+    function knockDownBot(bot, reason) {
+      bot.floor = 0;
+      bot.hidden = false;
+      bot.stunnedUntil = performance.now() + 1800;
+      state.kills += 1;
+      showNotice(`${bot.id} ${reason}`);
+      addChat("SYSTEM", "--", `${bot.id} ${reason}`);
+    }
+
+    function tryHide() {
+      if (state.mode !== "play") return;
+      if (performance.now() < state.player.stunnedUntil) {
+        showNotice("스턴 중입니다.");
+        return;
+      }
+      if (state.player.hidden) {
+        showNotice("이미 숨어 있습니다.");
+        return;
+      }
+      if (!TEST_ITEMS_ENABLED && !canHide()) {
+        showNotice(`${cooldownText()} 후 다시 숨을 수 있습니다.`);
+        return;
+      }
+      state.lastHideAt = Date.now();
+      state.player.hidden = true;
+      showNotice(`${state.player.floor}층에 숨었습니다.`);
+      syncOnlineState();
+    }
+
+    function knockDownOpponent(victim, reason) {
+      if (!victim) return;
+      if (victim.onlineId) {
+        showNotice(`${victim.id} ${reason}`);
+        addChat("SYSTEM", "--", `${victim.id} ${reason}`);
+        attackRemote(victim, `${state.player.id || "플레이어"}에게 ${reason}`);
+        return;
+      }
+      knockDownBot(victim, reason);
+    }
+
+    function climb(inputDir) {
+      if (state.mode !== "play") return;
+      if (performance.now() < state.player.stunnedUntil) {
+        showNotice("스턴 중입니다.");
+        return;
+      }
+      const expected = directionForNextFloor(state.player.floor);
+      const wasHidden = state.player.hidden;
+      const previousFloor = state.player.floor;
+
+      if (expected !== inputDir) {
+        respawnAtZero("계단 방향을 놓쳐 0층으로 떨어졌습니다.");
+        return;
+      }
+
+      state.player.floor += 1;
+      state.player.hidden = false;
+      addCombo();
+      playFootstep();
+      addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
+      state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 520 };
+      checkItemReward(previousFloor, state.player.floor);
+      checkLifeReward(previousFloor, state.player.floor);
+      syncOnlineState();
+
+      if (isRestFloor(state.player.floor)) {
+        showNotice(`${state.player.floor}층 휴식공간입니다.`);
+      } else if (wasHidden) {
+        const victim = opponents().find((opponent) => Math.abs(opponent.floor - state.player.floor) <= 1 && !opponent.hidden);
+        if (victim) knockDownOpponent(victim, "기습 성공으로 0층 추락");
+        else showNotice("기습 이동!");
+      } else {
+        const victim = opponents().find((opponent) => opponent.floor === state.player.floor && !opponent.hidden);
+        if (victim) knockDownOpponent(victim, "따라잡혀 0층 추락");
+      }
+    }
+
+    function handleKey(event) {
+      if (document.activeElement === chatInput) return;
+      const key = event.key || event.code;
+      const code = event.code || event.key;
+      if (event.code === "Digit0" || event.code === "Numpad0") {
+        event.preventDefault();
+        touchComboInput();
+        grantTestItems();
+        return;
+      }
+      if (["Digit1", "Digit2", "Digit3", "Numpad1", "Numpad2", "Numpad3"].includes(event.code)) {
+        event.preventDefault();
+        touchComboInput();
+        const index = Number(event.code.slice(-1)) - 1;
+        useItem(index);
+        return;
+      }
+      const isDown = key === "ArrowDown" || code === "ArrowDown" || key === "Down" || code === "Down";
+      const isRight = key === "ArrowRight" || code === "ArrowRight" || key === "Right" || code === "Right";
+      const isUp = key === "ArrowUp" || code === "ArrowUp" || key === "Up" || code === "Up";
+      const isLeft = key === "ArrowLeft" || code === "ArrowLeft" || key === "Left" || code === "Left";
+      if (!isDown && !isRight && !isUp && !isLeft) return;
+      event.preventDefault();
+      touchComboInput();
+      if (isDown) tryHide();
+      else if (isRight) climb("R");
+      else if (isUp) climb("U");
+      else climb("L");
+    }
+
+    function updateBots(now) {
+      if (state.mode !== "play") return;
+      if (state.online.connected) return;
+      for (const bot of state.bots) {
+        const nearPlayer = Math.abs(bot.floor - state.player.floor) <= 45;
+        if (nearPlayer || Math.random() < 0.01) botUseItem(bot, now);
+        if (now < bot.nextMoveAt || now < bot.stunnedUntil) continue;
+        const delay = bot.baseSpeed * bot.rhythm + Math.random() * 720;
+        bot.nextMoveAt = now + delay;
+
+        if (Math.random() < bot.hesitation) {
+          bot.nextMoveAt += 450 + Math.random() * 950;
+          continue;
+        }
+
+        if (Math.random() < 0.045 && !bot.hidden) {
+          bot.hidden = true;
+          bot.nextMoveAt += 900 + Math.random() * 1300;
+          continue;
+        }
+
+        const previousFloor = bot.floor;
+        if (Math.random() < bot.mistake) {
+          bot.floor = Math.max(0, bot.floor - 1);
+          bot.hidden = false;
+          addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
+          continue;
+        }
+        bot.floor += 1;
+        addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
+        const cameOut = bot.hidden;
+        bot.hidden = false;
+
+        if (isRestFloor(state.player.floor)) {
+          continue;
+        }
+
+        if (cameOut && Math.abs(bot.floor - state.player.floor) <= 1 && !state.player.hidden) {
+          respawnAtZero(`${bot.id}의 기습을 받아 0층으로 떨어졌습니다.`);
+          break;
+        } else if (bot.floor === state.player.floor && !state.player.hidden) {
+          respawnAtZero(`${bot.id}에게 따라잡혀 0층으로 떨어졌습니다.`);
+          break;
+        }
+
+        if (bot.floor > state.player.floor + 55) bot.floor = Math.max(0, state.player.floor - 6);
+        if (bot.floor < state.player.floor - 24) {
+          bot.floor = state.player.floor + 8 + Math.floor(Math.random() * 24);
+          bot.hidden = false;
+          bot.nextMoveAt = now + 650 + Math.random() * 1300;
+        }
+      }
+    }
+
+    function screenPosition(floor, focusFloor, width, height) {
+      const pos = stairPosition(floor);
+      const focus = stairPosition(focusFloor);
+      return {
+        x: width * 0.5 + (pos.x - focus.x) * STEP_X,
+        y: height * 0.68 - (pos.y - focus.y) * STEP_Y
+      };
+    }
+
+    function drawBar(x, y, active, glowAmount, rest) {
+      ctx.save();
+      ctx.translate(x, y);
+      const width = rest ? BAR_W * 2.9 : BAR_W;
+      if (glowAmount > 0) {
+        ctx.shadowColor = "#fff0b8";
+        ctx.shadowBlur = 8 + glowAmount * 24;
+      }
+      ctx.fillStyle = rest ? "#4c8f78" : glowAmount > 0 ? `rgba(255, 243, 176, ${0.34 + glowAmount * 0.66})` : active ? varColor("--bar-active") : varColor("--bar");
+      ctx.strokeStyle = rest ? "#92e2c2" : glowAmount > 0 || active ? "#ffe1a4" : "rgba(255,255,255,0.18)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(-width / 2, -BAR_H / 2, width, BAR_H, 4);
+      ctx.fill();
+      ctx.stroke();
+      if (glowAmount > 0) {
+        ctx.globalAlpha = 0.28 * glowAmount;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.roundRect(-width / 2 - 8, -BAR_H / 2 - 5, width + 16, BAR_H + 10, 7);
+        ctx.fill();
+      }
+      if (rest) {
+        ctx.globalAlpha = 0.92;
+        ctx.fillStyle = "#d8fff0";
+        ctx.font = "900 11px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText("REST", 0, -10);
+      }
+      ctx.restore();
+    }
+
+    function drawRunner(entity, x, y, color, alpha = 1, selfView = false) {
+      if (entity.hidden && !selfView) return;
+      const label = `${entity.id} ${entity.floor}F`;
+      ctx.save();
+      ctx.translate(x, y - 22);
+      const visibleAlpha = entity.hidden && selfView ? Math.min(alpha, 0.42) : alpha;
+      ctx.globalAlpha = visibleAlpha;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(-16, -16, 32, 32, 7);
+      ctx.fill();
+      if (hasShield(entity)) {
+        ctx.strokeStyle = "#fff3b0";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(-21, -21, 42, 42);
+      }
+      ctx.globalAlpha = visibleAlpha;
+      ctx.fillStyle = varColor("--text");
+      ctx.font = "800 12px system-ui";
+      ctx.textAlign = "center";
+      if (visibleAlpha > 0.55) ctx.fillText(performance.now() < (entity.stunnedUntil || 0) ? "STUN" : label, 0, -24);
+      ctx.restore();
+    }
+
+    function drawEffects(focus, width, height, now) {
+      state.effects = state.effects.filter((effect) => now - effect.start < effect.duration);
+      for (const effect of state.effects) {
+        const t = Math.max(0, Math.min(1, (now - effect.start) / effect.duration));
+
+        if (effect.type === "boulder") {
+          const startP = screenPosition(effect.fromFloor, focus, width, height);
+          const endP = screenPosition(effect.toFloor, focus, width, height);
+          const y = startP.y + (endP.y - startP.y) * t;
+          const pulse = Math.sin(t * Math.PI);
+          ctx.save();
+          ctx.globalAlpha = 0.18 + pulse * 0.42;
+          ctx.strokeStyle = "#9a9fa8";
+          ctx.lineWidth = 10;
+          ctx.beginPath();
+          ctx.moveTo(startP.x, startP.y - 80);
+          ctx.lineTo(endP.x, endP.y + 20);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = "#6b7078";
+          ctx.strokeStyle = "#d8dde5";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(startP.x, y - 42, 18 + pulse * 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#f5f1e8";
+          ctx.font = "900 12px system-ui";
+          ctx.textAlign = "center";
+          ctx.fillText(`낙석 ${effect.hits}명`, startP.x, y - 72);
+          ctx.restore();
+        }
+
+        if (effect.type === "missile") {
+          const startP = screenPosition(effect.fromFloor, focus, width, height);
+          const liveTarget = effect.targetKind === "player"
+            ? state.player
+            : effect.targetKind === "remote"
+              ? state.remotePlayers.find((player) => player.onlineId === effect.targetId)
+              : state.bots.find((bot) => bot.id === effect.targetId);
+          const liveTargetFloor = liveTarget ? liveTarget.floor : effect.targetFloor;
+          const targetP = screenPosition(liveTargetFloor, focus, width, height);
+          const x = startP.x + (targetP.x - startP.x) * t;
+          const y = startP.y + (targetP.y - startP.y) * t - Math.sin(t * Math.PI) * 70;
+          if (t >= 0.78 && !effect.resolved) resolveMissileHit(effect);
+          ctx.save();
+          ctx.strokeStyle = effect.resolved && !effect.hit ? "#aeb6c4" : "#ff626f";
+          ctx.lineWidth = 4;
+          ctx.globalAlpha = 0.75;
+          ctx.beginPath();
+          ctx.moveTo(startP.x, startP.y - 26);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = effect.resolved && !effect.hit ? "#aeb6c4" : "#ff626f";
+          ctx.beginPath();
+          ctx.roundRect(x - 18, y - 7, 36, 14, 7);
+          ctx.fill();
+          if (t > 0.72) {
+            const boom = (t - 0.72) / 0.28;
+            ctx.globalAlpha = Math.max(0, 1 - boom);
+            ctx.strokeStyle = "#fff3b0";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(targetP.x, targetP.y - 24, 16 + boom * 42, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = "#f5f1e8";
+            ctx.font = "900 12px system-ui";
+            ctx.textAlign = "center";
+            ctx.fillText(effect.resolved ? (effect.hit ? `${effect.targetName} 명중` : "방어/실패") : "접근 중", targetP.x, targetP.y - 72);
+          }
+          ctx.restore();
+        }
+      }
+    }
+
+    function varColor(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function renderGame() {
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+      ctx.clearRect(0, 0, width, height);
+
+      if (state.flash > 0) {
+        ctx.fillStyle = `rgba(255, 100, 111, ${state.flash * 0.28})`;
+        ctx.fillRect(0, 0, width, height);
+        state.flash = Math.max(0, state.flash - 0.025);
+      }
+
+      const focus = state.mode === "play" ? state.player.floor : 0;
+      const start = Math.max(0, focus - 8);
+      const end = focus + 30;
+      const now = performance.now();
+      for (let floor = start; floor <= end; floor++) {
+        const p = screenPosition(floor, focus, width, height);
+        let glowAmount = 0;
+        if (floor === state.climbFlash.floor && state.climbFlash.duration > 0) {
+          const t = (now - state.climbFlash.start) / state.climbFlash.duration;
+          if (t >= 0 && t <= 1) glowAmount = Math.sin(t * Math.PI);
+        }
+        drawBar(p.x, p.y, floor === focus, glowAmount, isRestFloor(floor));
+      }
+
+      state.trails = state.trails.filter((trail) => now - trail.start < trail.duration);
+      for (const trail of state.trails) {
+        if (Math.abs(trail.floor - focus) > 30) continue;
+        const age = (now - trail.start) / trail.duration;
+        const p = screenPosition(trail.floor, focus, width, height);
+        drawRunner({ id: trail.id, floor: trail.floor, hidden: false, stunnedUntil: 0 }, p.x, p.y, trail.color, (1 - age) * 0.34);
+      }
+
+      for (const opponent of opponents()) {
+        if (Math.abs(opponent.floor - focus) > 30) continue;
+        const p = screenPosition(opponent.floor, focus, width, height);
+        drawRunner(opponent, p.x, p.y, varColor("--bot"));
+      }
+
+      const pp = screenPosition(state.player.floor, focus, width, height);
+      const playerLabel = state.player.id ? state.player : { id: "YOU", floor: 0, hidden: false };
+      drawRunner(playerLabel, pp.x, pp.y, varColor("--player"), 1, true);
+
+      drawEffects(focus, width, height, now);
+    }
+
+    function renderHud() {
+      updateComboTimeout();
+      ui.rankingPanel.classList.toggle("collapsed", state.rankingCollapsed);
+      ui.floor.textContent = `${state.player.floor}F`;
+      ui.combo.textContent = `COMBO x${state.combo}`;
+      ui.combo.classList.toggle("active", state.combo > 0);
+      ui.playerLabel.textContent = state.player.id ? `${state.player.id} / ${state.player.country}` : "ID 없음";
+      ui.block.textContent = `${Math.floor(state.player.floor / SEGMENT_SIZE) + 1}구간`;
+      ui.kills.textContent = `킬 ${state.kills}`;
+      ui.lives.textContent = `목숨 ${state.lives}`;
+      ui.onlineStatus.textContent = state.online.connected ? `온라인 ${state.remotePlayers.length + 1}명` : state.online.enabled ? "서버 연결 중" : "오프라인";
+      const stunned = Math.max(0, state.player.stunnedUntil - performance.now());
+      const shieldLeft = shieldSecondsLeft(state.player);
+      ui.cooldown.textContent = stunned > 0 ? `스턴 ${Math.ceil(stunned / 1000)}초` : state.player.hidden ? "은신 중" : shieldLeft > 0 ? `보호막 ${shieldLeft}초` : cooldownText();
+
+      state.inventory.forEach((item, index) => {
+        ui.itemSlots[index].classList.toggle("ready", Boolean(item));
+        ui.itemSlots[index].innerHTML = `<span class="item-key">${index + 1}</span> ${item ? escapeHtml(item.name) : "빈칸"}`;
+      });
+
+      const players = [state.player, ...opponents()]
+        .filter((player) => player.id)
+        .slice()
+        .sort((a, b) => b.floor - a.floor);
+
+      ui.rankRows.innerHTML = players.map((player) => (
+        `<div class="rank-row">
+          <span class="rank-id">${escapeHtml(player.id)}</span>
+          <span>${escapeHtml(player.country)}</span>
+          <span class="rank-floor">${player.floor}F</span>
+        </div>`
+      )).join("");
+
+      if (performance.now() > state.noticeUntil) {
+        ui.notice.innerHTML = "<strong>조작</strong><br>&larr; 왼쪽 위 계단 / &uarr; 머리 위 계단 / &rarr; 오른쪽 계단 / &darr; 숨기 / 1,2,3 아이템 / 0 테스트 지급";
+      }
+    }
+
+    function tick(now) {
+      updateBots(now);
+      renderGame();
+      renderHud();
+      requestAnimationFrame(tick);
+    }
+
+    joinForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const id = document.getElementById("playerId").value.trim().replace(/\s+/g, "_");
+      const country = document.getElementById("country").value;
+      if (!id) return;
+      startGame(id, country);
+    });
+
+    chatForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const text = chatInput.value.trim();
+      if (!text || !state.player.id) return;
+      if (state.online.connected) {
+        postOnline("/api/chat", { onlineId: state.online.onlineId, text });
+      } else {
+        addChat(state.player.id, state.player.country, text);
+      }
+      chatInput.value = "";
+    });
+
+    ui.rankToggle.addEventListener("click", () => {
+      setRankingCollapsed(!state.rankingCollapsed);
+    });
+
+    resetBots();
+    restoreSessionProfile();
+    resize();
+    renderChat();
+    setRankingCollapsed(state.rankingCollapsed);
+    renderHud();
+    window.addEventListener("resize", resize);
+    window.addEventListener("keydown", handleKey, { passive: false, capture: true });
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
