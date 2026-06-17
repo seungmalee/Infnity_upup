@@ -587,7 +587,7 @@
 
     <div class="notice" id="notice">
       <strong>조작</strong><br>
-      &larr; 왼쪽 위 계단 / &uarr; 머리 위 계단 / &rarr; 오른쪽 계단 / &darr; 숨기 / 1,2,3 아이템 / 0 테스트 지급
+      &larr; 왼쪽 위 계단 / &uarr; 머리 위 계단 / &rarr; 오른쪽 계단 / &darr; 숨기 / 1,2,3 아이템
     </div>
   </div>
 
@@ -631,6 +631,10 @@
     const COMBO_TIMEOUT = 3000;
     const SHIELD_DURATION = 5000;
     const LIFE_REWARD_INTERVAL = 250;
+    const BOULDER_STUN = 1000;
+    const MISSILE_STUN = 3000;
+    const MISSILE_DURATION = 1800;
+    const MISSILE_HIT_AT = 0.9;
     const PROFILE_KEY = "stairProfile";
     const BOT_DATA = [
       ["NOVA", "US"],
@@ -653,7 +657,6 @@
       { type: "missile", name: "미사일" }
     ];
     const FOOTSTEP_SOUND_URL = "";
-    const TEST_ITEMS_ENABLED = true;
     const footstepPool = FOOTSTEP_SOUND_URL ? Array.from({ length: 4 }, () => {
       const audio = new Audio(FOOTSTEP_SOUND_URL);
       audio.preload = "auto";
@@ -708,7 +711,16 @@
 
     function displayName(player) {
       if (!player || !player.id) return "ID 없음";
-      return `${flagEmoji(player.country)} ${player.id}`;
+      const title = titleForFloor(Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)));
+      return `${title ? `${title} ` : ""}${flagEmoji(player.country)} ${player.id}`;
+    }
+
+    function titleForFloor(floor) {
+      if (floor >= 3000) return "건휘친구";
+      if (floor >= 1500) return "점육점";
+      if (floor >= 1000) return "까망이";
+      if (floor >= 500) return "누랭이";
+      return "";
     }
 
     function escapeHtml(text) {
@@ -850,7 +862,7 @@
         hesitation: 0.08 + Math.random() * 0.12,
         mistake: 0.025 + Math.random() * 0.045,
         inventory: [ITEMS[Math.floor(Math.random() * ITEMS.length)]],
-        nextItemAt: now + 5000 + Math.random() * 10000,
+        nextItemAt: now + 18000 + Math.random() * 24000,
         stunnedUntil: 0
       }));
     }
@@ -876,7 +888,7 @@
           hesitation: 0.08 + Math.random() * 0.12,
           mistake: 0.025 + Math.random() * 0.045,
           inventory: [ITEMS[Math.floor(Math.random() * ITEMS.length)]],
-          nextItemAt: now + 5000 + Math.random() * 10000,
+          nextItemAt: now + 18000 + Math.random() * 24000,
           stunnedUntil: 0
         });
       }
@@ -1203,7 +1215,7 @@
         hit,
         resolved: false,
         start: performance.now(),
-        duration: 920
+        duration: MISSILE_DURATION
       });
     }
 
@@ -1225,17 +1237,6 @@
       state.inventory[index] = item;
       showNotice(`${item.name} 아이템 획득!`);
       addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 ${item.name} 아이템을 얻었습니다.`);
-      saveSessionProfile();
-    }
-
-    function grantTestItems() {
-      if (!TEST_ITEMS_ENABLED) return;
-      state.inventory = [0, 1, 2].map(() => {
-        const item = ITEMS[state.testItemCursor % ITEMS.length];
-        state.testItemCursor += 1;
-        return item;
-      });
-      showNotice("테스트 아이템 3개 지급!");
       saveSessionProfile();
     }
 
@@ -1307,7 +1308,7 @@
         addChat("SYSTEM", "--", `미사일 명중: ${effect.sourceId} -> ${target.id}`);
         return;
       }
-      if (applyStun(target, 3000, "미사일")) {
+      if (applyStun(target, MISSILE_STUN, "미사일")) {
         target.floor = landedFloor;
         target.hidden = false;
         if (target === state.player) state.flash = 1;
@@ -1345,10 +1346,10 @@
         for (const target of opponents()) {
           if (target.floor >= minFloor && target.floor <= state.player.floor) {
             if (target.onlineId) {
-              stunRemote(target, "낙석", 3000);
+              stunRemote(target, "낙석", BOULDER_STUN);
               hits += 1;
               hitNames.push(target.id);
-            } else if (applyStun(target, 3000, "낙석")) {
+            } else if (applyStun(target, BOULDER_STUN, "낙석")) {
               hits += 1;
               hitNames.push(target.id);
             }
@@ -1385,13 +1386,11 @@
 
       if (item.type === "missile") {
         const target = opponents()
-          .filter((bot) => bot.floor >= state.player.floor)
-          .sort((a, b) => a.floor - b.floor)[0]
-          || opponents().slice().sort((a, b) => Math.abs(a.floor - state.player.floor) - Math.abs(b.floor - state.player.floor))[0];
+          .filter((opponent) => opponent.floor === state.player.floor + 1 && !opponent.hidden)
+          .sort((a, b) => a.id.localeCompare(b.id))[0];
         if (!target) {
-          showNotice("미사일 대상이 없습니다.");
-          addMissileEffect(state.player.floor, state.player.floor + 8, "없음", state.player.floor + 8, false, "bot", state.player.id || "YOU");
-          addChat("SYSTEM", "--", "미사일 발동: 대상 없음");
+          showNotice("바로 위 층에 미사일 대상이 없습니다.");
+          addChat("SYSTEM", "--", "미사일 발동 실패: 바로 위 층 대상 없음");
           saveSessionProfile();
           return;
         }
@@ -1405,14 +1404,14 @@
     function botUseItem(bot, now) {
       if (!bot.inventory.length || now < bot.nextItemAt || now < bot.stunnedUntil || state.mode !== "play") return;
       const item = bot.inventory.shift();
-      bot.nextItemAt = now + 12000 + Math.random() * 18000;
+      bot.nextItemAt = now + 30000 + Math.random() * 45000;
       bot.inventory.push(ITEMS[Math.floor(Math.random() * ITEMS.length)]);
 
       if (item.type === "boulder") {
         const minFloor = Math.max(0, bot.floor - 100);
         const hit = state.player.floor >= minFloor && state.player.floor <= bot.floor;
         addBoulderEffect(bot.floor, minFloor, hit ? 1 : 0);
-        if (hit && applyStun(state.player, 3000, "낙석")) {
+        if (hit && applyStun(state.player, BOULDER_STUN, "낙석")) {
           showNotice(`${bot.id} 낙석에 맞아 스턴!`);
           addChat("SYSTEM", "--", `${bot.id} 낙석 발동: 플레이어 스턴`);
         } else {
@@ -1421,6 +1420,10 @@
       }
 
       if (item.type === "missile") {
+        if (state.player.floor !== bot.floor + 1 || state.player.hidden) {
+          addChat("SYSTEM", "--", `${bot.id} 미사일 발동 실패: 바로 위 층 대상 없음`);
+          return;
+        }
         const fromFloor = bot.floor;
         const targetFloor = state.player.floor;
         addMissileEffect(fromFloor, targetFloor, state.player.id || "YOU", targetFloor, false, "player", bot.id);
@@ -1566,7 +1569,7 @@
         showNotice("이미 숨어 있습니다.");
         return;
       }
-      if (!TEST_ITEMS_ENABLED && !canHide()) {
+      if (!canHide()) {
         showNotice(`${cooldownText()} 후 다시 숨을 수 있습니다.`);
         return;
       }
@@ -1627,14 +1630,15 @@
 
     function handleKey(event) {
       if (document.activeElement === chatInput) return;
+      if (event.repeat) {
+        const repeatCode = event.code || event.key;
+        if (["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft", "Down", "Right", "Up", "Left", "Digit1", "Digit2", "Digit3", "Numpad1", "Numpad2", "Numpad3"].includes(repeatCode)) {
+          event.preventDefault();
+          return;
+        }
+      }
       const key = event.key || event.code;
       const code = event.code || event.key;
-      if (event.code === "Digit0" || event.code === "Numpad0") {
-        event.preventDefault();
-        touchComboInput();
-        grantTestItems();
-        return;
-      }
       if (["Digit1", "Digit2", "Digit3", "Numpad1", "Numpad2", "Numpad3"].includes(event.code)) {
         event.preventDefault();
         touchComboInput();
@@ -1754,7 +1758,7 @@
 
     function drawRunner(entity, x, y, color, alpha = 1, selfView = false) {
       if (entity.hidden && !selfView) return;
-      const label = `${flagEmoji(entity.country)} ${entity.id} ${entity.floor}F`;
+      const label = `${displayName(entity)} ${entity.floor}F`;
       ctx.save();
       ctx.translate(x, y - 22);
       const visibleAlpha = entity.hidden && selfView ? Math.min(alpha, 0.42) : alpha;
@@ -1818,23 +1822,37 @@
               : state.bots.find((bot) => bot.id === effect.targetId);
           const liveTargetFloor = liveTarget ? liveTarget.floor : effect.targetFloor;
           const targetP = screenPosition(liveTargetFloor, focus, width, height);
-          const x = startP.x + (targetP.x - startP.x) * t;
-          const y = startP.y + (targetP.y - startP.y) * t - Math.sin(t * Math.PI) * 70;
-          if (t >= 0.78 && !effect.resolved) resolveMissileHit(effect);
+          const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          const x = startP.x + (targetP.x - startP.x) * eased;
+          const y = startP.y + (targetP.y - startP.y) * eased - Math.sin(eased * Math.PI) * 58;
+          if (t >= MISSILE_HIT_AT && !effect.resolved) resolveMissileHit(effect);
           ctx.save();
-          ctx.strokeStyle = effect.resolved && !effect.hit ? "#aeb6c4" : "#ff626f";
-          ctx.lineWidth = 4;
-          ctx.globalAlpha = 0.75;
-          ctx.beginPath();
-          ctx.moveTo(startP.x, startP.y - 26);
-          ctx.lineTo(x, y);
-          ctx.stroke();
-          ctx.globalAlpha = 1;
+          const rocketColor = effect.resolved && !effect.hit ? "#aeb6c4" : "#ff626f";
+          const angle = Math.atan2(targetP.y - startP.y, targetP.x - startP.x);
+          const pulse = 0.7 + Math.sin(t * Math.PI * 8) * 0.3;
+          ctx.translate(x, y);
+          ctx.rotate(angle);
+          ctx.shadowColor = rocketColor;
+          ctx.shadowBlur = 14 * pulse;
           ctx.fillStyle = effect.resolved && !effect.hit ? "#aeb6c4" : "#ff626f";
           ctx.beginPath();
-          ctx.roundRect(x - 18, y - 7, 36, 14, 7);
+          ctx.roundRect(-20, -8, 40, 16, 8);
           ctx.fill();
+          ctx.fillStyle = "#fff3b0";
+          ctx.beginPath();
+          ctx.moveTo(-24, 0);
+          ctx.lineTo(-38 - pulse * 8, -7);
+          ctx.lineTo(-34 - pulse * 10, 0);
+          ctx.lineTo(-38 - pulse * 8, 7);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#f5f1e8";
+          ctx.beginPath();
+          ctx.arc(11, 0, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
           if (t > 0.72) {
+            ctx.save();
             const boom = (t - 0.72) / 0.28;
             ctx.globalAlpha = Math.max(0, 1 - boom);
             ctx.strokeStyle = "#fff3b0";
@@ -1846,8 +1864,8 @@
             ctx.font = "900 12px system-ui";
             ctx.textAlign = "center";
             ctx.fillText(effect.resolved ? (effect.hit ? `${effect.targetName} 명중` : "방어/실패") : "접근 중", targetP.x, targetP.y - 72);
+            ctx.restore();
           }
-          ctx.restore();
         }
       }
     }
@@ -1909,7 +1927,7 @@
       ui.floor.textContent = `${state.player.floor}F`;
       ui.combo.textContent = `COMBO x${state.combo}`;
       ui.combo.classList.toggle("active", state.combo > 0);
-      ui.playerLabel.textContent = state.player.id ? `${flagEmoji(state.player.country)} ${state.player.id} / ${state.player.country}` : "ID 없음";
+      ui.playerLabel.textContent = state.player.id ? `${displayName(state.player)} / ${state.player.country}` : "ID 없음";
       ui.block.textContent = `${Math.floor(state.player.floor / SEGMENT_SIZE) + 1}구간`;
       ui.kills.textContent = `킬 ${state.kills}`;
       ui.lives.textContent = `목숨 ${state.lives}`;
@@ -1932,14 +1950,14 @@
       ui.rankRows.innerHTML = players.map((player, index) => (
         `<div class="rank-row">
           <span>${index === 0 ? "👑" : index + 1}</span>
-          <span class="rank-id">${escapeHtml(flagEmoji(player.country))} ${escapeHtml(player.id)}</span>
+          <span class="rank-id">${escapeHtml(displayName(player))}</span>
           <span>${escapeHtml(player.country)}</span>
           <span class="rank-floor">${player.bestFloor}F</span>
         </div>`
       )).join("");
 
       if (performance.now() > state.noticeUntil) {
-        ui.notice.innerHTML = "<strong>조작</strong><br>&larr; 왼쪽 위 계단 / &uarr; 머리 위 계단 / &rarr; 오른쪽 계단 / &darr; 숨기 / 1,2,3 아이템 / 0 테스트 지급";
+        ui.notice.innerHTML = "<strong>조작</strong><br>&larr; 왼쪽 위 계단 / &uarr; 머리 위 계단 / &rarr; 오른쪽 계단 / &darr; 숨기 / 1,2,3 아이템";
       }
     }
 
