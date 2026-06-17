@@ -51,6 +51,7 @@ function publicPlayers() {
     shieldUntil: player.shieldUntil,
     stunnedUntil: player.stunnedUntil,
     kills: player.kills,
+    gold: player.gold || 0,
     lives: player.lives
   }));
 }
@@ -180,6 +181,7 @@ const server = http.createServer(async (req, res) => {
         shieldUntil: Number(body.shieldUntil || 0),
         stunnedUntil: Number(body.stunnedUntil || 0),
         kills: Number(body.kills || 0),
+        gold: Number(body.gold || 0),
         lives: Number(body.lives || 0),
         lastSeen: Date.now()
       });
@@ -197,7 +199,7 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 404, { error: "unknown player" });
         return;
       }
-      for (const key of ["floor", "stunnedUntil", "shieldUntil", "kills", "lives"]) {
+      for (const key of ["floor", "stunnedUntil", "shieldUntil", "kills", "gold", "lives"]) {
         if (Number.isFinite(Number(body[key]))) player[key] = Number(body[key]);
       }
       if (Number.isFinite(Number(body.bestFloor))) {
@@ -241,6 +243,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       attacker.kills += 1;
+      attacker.gold = (attacker.gold || 0) + 100;
       attacker.lastSeen = Date.now();
       const reason = String(body.reason || `${attacker.id}에게 당했습니다.`).slice(0, 120);
       const targetClient = clients.get(targetId);
@@ -250,7 +253,7 @@ const server = http.createServer(async (req, res) => {
       chat.push({ id: "SYSTEM", country: "--", text: `${attacker.id}님이 ${target.id}님을 떨어뜨렸습니다.` });
       while (chat.length > 60) chat.shift();
       broadcast("state");
-      sendJson(res, 200, { ok: true, kills: attacker.kills });
+      sendJson(res, 200, { ok: true, kills: attacker.kills, gold: attacker.gold });
       return;
     }
 
