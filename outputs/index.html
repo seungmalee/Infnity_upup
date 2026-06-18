@@ -753,11 +753,12 @@
 
       .idle-timer {
         position: fixed;
-        top: max(8px, env(safe-area-inset-top));
+        top: calc(max(8px, env(safe-area-inset-top)) + 58px);
         left: 50%;
         min-width: 92px;
         padding: 6px 8px;
         transform: translateX(-50%);
+        z-index: 6;
       }
 
       .idle-value {
@@ -974,6 +975,20 @@
         left: auto;
         right: max(8px, env(safe-area-inset-right));
         width: min(54vw, 210px);
+      }
+
+      .idle-timer {
+        top: calc(max(8px, env(safe-area-inset-top)) + 64px);
+        min-width: 84px;
+        padding: 5px 7px;
+      }
+
+      .idle-label {
+        font-size: 9px;
+      }
+
+      .idle-value {
+        font-size: 15px;
       }
 
       .rank-content {
