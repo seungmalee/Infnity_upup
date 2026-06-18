@@ -746,6 +746,7 @@
     const JUMP_DURATION = 240;
     const BOT_FILLER_COUNT = 0;
     const PROFILE_KEY = "stairProfile";
+    const PLAYER_KEY = "stairPlayerKey";
     const BOT_DATA = [
       ["NOVA", "US"],
       ["MIN", "KR"],
@@ -797,11 +798,13 @@
       lives: 0,
       rewardedLifeMilestones: new Set(),
       remotePlayers: [],
+      leaderboard: [],
       serverPopulation: 1,
       online: {
         enabled: location.protocol === "http:" || location.protocol === "https:",
         connected: false,
         onlineId: "",
+        playerKey: "",
         events: null,
         syncTimer: 0
       },
@@ -845,6 +848,15 @@
       }[char]));
     }
 
+    function getPlayerKey() {
+      let key = localStorage.getItem(PLAYER_KEY);
+      if (!key) {
+        key = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        localStorage.setItem(PLAYER_KEY, key);
+      }
+      return key;
+    }
+
     function itemFromType(type) {
       return ITEMS.find((item) => item.type === type) || null;
     }
@@ -868,6 +880,7 @@
         lives: state.lives,
         rewardedMilestones: [...state.rewardedMilestones],
         rewardedLifeMilestones: [...state.rewardedLifeMilestones],
+        playerKey: state.online.playerKey,
         onlineId: state.online.onlineId
       }));
     }
@@ -1124,8 +1137,22 @@
           }));
         const own = data.players.find((player) => player.onlineId === state.online.onlineId);
         if (own && Number(own.kills || 0) > state.kills) state.kills = Number(own.kills || 0);
-        if (own && Number(own.gold || 0) > state.gold) state.gold = Number(own.gold || 0);
+        if (own && Number.isFinite(Number(own.gold))) state.gold = Number(own.gold || 0);
+        if (own && Number.isFinite(Number(own.lives))) state.lives = Number(own.lives || 0);
         if (own && Number(own.bestFloor || 0) > state.player.bestFloor) state.player.bestFloor = Number(own.bestFloor || 0);
+      }
+      if (Array.isArray(data.leaderboard)) {
+        state.leaderboard = data.leaderboard.map((player) => ({
+          ...player,
+          id: String(player.id || "PLAYER"),
+          country: String(player.country || "--"),
+          floor: Number(player.floor || 0),
+          bestFloor: Number(player.bestFloor || player.floor || 0),
+          kills: Number(player.kills || 0),
+          gold: Number(player.gold || 0),
+          lives: Number(player.lives || 0),
+          record: true
+        }));
       }
       if (Array.isArray(data.chat)) {
         state.chat = data.chat.slice(-60);
@@ -1169,8 +1196,10 @@
 
     async function connectOnline() {
       if (!state.online.enabled || !state.player.id || state.online.connected) return;
+      state.online.playerKey = state.online.playerKey || getPlayerKey();
       const joined = await postOnline("/api/join", {
         onlineId: state.online.onlineId,
+        playerKey: state.online.playerKey,
         id: state.player.id,
         country: state.player.country,
         floor: state.player.floor,
@@ -1646,6 +1675,7 @@
       state.kills = 0;
       state.gold = 0;
       state.lives = 0;
+      state.online.playerKey = getPlayerKey();
       resetRunState();
       state.inventory = [null, null, null];
       state.lastHideAt = -HIDE_COOLDOWN;
@@ -1681,6 +1711,7 @@
         state.lives = Number(profile.lives || 0);
         state.rewardedMilestones = new Set(Array.isArray(profile.rewardedMilestones) ? profile.rewardedMilestones : []);
         state.rewardedLifeMilestones = new Set(Array.isArray(profile.rewardedLifeMilestones) ? profile.rewardedLifeMilestones : []);
+        state.online.playerKey = String(profile.playerKey || "") || getPlayerKey();
         state.online.onlineId = String(profile.onlineId || "");
         resetCombo();
         state.trails = [];
@@ -2112,11 +2143,15 @@
         ui.itemSlots[index].innerHTML = `<span class="item-key">${index + 1}</span> ${item ? escapeHtml(item.name) : "빈칸"}`;
       });
 
-      const players = [state.player, ...opponents()]
-        .filter((player) => player.id)
-        .map((player) => ({ ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)) }))
-        .slice()
-        .sort((a, b) => b.bestFloor - a.bestFloor);
+      const rankMap = new Map();
+      for (const player of [...state.leaderboard, state.player, ...opponents()]) {
+        if (!player.id) continue;
+        const key = player.onlineId || `${player.country}:${player.id}`;
+        const row = { ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)) };
+        const previous = rankMap.get(key);
+        if (!previous || row.bestFloor > previous.bestFloor) rankMap.set(key, row);
+      }
+      const players = [...rankMap.values()].sort((a, b) => b.bestFloor - a.bestFloor);
 
       ui.rankRows.innerHTML = players.map((player, index) => (
         `<div class="rank-row">
