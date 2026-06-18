@@ -3,14 +3,139 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
+let MongoClient = null;
+try {
+  ({ MongoClient } = require("mongodb"));
+} catch (error) {
+  MongoClient = null;
+}
+
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = __dirname;
 const INDEX = path.join(ROOT, "outputs", "index.html");
 const KILL_GOLD_REWARD = 50;
+const MONGODB_URI = process.env.MONGODB_URI || "";
+const MONGODB_DB = process.env.MONGODB_DB || "stairgame";
 
 const players = new Map();
 const clients = new Map();
+let dbPromise = null;
+let records = null;
+let leaderboard = [];
 const chat = [{ id: "SYSTEM", country: "--", text: "온라인 서버가 준비되었습니다." }];
+
+async function getRecords() {
+  if (!MONGODB_URI || !MongoClient) return null;
+  if (!dbPromise) {
+    dbPromise = MongoClient.connect(MONGODB_URI)
+      .then(async (client) => {
+        const collection = client.db(MONGODB_DB).collection("players");
+        await collection.createIndex({ playerKey: 1 }, { unique: true });
+        await collection.createIndex({ bestFloor: -1, updatedAt: -1 });
+        records = collection;
+        await refreshLeaderboard();
+        console.log("MongoDB connected");
+        return collection;
+      })
+      .catch((error) => {
+        console.warn("MongoDB disabled:", error.message);
+        records = null;
+        return null;
+      });
+  }
+  return dbPromise;
+}
+
+function clampNumber(value, min = 0, max = Number.MAX_SAFE_INTEGER) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return min;
+  return Math.max(min, Math.min(max, Math.floor(number)));
+}
+
+function cleanId(value) {
+  return String(value || "PLAYER").slice(0, 14).replace(/\s+/g, "_");
+}
+
+function cleanCountry(value) {
+  return String(value || "KR").slice(0, 3).toUpperCase();
+}
+
+function cleanPlayerKey(value) {
+  return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80);
+}
+
+function publicRecord(record) {
+  return {
+    id: cleanId(record.id),
+    country: cleanCountry(record.country),
+    floor: clampNumber(record.currentFloor || 0),
+    bestFloor: clampNumber(record.bestFloor || 0),
+    hidden: false,
+    shield: false,
+    shieldUntil: 0,
+    stunnedUntil: 0,
+    kills: clampNumber(record.kills || 0),
+    gold: clampNumber(record.gold || 0),
+    lives: clampNumber(record.lives || 0),
+    record: true
+  };
+}
+
+async function refreshLeaderboard() {
+  const collection = records || await getRecords();
+  if (!collection) {
+    leaderboard = [];
+    return leaderboard;
+  }
+  const rows = await collection
+    .find({}, { projection: { _id: 0, playerKey: 0 } })
+    .sort({ bestFloor: -1, updatedAt: -1 })
+    .limit(25)
+    .toArray();
+  leaderboard = rows.map(publicRecord);
+  return leaderboard;
+}
+
+async function loadRecord(playerKey) {
+  const key = cleanPlayerKey(playerKey);
+  if (!key) return null;
+  const collection = await getRecords();
+  if (!collection) return null;
+  return collection.findOne({ playerKey: key });
+}
+
+async function saveRecord(player, force = false) {
+  if (!player.playerKey) return;
+  const now = Date.now();
+  if (!force && player.lastSavedAt && now - player.lastSavedAt < 5000) return;
+  const collection = await getRecords();
+  if (!collection) return;
+  const bestFloor = Math.max(clampNumber(player.bestFloor), clampNumber(player.floor));
+  await collection.updateOne(
+    { playerKey: player.playerKey },
+    {
+      $set: {
+        playerKey: player.playerKey,
+        id: cleanId(player.id),
+        country: cleanCountry(player.country),
+        currentFloor: clampNumber(player.floor),
+        gold: clampNumber(player.gold),
+        lives: clampNumber(player.lives),
+        updatedAt: new Date()
+      },
+      $max: {
+        bestFloor,
+        kills: clampNumber(player.kills)
+      },
+      $setOnInsert: {
+        createdAt: new Date()
+      }
+    },
+    { upsert: true }
+  );
+  player.lastSavedAt = now;
+  await refreshLeaderboard();
+}
 
 function sendJson(res, status, data) {
   const body = JSON.stringify(data);
@@ -61,6 +186,7 @@ function broadcast(type = "state", extra = {}) {
   const payload = JSON.stringify({
     type,
     players: publicPlayers(),
+    leaderboard,
     chat,
     ...extra
   });
@@ -169,27 +295,32 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       const requestedId = String(body.onlineId || "");
       const onlineId = requestedId && players.has(requestedId) ? requestedId : crypto.randomUUID();
-      const id = String(body.id || "PLAYER").slice(0, 14).replace(/\s+/g, "_");
-      const country = String(body.country || "KR").slice(0, 3);
-      players.set(onlineId, {
+      const id = cleanId(body.id);
+      const country = cleanCountry(body.country);
+      const playerKey = cleanPlayerKey(body.playerKey || onlineId);
+      const saved = await loadRecord(playerKey);
+      const player = {
         onlineId,
+        playerKey,
         id,
         country,
-        floor: Number(body.floor || 0),
-        bestFloor: Math.max(Number(body.bestFloor || 0), Number(body.floor || 0)),
+        floor: clampNumber(body.floor || 0),
+        bestFloor: Math.max(clampNumber(body.bestFloor || 0), clampNumber(body.floor || 0), clampNumber(saved && saved.bestFloor)),
         hidden: Boolean(body.hidden),
         shield: Boolean(body.shield),
-        shieldUntil: Number(body.shieldUntil || 0),
-        stunnedUntil: Number(body.stunnedUntil || 0),
-        kills: Number(body.kills || 0),
-        gold: Number(body.gold || 0),
-        lives: Number(body.lives || 0),
+        shieldUntil: clampNumber(body.shieldUntil || 0),
+        stunnedUntil: clampNumber(body.stunnedUntil || 0),
+        kills: Math.max(clampNumber(body.kills || 0), clampNumber(saved && saved.kills)),
+        gold: saved ? clampNumber(saved.gold) : clampNumber(body.gold || 0),
+        lives: saved ? clampNumber(saved.lives) : clampNumber(body.lives || 0),
         lastSeen: Date.now()
-      });
+      };
+      players.set(onlineId, player);
+      await saveRecord(player, true);
       chat.push({ id: "SYSTEM", country: "--", text: `${id}님이 접속했습니다.` });
       while (chat.length > 60) chat.shift();
       broadcast("state");
-      sendJson(res, 200, { onlineId, players: publicPlayers(), chat });
+      sendJson(res, 200, { onlineId, players: publicPlayers(), leaderboard, chat });
       return;
     }
 
@@ -200,6 +331,9 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 404, { error: "unknown player" });
         return;
       }
+      const previousGold = player.gold;
+      const previousLives = player.lives;
+      const previousKills = player.kills;
       for (const key of ["floor", "stunnedUntil", "shieldUntil", "kills", "gold", "lives"]) {
         if (Number.isFinite(Number(body[key]))) player[key] = Number(body[key]);
       }
@@ -211,6 +345,7 @@ const server = http.createServer(async (req, res) => {
         if (typeof body[key] === "boolean") player[key] = body[key];
       }
       player.lastSeen = Date.now();
+      await saveRecord(player, player.gold !== previousGold || player.lives !== previousLives || player.kills !== previousKills);
       broadcast("state");
       sendJson(res, 200, { ok: true });
       return;
@@ -246,10 +381,11 @@ const server = http.createServer(async (req, res) => {
       attacker.kills += 1;
       attacker.gold = (attacker.gold || 0) + KILL_GOLD_REWARD;
       attacker.lastSeen = Date.now();
+      await saveRecord(attacker, true);
       const reason = String(body.reason || `${attacker.id}에게 당했습니다.`).slice(0, 120);
       const targetClient = clients.get(targetId);
       if (targetClient) {
-        targetClient.write(`data: ${JSON.stringify({ type: "attacked", reason, attackerId: attacker.onlineId, players: publicPlayers(), chat })}\n\n`);
+        targetClient.write(`data: ${JSON.stringify({ type: "attacked", reason, attackerId: attacker.onlineId, players: publicPlayers(), leaderboard, chat })}\n\n`);
       }
       chat.push({ id: "SYSTEM", country: "--", text: `${attacker.id}님이 ${target.id}님을 떨어뜨렸습니다.` });
       while (chat.length > 60) chat.shift();
@@ -272,7 +408,7 @@ const server = http.createServer(async (req, res) => {
       source.lastSeen = Date.now();
       const targetClient = clients.get(targetId);
       if (targetClient) {
-        targetClient.write(`data: ${JSON.stringify({ type: "stunned", reason, ms, sourceId: source.onlineId, players: publicPlayers(), chat })}\n\n`);
+        targetClient.write(`data: ${JSON.stringify({ type: "stunned", reason, ms, sourceId: source.onlineId, players: publicPlayers(), leaderboard, chat })}\n\n`);
       }
       chat.push({ id: "SYSTEM", country: "--", text: `${source.id}님의 ${reason}: ${target.id} 스턴` });
       while (chat.length > 60) chat.shift();
@@ -295,7 +431,7 @@ const server = http.createServer(async (req, res) => {
         "Access-Control-Allow-Origin": "*"
       });
       clients.set(onlineId, res);
-      res.write(`data: ${JSON.stringify({ type: "state", players: publicPlayers(), chat })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: "state", players: publicPlayers(), leaderboard, chat })}\n\n`);
       req.on("close", () => {
         if (clients.get(onlineId) === res) clients.delete(onlineId);
       });
@@ -310,10 +446,12 @@ const server = http.createServer(async (req, res) => {
 
 setInterval(() => {
   cleanup();
+  refreshLeaderboard().catch(() => {});
   broadcast("state");
 }, 5000).unref();
 
 server.listen(PORT, "0.0.0.0", () => {
+  getRecords().catch(() => {});
   console.log(`Stair game online server: http://localhost:${PORT}`);
   console.log("같은 네트워크 밖 친구에게 공유하려면 Render/Railway/Fly.io 같은 Node 서버 배포 서비스를 사용하세요.");
   if (!fs.existsSync(INDEX)) console.warn("outputs/index.html 파일을 찾지 못했습니다.");
