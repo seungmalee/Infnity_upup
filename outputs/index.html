@@ -451,19 +451,19 @@
 
     .mobile-controls {
       position: fixed;
-      left: auto;
-      right: 0;
-      top: 50%;
-      bottom: auto;
+      left: 50%;
+      right: auto;
+      top: auto;
+      bottom: 12vh;
       display: none;
-      width: min(72vw, 236px);
+      width: min(92vw, 282px);
       grid-template-columns: 1fr;
       justify-items: center;
       gap: 0;
       padding: 12px max(12px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
       pointer-events: none;
       z-index: 5;
-      transform: translateY(-50%);
+      transform: translateX(-50%);
     }
 
     .mobile-pad {
@@ -474,8 +474,8 @@
     }
 
     .mobile-pad {
-      grid-template-columns: repeat(3, 62px);
-      grid-template-rows: repeat(2, 56px);
+      grid-template-columns: repeat(3, 72px);
+      grid-template-rows: repeat(2, 64px);
       align-content: end;
       justify-content: start;
     }
@@ -483,12 +483,12 @@
     .mobile-btn {
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: rgba(25, 29, 37, 0.9);
+      background: rgba(25, 29, 37, 0.54);
       color: var(--text);
       box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
       min-width: 0;
-      min-height: 56px;
-      font-size: 21px;
+      min-height: 64px;
+      font-size: 24px;
       font-weight: 900;
       cursor: pointer;
       user-select: none;
@@ -603,9 +603,11 @@
         position: fixed;
         left: max(8px, env(safe-area-inset-left));
         right: auto;
-        bottom: calc(86px + env(safe-area-inset-bottom));
+        top: 50%;
+        bottom: auto;
         width: min(17vw, 68px);
         padding: 6px;
+        transform: translateY(-50%);
       }
 
       .item-bar .panel-title {
@@ -666,7 +668,7 @@
       }
 
       .mobile-pad {
-        justify-content: end;
+        justify-content: center;
       }
 
       .chat,
@@ -708,7 +710,8 @@
       }
 
       .item-bar {
-        bottom: calc(104px + env(safe-area-inset-bottom));
+        top: 50%;
+        bottom: auto;
         width: min(18vw, 66px);
       }
 
@@ -737,12 +740,12 @@
       }
 
       .mobile-controls {
-        width: min(74vw, 236px);
+        width: min(94vw, 282px);
         gap: 8px;
       }
 
       .mobile-pad {
-        justify-content: end;
+        justify-content: center;
       }
 
     }
