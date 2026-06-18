@@ -2504,7 +2504,7 @@
     }
 
     function setAutoClimb(enabled) {
-      state.autoClimb = Boolean(enabled);
+      state.autoClimb = false;
       if (state.autoTimer) {
         clearInterval(state.autoTimer);
         state.autoTimer = 0;
