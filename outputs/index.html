@@ -598,6 +598,27 @@
       grid-row: 2;
     }
 
+    .mobile-idle-bar {
+      display: none;
+      width: min(216px, 78vw);
+      height: 8px;
+      margin-top: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      background: rgba(25, 29, 37, 0.58);
+      overflow: hidden;
+      pointer-events: none;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
+    }
+
+    .mobile-idle-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #4dd8a6, #f0bd5b, #ff745e);
+      transition: width 90ms linear;
+    }
+
     @media (max-width: 760px) {
       #game {
         height: 100dvh;
@@ -752,17 +773,11 @@
       }
 
       .idle-timer {
-        position: fixed;
-        top: calc(max(8px, env(safe-area-inset-top)) + 58px);
-        left: 50%;
-        min-width: 92px;
-        padding: 6px 8px;
-        transform: translateX(-50%);
-        z-index: 6;
+        display: none;
       }
 
-      .idle-value {
-        font-size: 16px;
+      .mobile-idle-bar {
+        display: block;
       }
 
       .item-bar {
@@ -977,18 +992,8 @@
         width: min(54vw, 210px);
       }
 
-      .idle-timer {
-        top: calc(max(8px, env(safe-area-inset-top)) + 64px);
-        min-width: 84px;
-        padding: 5px 7px;
-      }
-
-      .idle-label {
-        font-size: 9px;
-      }
-
-      .idle-value {
-        font-size: 15px;
+      .mobile-idle-bar {
+        width: min(216px, 80vw);
       }
 
       .rank-content {
@@ -1107,6 +1112,9 @@
       <button class="mobile-btn hide" type="button" data-mobile-action="hide" aria-label="숨기">숨</button>
       <button class="mobile-btn right" type="button" data-mobile-action="right" aria-label="오른쪽 이동">→</button>
     </div>
+    <div class="mobile-idle-bar" aria-hidden="true">
+      <div class="mobile-idle-fill" id="mobileIdleFill"></div>
+    </div>
   </div>
 
   <script>
@@ -1129,6 +1137,7 @@
       onlineStatus: document.getElementById("onlineStatus"),
       boostBtn: document.getElementById("boostBtn"),
       autoBtn: document.getElementById("autoBtn"),
+      mobileIdleFill: document.getElementById("mobileIdleFill"),
       itemSlots: [
         document.getElementById("item0"),
         document.getElementById("item1"),
@@ -2770,9 +2779,11 @@
       ui.autoBtn.textContent = state.autoClimb ? "AUTO ON" : "AUTO OFF";
       ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(hideCooldownLeft() / 1000)}s`;
       const idleLeft = state.player.hidden || stunned > 0 ? FLOOR_IDLE_LIMIT : Math.max(0, FLOOR_IDLE_LIMIT - (performance.now() - state.floorHold.since));
+      const idleProgress = state.player.hidden || stunned > 0 ? 0 : Math.min(1, Math.max(0, 1 - idleLeft / FLOOR_IDLE_LIMIT));
       ui.idleTimer.classList.toggle("danger", idleLeft <= 1200 && !state.player.hidden && stunned <= 0);
       ui.idleTimer.querySelector(".idle-label").textContent = state.player.hidden ? "HIDE" : stunned > 0 ? "STUN" : "STAY";
       ui.idleTimer.querySelector(".idle-value").textContent = `${(idleLeft / 1000).toFixed(1)}s`;
+      ui.mobileIdleFill.style.width = `${Math.round(idleProgress * 100)}%`;
 
       state.inventory.forEach((item, index) => {
         ui.itemSlots[index].classList.toggle("ready", Boolean(item));
