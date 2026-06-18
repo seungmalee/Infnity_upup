@@ -150,6 +150,7 @@
     }
 
     .top-left,
+    .idle-timer,
     .ranking,
     .chat,
     .item-bar,
@@ -200,6 +201,38 @@
     .combo.active {
       opacity: 1;
       transform: translateX(0) scale(1);
+    }
+
+    .idle-timer {
+      grid-column: 2;
+      grid-row: 1;
+      place-self: start center;
+      min-width: 128px;
+      padding: 9px 14px;
+      text-align: center;
+      font-weight: 900;
+      color: var(--text);
+      pointer-events: none;
+    }
+
+    .idle-timer.danger {
+      color: #ffdd9a;
+      border-color: rgba(255, 116, 94, 0.54);
+      box-shadow: 0 0 24px rgba(255, 116, 94, 0.18);
+    }
+
+    .idle-label {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .idle-value {
+      display: block;
+      font-size: 20px;
+      line-height: 1;
     }
 
     .meta {
@@ -350,8 +383,8 @@
     .rank-head,
     .rank-row {
       display: grid;
-      grid-template-columns: 36px minmax(76px, 1fr) 58px 64px;
-      gap: 8px;
+      grid-template-columns: 28px minmax(40px, 1fr) 34px 46px 64px;
+      gap: 6px;
       align-items: center;
       min-height: 28px;
       font-size: 13px;
@@ -389,6 +422,16 @@
       color: var(--bar-active);
       text-align: right;
       font-weight: 900;
+    }
+
+    .rank-time {
+      color: var(--muted);
+      text-align: right;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
     }
 
     .chat {
@@ -659,7 +702,7 @@
       }
 
       .rank-row {
-        grid-template-columns: 18px minmax(0, 1fr) 28px 42px;
+        grid-template-columns: 18px minmax(0, 1fr) 24px 34px 48px;
         gap: 4px;
         min-height: 22px;
         font-size: 10px;
@@ -678,6 +721,19 @@
         min-width: 96px;
         padding: 8px 10px;
         font-size: 18px;
+      }
+
+      .idle-timer {
+        position: fixed;
+        top: max(8px, env(safe-area-inset-top));
+        left: 50%;
+        min-width: 92px;
+        padding: 6px 8px;
+        transform: translateX(-50%);
+      }
+
+      .idle-value {
+        font-size: 16px;
       }
 
       .item-bar {
@@ -710,7 +766,7 @@
 
       .rank-head,
       .rank-row {
-        grid-template-columns: 28px minmax(48px, 1fr) 36px 48px;
+        grid-template-columns: 18px minmax(0, 1fr) 24px 34px 48px;
         gap: 5px;
       }
 
@@ -818,7 +874,7 @@
       }
 
       .ranking .rank-row {
-        grid-template-columns: 18px minmax(0, 1fr) 28px 42px;
+        grid-template-columns: 18px minmax(0, 1fr) 24px 34px 48px;
         gap: 4px;
         min-height: 22px;
         font-size: 10px;
@@ -861,6 +917,7 @@
       .ranking,
       .notice,
       .chat,
+      .idle-timer,
       .combo {
         grid-column: 1;
       }
@@ -953,6 +1010,11 @@
 
     <div class="combo" id="combo">COMBO x0</div>
 
+    <div class="idle-timer" id="idleTimer">
+      <span class="idle-label">STAY</span>
+      <span class="idle-value">3.0</span>
+    </div>
+
     <div class="item-bar">
       <h2 class="panel-title">아이템</h2>
       <div class="inventory">
@@ -969,10 +1031,11 @@
       </div>
       <div class="rank-content">
         <div class="rank-head">
-          <span>순위</span>
+          <span>Rank</span>
           <span>ID</span>
-          <span>국가</span>
-          <span>최고</span>
+          <span>Nation</span>
+          <span>Floor</span>
+          <span>Time</span>
         </div>
         <div id="rankRows"></div>
       </div>
@@ -1011,6 +1074,7 @@
     const chatInput = document.getElementById("chatInput");
     const ui = {
       floor: document.getElementById("floor"),
+      idleTimer: document.getElementById("idleTimer"),
       combo: document.getElementById("combo"),
       playerLabel: document.getElementById("playerLabel"),
       block: document.getElementById("block"),
@@ -1103,6 +1167,8 @@
       combo: 0,
       comboLastInputAt: 0,
       floorHold: { floor: 0, since: 0, punished: false },
+      runStartedAt: Date.now(),
+      bestTimeMs: 0,
       kills: 0,
       gold: 0,
       lives: 0,
@@ -1182,6 +1248,8 @@
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
         stunnedUntil: state.player.stunnedUntil,
+        runStartedAt: state.runStartedAt,
+        bestTimeMs: state.bestTimeMs,
         lastHideAt: state.lastHideAt,
         inventory: state.inventory.map((item) => item ? item.type : null),
         testItemCursor: state.testItemCursor,
@@ -1444,14 +1512,16 @@
             shield: Boolean(player.shield),
             shieldUntil: Number(player.shieldUntil || 0),
             stunnedUntil: Number(player.stunnedUntil || 0),
-            kills: Number(player.kills || 0),
-            gold: Number(player.gold || 0),
-            lives: Number(player.lives || 0)
+          kills: Number(player.kills || 0),
+          gold: Number(player.gold || 0),
+          lives: Number(player.lives || 0),
+          bestTimeMs: Number(player.bestTimeMs || 0)
           }));
         const own = data.players.find((player) => player.onlineId === state.online.onlineId);
         if (own && Number(own.kills || 0) > state.kills) state.kills = Number(own.kills || 0);
         if (own && Number.isFinite(Number(own.gold))) state.gold = Number(own.gold || 0);
         if (own && Number.isFinite(Number(own.lives))) state.lives = Number(own.lives || 0);
+        if (own && Number.isFinite(Number(own.bestTimeMs)) && Number(own.bestTimeMs) > 0) state.bestTimeMs = Number(own.bestTimeMs);
         if (own && Number.isFinite(Number(own.floor))) {
           const serverFloor = Math.max(0, Number(own.floor || 0));
           if (serverFloor > state.player.floor) {
@@ -1471,6 +1541,7 @@
           kills: Number(player.kills || 0),
           gold: Number(player.gold || 0),
           lives: Number(player.lives || 0),
+          bestTimeMs: Number(player.bestTimeMs || 0),
           record: true
         }));
       }
@@ -1510,7 +1581,8 @@
         stunnedUntil: state.player.stunnedUntil,
         kills: state.kills,
         gold: state.gold,
-        lives: state.lives
+        lives: state.lives,
+        bestTimeMs: state.bestTimeMs
       });
     }
 
@@ -1547,7 +1619,8 @@
         stunnedUntil: state.player.stunnedUntil,
         kills: state.kills,
         gold: state.gold,
-        lives: state.lives
+        lives: state.lives,
+        bestTimeMs: state.bestTimeMs
       });
       if (!joined || !joined.onlineId) return;
       state.online.onlineId = joined.onlineId;
@@ -1636,6 +1709,21 @@
       ui.rankingPanel.classList.toggle("collapsed", collapsed);
       ui.rankToggle.textContent = collapsed ? "보기" : "숨김";
       ui.rankingTitle.textContent = collapsed ? "랭킹 보기" : "랭킹";
+    }
+
+    function formatDuration(ms) {
+      const total = Math.max(0, Math.floor(Number(ms || 0) / 1000));
+      const hours = Math.floor(total / 3600);
+      const minutes = Math.floor((total % 3600) / 60);
+      const seconds = total % 60;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function updateBestFloorRecord() {
+      if (state.player.floor > state.player.bestFloor) {
+        state.player.bestFloor = state.player.floor;
+        state.bestTimeMs = Date.now() - state.runStartedAt;
+      }
     }
 
     function cooldownText() {
@@ -1880,7 +1968,7 @@
       if (item.type === "warp") {
         const previousFloor = state.player.floor;
         state.player.floor += 100;
-        state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
+        updateBestFloorRecord();
         state.player.hidden = false;
         addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
         state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 640 };
@@ -1993,6 +2081,7 @@
       }
       state.mode = "play";
       state.player.floor = 0;
+      state.runStartedAt = Date.now();
       resetFloorHold();
       resetRunState();
       state.flash = 1;
@@ -2042,7 +2131,7 @@
       state.gold -= 500;
       state.player.floor += 100;
       resetFloorHold();
-      state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
+      updateBestFloorRecord();
       state.player.hidden = false;
       addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
       state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 640 };
@@ -2058,6 +2147,8 @@
       state.player.country = country;
       state.player.floor = 0;
       state.player.bestFloor = 0;
+      state.runStartedAt = Date.now();
+      state.bestTimeMs = 0;
       state.kills = 0;
       state.gold = 0;
       state.lives = 0;
@@ -2085,6 +2176,8 @@
         state.player.country = String(profile.country).slice(0, 3);
         state.player.floor = Math.max(0, Number(profile.floor || 0));
         state.player.bestFloor = Math.max(state.player.floor, Number(profile.bestFloor || 0));
+        state.runStartedAt = Number.isFinite(Number(profile.runStartedAt)) ? Number(profile.runStartedAt) : Date.now();
+        state.bestTimeMs = Number(profile.bestTimeMs || 0);
         state.player.hidden = false;
         state.player.shield = Boolean(profile.shield);
         state.player.shieldUntil = Number(profile.shieldUntil || 0);
@@ -2183,7 +2276,7 @@
 
       state.player.floor += 1;
       resetFloorHold();
-      state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
+      updateBestFloorRecord();
       state.player.hidden = false;
       addCombo();
       state.jump = { start: performance.now(), duration: JUMP_DURATION };
@@ -2586,6 +2679,10 @@
       ui.lives.textContent = `L ${state.lives}`;
       ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">${state.gold}/500G</span>`;
       ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(hideCooldownLeft() / 1000)}s`;
+      const idleLeft = state.player.hidden || stunned > 0 ? FLOOR_IDLE_LIMIT : Math.max(0, FLOOR_IDLE_LIMIT - (performance.now() - state.floorHold.since));
+      ui.idleTimer.classList.toggle("danger", idleLeft <= 1200 && !state.player.hidden && stunned <= 0);
+      ui.idleTimer.querySelector(".idle-label").textContent = state.player.hidden ? "HIDE" : stunned > 0 ? "STUN" : "STAY";
+      ui.idleTimer.querySelector(".idle-value").textContent = `${(idleLeft / 1000).toFixed(1)}s`;
 
       state.inventory.forEach((item, index) => {
         ui.itemSlots[index].classList.toggle("ready", Boolean(item));
@@ -2596,9 +2693,9 @@
       for (const player of [...state.leaderboard, state.player, ...opponents()]) {
         if (!player.id) continue;
         const key = `${player.country || "--"}:${player.id}`;
-        const row = { ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)) };
+        const row = { ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)), bestTimeMs: Number(player.bestTimeMs || 0) };
         const previous = rankMap.get(key);
-        if (!previous || row.bestFloor > previous.bestFloor) rankMap.set(key, row);
+        if (!previous || row.bestFloor > previous.bestFloor || (row.bestFloor === previous.bestFloor && row.bestTimeMs > 0 && (!previous.bestTimeMs || row.bestTimeMs < previous.bestTimeMs))) rankMap.set(key, row);
       }
       const players = [...rankMap.values()].sort((a, b) => b.bestFloor - a.bestFloor);
 
@@ -2608,6 +2705,7 @@
           <span class="rank-id">${escapeHtml(displayName(player))}</span>
           <span>${escapeHtml(player.country)}</span>
           <span class="rank-floor">${player.bestFloor}F</span>
+          <span class="rank-time">${formatDuration(player.bestTimeMs)}</span>
         </div>`
       )).join("");
 
