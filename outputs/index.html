@@ -743,6 +743,7 @@
         width: auto;
         height: 34px;
         display: flex;
+        flex-direction: column;
         padding: 7px 9px;
         pointer-events: auto;
       }
@@ -752,6 +753,8 @@
       }
 
       .chat-log {
+        flex: 1 1 auto;
+        min-height: 0;
         font-size: 11px;
         gap: 0;
         padding-right: 0;
@@ -775,12 +778,16 @@
       }
 
       .chat.expanded {
-        height: 158px;
+        height: min(34vh, 210px);
         padding: 9px;
       }
 
       .chat.expanded .chat-log {
+        flex: 1 1 auto;
+        min-height: 0;
         overflow: auto;
+        display: flex;
+        flex-direction: column;
         gap: 5px;
         padding-right: 4px;
       }
@@ -792,6 +799,8 @@
 
       .chat.expanded form {
         display: flex;
+        flex: 0 0 auto;
+        margin-top: 8px;
       }
 
       .chat input {
