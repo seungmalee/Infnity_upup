@@ -455,15 +455,15 @@
       right: 0;
       bottom: 0;
       display: none;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      grid-template-columns: 1fr;
+      justify-items: center;
+      gap: 0;
       padding: 12px max(12px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
       pointer-events: none;
       z-index: 5;
     }
 
-    .mobile-pad,
-    .mobile-items {
+    .mobile-pad {
       display: grid;
       gap: 8px;
       pointer-events: auto;
@@ -475,12 +475,6 @@
       grid-template-rows: repeat(2, 48px);
       align-content: end;
       justify-content: start;
-    }
-
-    .mobile-items {
-      grid-template-columns: repeat(3, 48px);
-      align-content: end;
-      justify-content: end;
     }
 
     .mobile-btn {
@@ -639,6 +633,15 @@
         justify-content: center;
         padding: 0 6px;
         font-size: 11px;
+        cursor: pointer;
+        pointer-events: auto;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .item-slot:active {
+        transform: translateY(1px) scale(0.99);
+        border-color: rgba(240, 189, 91, 0.68);
       }
 
       .item-key {
@@ -726,7 +729,6 @@
       }
 
       .mobile-controls {
-        grid-template-columns: 1fr;
         gap: 8px;
       }
 
@@ -734,9 +736,6 @@
         justify-content: center;
       }
 
-      .mobile-items {
-        grid-template-columns: repeat(3, minmax(62px, 1fr));
-      }
     }
   </style>
 </head>
@@ -832,11 +831,6 @@
       <button class="mobile-btn left" type="button" data-mobile-action="left" aria-label="왼쪽 이동">←</button>
       <button class="mobile-btn hide" type="button" data-mobile-action="hide" aria-label="숨기">숨</button>
       <button class="mobile-btn right" type="button" data-mobile-action="right" aria-label="오른쪽 이동">→</button>
-    </div>
-    <div class="mobile-items">
-      <button class="mobile-btn" type="button" data-mobile-item="0" aria-label="아이템 1 사용">1</button>
-      <button class="mobile-btn" type="button" data-mobile-item="1" aria-label="아이템 2 사용">2</button>
-      <button class="mobile-btn" type="button" data-mobile-item="2" aria-label="아이템 3 사용">3</button>
     </div>
   </div>
 
@@ -2023,6 +2017,14 @@
       if (action === "right") climb("R");
     }
 
+    function handleMobileItemSlot(event) {
+      event.preventDefault();
+      const index = ui.itemSlots.indexOf(event.currentTarget);
+      if (index < 0) return;
+      touchComboInput();
+      useItem(index);
+    }
+
     function updateBots(now) {
       if (state.mode !== "play") return;
       if (state.online.enabled && state.serverPopulation > 5) return;
@@ -2388,8 +2390,11 @@
     window.addEventListener("resize", resize);
     window.addEventListener("keydown", handleKey, { passive: false, capture: true });
     window.addEventListener("pagehide", leaveOnline);
-    document.querySelectorAll("[data-mobile-action], [data-mobile-item]").forEach((button) => {
+    document.querySelectorAll("[data-mobile-action]").forEach((button) => {
       button.addEventListener("pointerdown", handleMobileControl, { passive: false });
+    });
+    ui.itemSlots.forEach((slot) => {
+      slot.addEventListener("pointerdown", handleMobileItemSlot, { passive: false });
     });
     requestAnimationFrame(tick);
   </script>
