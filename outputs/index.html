@@ -348,6 +348,10 @@
       flex: 0 0 auto;
     }
 
+    .item-short {
+      display: none;
+    }
+
     .ranking {
       grid-column: 3;
       grid-row: 1 / 3;
@@ -819,10 +823,27 @@
         justify-content: center;
         padding: 0 4px;
         font-size: 10px;
+        flex-direction: column;
+        gap: 2px;
         cursor: pointer;
         pointer-events: auto;
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
+      }
+
+      .item-name {
+        display: none;
+      }
+
+      .item-short {
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        text-align: center;
+        color: var(--text);
+        font-size: 9px;
+        line-height: 1;
+        white-space: nowrap;
       }
 
       .item-slot:active {
@@ -1189,11 +1210,11 @@
       ["YUI", "JP"]
     ];
     const ITEMS = [
-      { type: "boulder", name: "낙석" },
-      { type: "warp", name: "워프" },
-      { type: "shield", name: "보호막" },
-      { type: "hideReset", name: "쿨초기화" },
-      { type: "missile", name: "미사일" }
+      { type: "boulder", name: "낙석", short: "ROCK" },
+      { type: "warp", name: "워프", short: "WARP" },
+      { type: "shield", name: "보호막", short: "SHLD" },
+      { type: "hideReset", name: "쿨초기화", short: "HIDE" },
+      { type: "missile", name: "미사일", short: "MSL" }
     ];
     const FOOTSTEP_SOUND_URL = "";
     const footstepPool = FOOTSTEP_SOUND_URL ? Array.from({ length: 4 }, () => {
@@ -2787,7 +2808,9 @@
 
       state.inventory.forEach((item, index) => {
         ui.itemSlots[index].classList.toggle("ready", Boolean(item));
-        ui.itemSlots[index].innerHTML = `<span class="item-key">${index + 1}</span> ${item ? escapeHtml(item.name) : "빈칸"}`;
+        const fullName = item ? item.name : "EMPTY";
+        const shortName = item ? item.short : "-";
+        ui.itemSlots[index].innerHTML = `<span class="item-key">${index + 1}</span><span class="item-name">${escapeHtml(fullName)}</span><span class="item-short">${escapeHtml(shortName)}</span>`;
       });
 
       const rankMap = new Map();
