@@ -449,7 +449,89 @@
       color: var(--text);
     }
 
+    .mobile-controls {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: none;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding: 12px max(12px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .mobile-pad,
+    .mobile-items {
+      display: grid;
+      gap: 8px;
+      pointer-events: auto;
+      touch-action: none;
+    }
+
+    .mobile-pad {
+      grid-template-columns: repeat(3, 54px);
+      grid-template-rows: repeat(2, 48px);
+      align-content: end;
+      justify-content: start;
+    }
+
+    .mobile-items {
+      grid-template-columns: repeat(3, 48px);
+      align-content: end;
+      justify-content: end;
+    }
+
+    .mobile-btn {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(25, 29, 37, 0.9);
+      color: var(--text);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+      min-width: 0;
+      min-height: 48px;
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-btn:active {
+      transform: translateY(1px) scale(0.98);
+      border-color: rgba(240, 189, 91, 0.64);
+      background: rgba(240, 189, 91, 0.2);
+      color: var(--bar-active);
+    }
+
+    .mobile-btn.up {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .mobile-btn.left {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .mobile-btn.hide {
+      grid-column: 2;
+      grid-row: 2;
+      font-size: 13px;
+    }
+
+    .mobile-btn.right {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
     @media (max-width: 760px) {
+      #game {
+        height: 100dvh;
+      }
+
       .hud {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         grid-template-rows: auto auto minmax(0, 1fr) auto;
@@ -546,6 +628,15 @@
         width: 48px;
         font-size: 12px;
       }
+
+      .mobile-controls {
+        display: grid;
+      }
+
+      .chat,
+      .notice {
+        display: none;
+      }
     }
 
     @media (max-height: 560px) {
@@ -606,6 +697,19 @@
 
       .rank-content {
         max-height: 118px;
+      }
+
+      .mobile-controls {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .mobile-pad {
+        justify-content: center;
+      }
+
+      .mobile-items {
+        grid-template-columns: repeat(3, minmax(62px, 1fr));
       }
     }
   </style>
@@ -693,6 +797,20 @@
     <div class="notice" id="notice">
       <strong>조작</strong><br>
       &larr; 왼쪽 위 계단 / &uarr; 머리 위 계단 / &rarr; 오른쪽 계단 / &darr; 숨기 / 1,2,3 아이템
+    </div>
+  </div>
+
+  <div class="mobile-controls" aria-label="모바일 조작">
+    <div class="mobile-pad">
+      <button class="mobile-btn up" type="button" data-mobile-action="up" aria-label="위로 이동">↑</button>
+      <button class="mobile-btn left" type="button" data-mobile-action="left" aria-label="왼쪽 이동">←</button>
+      <button class="mobile-btn hide" type="button" data-mobile-action="hide" aria-label="숨기">숨</button>
+      <button class="mobile-btn right" type="button" data-mobile-action="right" aria-label="오른쪽 이동">→</button>
+    </div>
+    <div class="mobile-items">
+      <button class="mobile-btn" type="button" data-mobile-item="0" aria-label="아이템 1 사용">1</button>
+      <button class="mobile-btn" type="button" data-mobile-item="1" aria-label="아이템 2 사용">2</button>
+      <button class="mobile-btn" type="button" data-mobile-item="2" aria-label="아이템 3 사용">3</button>
     </div>
   </div>
 
@@ -1864,6 +1982,21 @@
       else climb("L");
     }
 
+    function handleMobileControl(event) {
+      event.preventDefault();
+      const button = event.currentTarget;
+      touchComboInput();
+      if (button.dataset.mobileItem !== undefined) {
+        useItem(Number(button.dataset.mobileItem));
+        return;
+      }
+      const action = button.dataset.mobileAction;
+      if (action === "hide") tryHide();
+      if (action === "left") climb("L");
+      if (action === "up") climb("U");
+      if (action === "right") climb("R");
+    }
+
     function updateBots(now) {
       if (state.mode !== "play") return;
       if (state.online.enabled && state.serverPopulation > 5) return;
@@ -2226,6 +2359,9 @@
     window.addEventListener("resize", resize);
     window.addEventListener("keydown", handleKey, { passive: false, capture: true });
     window.addEventListener("pagehide", leaveOnline);
+    document.querySelectorAll("[data-mobile-action], [data-mobile-item]").forEach((button) => {
+      button.addEventListener("pointerdown", handleMobileControl, { passive: false });
+    });
     requestAnimationFrame(tick);
   </script>
 </body>
