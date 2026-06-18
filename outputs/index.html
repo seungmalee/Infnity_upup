@@ -233,6 +233,17 @@
       opacity: 0.78;
     }
 
+    .boost-main,
+    .boost-cost {
+      display: block;
+    }
+
+    .boost-cost {
+      color: var(--muted);
+      font-size: 0.85em;
+      font-weight: 800;
+    }
+
     .inventory {
       display: grid;
       grid-template-columns: 1fr;
@@ -540,29 +551,67 @@
         top: max(8px, env(safe-area-inset-top));
         left: max(8px, env(safe-area-inset-left));
         right: auto;
-        width: min(42vw, 150px);
+        width: min(38vw, 132px);
         display: block;
         padding: 8px;
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(18, 21, 28, 0.58);
       }
 
       .floor {
-        font-size: 25px;
-        margin-bottom: 6px;
+        font-size: 27px;
+        margin-bottom: 7px;
       }
 
       .meta {
         display: grid;
         grid-template-columns: 1fr;
         margin-top: 0;
-        gap: 3px;
+        gap: 4px;
         font-size: 10px;
         line-height: 1.1;
       }
 
+      .meta span {
+        display: flex;
+        justify-content: space-between;
+        gap: 5px;
+        min-width: 0;
+        padding: 3px 5px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      #block,
+      #onlineStatus {
+        display: none;
+      }
+
       .boost-btn {
-        min-height: 28px;
+        width: 72px;
+        min-height: 38px;
         margin-top: 6px;
+        padding: 4px 5px;
         font-size: 10px;
+        line-height: 1.05;
+        text-align: center;
+      }
+
+      .boost-main {
+        display: block;
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .boost-cost {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 800;
       }
 
       .ranking {
@@ -571,7 +620,10 @@
         right: max(8px, env(safe-area-inset-right));
         width: min(54vw, 220px);
         max-height: 152px;
-        padding: 8px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        backdrop-filter: none;
       }
 
       .ranking.collapsed {
@@ -593,6 +645,8 @@
 
       .ranking .panel-title {
         font-size: 10px;
+        text-align: right;
+        text-shadow: 0 1px 5px rgba(0, 0, 0, 0.72);
       }
 
       .rank-content {
@@ -609,6 +663,8 @@
         gap: 4px;
         min-height: 22px;
         font-size: 10px;
+        border-top-color: rgba(255, 255, 255, 0.05);
+        text-shadow: 0 1px 5px rgba(0, 0, 0, 0.82);
       }
 
       .rank-row:nth-child(n+6) {
@@ -2419,6 +2475,14 @@
       const stunned = Math.max(0, state.player.stunnedUntil - performance.now());
       const shieldLeft = shieldSecondsLeft(state.player);
       ui.cooldown.textContent = stunned > 0 ? `스턴 ${Math.ceil(stunned / 1000)}초` : state.player.hidden ? "은신 중" : shieldLeft > 0 ? `보호막 ${shieldLeft}초` : cooldownText();
+
+      ui.playerLabel.textContent = state.player.id ? `ID ${displayName(state.player)}` : "ID -";
+      ui.block.textContent = `${Math.floor(state.player.floor / SEGMENT_SIZE) + 1}구간`;
+      ui.kills.textContent = `K ${state.kills}`;
+      ui.gold.textContent = `G ${state.gold}`;
+      ui.lives.textContent = `L ${state.lives}`;
+      ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">${state.gold}/500G</span>`;
+      ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(Math.max(0, HIDE_COOLDOWN - (performance.now() - state.lastHideAt)) / 1000)}s`;
 
       state.inventory.forEach((item, index) => {
         ui.itemSlots[index].classList.toggle("ready", Boolean(item));
