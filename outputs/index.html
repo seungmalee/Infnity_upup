@@ -533,66 +533,91 @@
       }
 
       .hud {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        grid-template-rows: auto auto minmax(0, 1fr) auto;
-        gap: 8px;
-        padding: 10px;
+        display: block;
+        padding: 0;
+        overflow: visible;
       }
 
       .top-left {
-        grid-column: 1;
-        grid-row: 1;
-      }
-
-      .ranking {
-        grid-column: 2;
-        grid-row: 1 / 3;
-      }
-
-      .item-bar {
-        grid-column: 1;
-        grid-row: 2;
-      }
-
-      .chat {
-        grid-column: 2;
-        grid-row: 4;
-      }
-
-      .notice {
-        grid-column: 1;
-        grid-row: 4;
-      }
-
-      .top-left,
-      .ranking,
-      .item-bar,
-      .notice,
-      .chat {
-        padding: 10px;
-      }
-
-      .chat {
-        height: clamp(150px, 30vh, 220px);
+        position: fixed;
+        top: max(8px, env(safe-area-inset-top));
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        width: auto;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 6px 10px;
+        padding: 9px 10px;
       }
 
       .floor {
-        font-size: 28px;
+        grid-row: 1 / 3;
+        align-self: center;
+        font-size: 30px;
+      }
+
+      .meta {
+        margin-top: 0;
+        gap: 5px 8px;
+        align-content: center;
+        font-size: 11px;
+        line-height: 1.15;
+      }
+
+      .boost-btn {
+        grid-column: 1 / -1;
+        min-height: 30px;
+        margin-top: 0;
+        font-size: 12px;
+      }
+
+      .ranking {
+        position: fixed;
+        top: calc(max(8px, env(safe-area-inset-top)) + 92px);
+        right: max(8px, env(safe-area-inset-right));
+        width: min(58vw, 260px);
+        max-height: 34dvh;
+        padding: 8px;
+      }
+
+      .ranking.collapsed {
+        width: auto;
+        max-height: none;
+      }
+
+      .rank-content {
+        max-height: 24dvh;
+      }
+
+      .panel-header {
+        margin-bottom: 6px;
       }
 
       .combo {
-        grid-column: 1 / -1;
-        grid-row: 3;
-        place-self: center;
+        position: fixed;
+        top: 42%;
+        right: 10px;
         min-width: 96px;
         padding: 8px 10px;
         font-size: 18px;
       }
 
-      .boost-btn {
-        min-height: 32px;
-        margin-top: 8px;
-        font-size: 12px;
+      .item-bar {
+        position: fixed;
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        bottom: calc(116px + env(safe-area-inset-bottom));
+        width: auto;
+        padding: 8px;
+      }
+
+      .item-bar .panel-title {
+        display: none;
+      }
+
+      .inventory {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
       }
 
       .meta,
@@ -610,9 +635,10 @@
       }
 
       .item-slot {
-        height: 44px;
-        padding: 0 8px;
-        font-size: 12px;
+        height: 38px;
+        justify-content: center;
+        padding: 0 6px;
+        font-size: 11px;
       }
 
       .item-key {
@@ -655,8 +681,7 @@
 
     @media (max-width: 520px) {
       .hud {
-        grid-template-columns: minmax(0, 1fr);
-        grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+        display: block;
       }
 
       .top-left,
@@ -669,30 +694,31 @@
       }
 
       .top-left {
-        grid-row: 1;
+        display: grid;
       }
 
       .item-bar {
-        grid-row: 3;
+        bottom: calc(168px + env(safe-area-inset-bottom));
       }
 
       .combo {
-        grid-row: 4;
+        top: 48%;
+        right: 8px;
       }
 
       .notice {
-        grid-row: 5;
+        display: none;
       }
 
       .chat {
-        grid-row: 6;
-        height: 120px;
+        display: none;
       }
 
       .ranking {
-        grid-row: 2;
-        justify-self: end;
-        width: 100%;
+        top: calc(max(8px, env(safe-area-inset-top)) + 116px);
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        width: auto;
       }
 
       .rank-content {
@@ -2354,6 +2380,9 @@
     restoreSessionProfile();
     resize();
     renderChat();
+    if (window.matchMedia("(max-width: 760px)").matches && sessionStorage.getItem("rankingCollapsed") === null) {
+      state.rankingCollapsed = true;
+    }
     setRankingCollapsed(state.rankingCollapsed);
     renderHud();
     window.addEventListener("resize", resize);
