@@ -1548,7 +1548,8 @@
           kills: Number(player.kills || 0),
           gold: Number(player.gold || 0),
           lives: Number(player.lives || 0),
-          bestTimeMs: Number(player.bestTimeMs || 0)
+          bestTimeMs: Number(player.bestTimeMs || 0),
+          runElapsedMs: Number(player.runElapsedMs || 0)
           }));
         const own = data.players.find((player) => player.onlineId === state.online.onlineId);
         if (own && Number(own.kills || 0) > state.kills) state.kills = Number(own.kills || 0);
@@ -1615,7 +1616,8 @@
         kills: state.kills,
         gold: state.gold,
         lives: state.lives,
-        bestTimeMs: state.bestTimeMs
+        bestTimeMs: state.bestTimeMs,
+        runElapsedMs: runElapsedMs()
       });
     }
 
@@ -1653,7 +1655,8 @@
         kills: state.kills,
         gold: state.gold,
         lives: state.lives,
-        bestTimeMs: state.bestTimeMs
+        bestTimeMs: state.bestTimeMs,
+        runElapsedMs: runElapsedMs()
       });
       if (!joined || !joined.onlineId) return;
       state.online.onlineId = joined.onlineId;
@@ -1752,10 +1755,23 @@
       return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
     }
 
+    function runElapsedMs() {
+      return Math.max(0, Date.now() - state.runStartedAt);
+    }
+
+    function rankingTimeMs(player) {
+      const savedTime = Number(player.bestTimeMs || 0);
+      if (savedTime > 0) return savedTime;
+      const liveTime = Number(player.runElapsedMs || 0);
+      if (liveTime > 0 && Number(player.floor || 0) >= Number(player.bestFloor || 0)) return liveTime;
+      if (player === state.player && state.player.floor >= state.player.bestFloor) return runElapsedMs();
+      return 0;
+    }
+
     function updateBestFloorRecord() {
       if (state.player.floor > state.player.bestFloor) {
         state.player.bestFloor = state.player.floor;
-        state.bestTimeMs = Date.now() - state.runStartedAt;
+        state.bestTimeMs = runElapsedMs();
       }
     }
 
@@ -2752,7 +2768,7 @@
       for (const player of [...state.leaderboard, state.player, ...opponents()]) {
         if (!player.id) continue;
         const key = `${player.country || "--"}:${player.id}`;
-        const row = { ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)), bestTimeMs: Number(player.bestTimeMs || 0) };
+        const row = { ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)), bestTimeMs: Number(player.bestTimeMs || 0), runElapsedMs: Number(player.runElapsedMs || 0) };
         const previous = rankMap.get(key);
         if (!previous || row.bestFloor > previous.bestFloor || (row.bestFloor === previous.bestFloor && row.bestTimeMs > 0 && (!previous.bestTimeMs || row.bestTimeMs < previous.bestTimeMs))) rankMap.set(key, row);
       }
@@ -2764,7 +2780,7 @@
           <span class="rank-id">${escapeHtml(displayName(player))}</span>
           <span>${escapeHtml(player.country)}</span>
           <span class="rank-floor">${player.bestFloor}F</span>
-          <span class="rank-time">${formatDuration(player.bestTimeMs)}</span>
+          <span class="rank-time">${formatDuration(rankingTimeMs(player))}</span>
         </div>`
       )).join("");
 

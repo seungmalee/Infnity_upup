@@ -113,19 +113,20 @@ async function saveRecord(player, force = false) {
   if (!collection) return;
   const bestFloor = Math.max(clampNumber(player.bestFloor), clampNumber(player.floor));
   const bestTimeMs = clampNumber(player.bestTimeMs || 0);
+  const setFields = {
+    playerKey: player.playerKey,
+    id: cleanId(player.id),
+    country: cleanCountry(player.country),
+    currentFloor: clampNumber(player.floor),
+    gold: clampNumber(player.gold),
+    lives: clampNumber(player.lives),
+    updatedAt: new Date()
+  };
+  if (bestTimeMs > 0) setFields.bestTimeMs = bestTimeMs;
   await collection.updateOne(
     { playerKey: player.playerKey },
     {
-      $set: {
-        playerKey: player.playerKey,
-        id: cleanId(player.id),
-        country: cleanCountry(player.country),
-        currentFloor: clampNumber(player.floor),
-        gold: clampNumber(player.gold),
-        lives: clampNumber(player.lives),
-        bestTimeMs,
-        updatedAt: new Date()
-      },
+      $set: setFields,
       $max: {
         bestFloor,
         kills: clampNumber(player.kills)
@@ -182,7 +183,8 @@ function publicPlayers() {
     kills: player.kills,
     gold: player.gold || 0,
     lives: player.lives,
-    bestTimeMs: player.bestTimeMs || 0
+    bestTimeMs: player.bestTimeMs || 0,
+    runElapsedMs: player.runElapsedMs || 0
   }));
 }
 
@@ -342,18 +344,20 @@ const server = http.createServer(async (req, res) => {
       const previousKills = player.kills;
       const previousBestFloor = player.bestFloor;
       const previousBestTimeMs = player.bestTimeMs || 0;
+      const incomingBestFloor = Number.isFinite(Number(body.bestFloor)) ? clampNumber(body.bestFloor) : 0;
       for (const key of ["floor", "stunnedUntil", "shieldUntil", "kills", "gold", "lives"]) {
         if (Number.isFinite(Number(body[key]))) player[key] = Number(body[key]);
       }
-      if (Number.isFinite(Number(body.bestFloor))) {
-        player.bestFloor = Math.max(player.bestFloor || 0, Number(body.bestFloor));
-      }
       if (Number.isFinite(Number(body.bestTimeMs))) {
         const incomingBestTime = clampNumber(body.bestTimeMs || 0);
-        if (incomingBestTime > 0 && (!player.bestTimeMs || incomingBestTime < player.bestTimeMs || Number(body.bestFloor || 0) >= Number(player.bestFloor || 0))) {
+        if (incomingBestTime > 0 && (incomingBestFloor > (player.bestFloor || 0) || !player.bestTimeMs || (incomingBestFloor === (player.bestFloor || 0) && incomingBestTime < player.bestTimeMs))) {
           player.bestTimeMs = incomingBestTime;
         }
       }
+      if (incomingBestFloor > 0) {
+        player.bestFloor = Math.max(player.bestFloor || 0, incomingBestFloor);
+      }
+      if (Number.isFinite(Number(body.runElapsedMs))) player.runElapsedMs = clampNumber(body.runElapsedMs || 0);
       player.bestFloor = Math.max(player.bestFloor || 0, player.floor || 0);
       for (const key of ["hidden", "shield"]) {
         if (typeof body[key] === "boolean") player[key] = body[key];
