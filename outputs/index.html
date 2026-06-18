@@ -453,7 +453,8 @@
       position: fixed;
       left: auto;
       right: 0;
-      bottom: 0;
+      top: 50%;
+      bottom: auto;
       display: none;
       width: min(72vw, 236px);
       grid-template-columns: 1fr;
@@ -462,6 +463,7 @@
       padding: 12px max(12px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
       pointer-events: none;
       z-index: 5;
+      transform: translateY(-50%);
     }
 
     .mobile-pad {
@@ -601,7 +603,7 @@
         position: fixed;
         left: max(8px, env(safe-area-inset-left));
         right: auto;
-        bottom: calc(18px + env(safe-area-inset-bottom));
+        bottom: calc(86px + env(safe-area-inset-bottom));
         width: min(17vw, 68px);
         padding: 6px;
       }
@@ -706,7 +708,7 @@
       }
 
       .item-bar {
-        bottom: calc(18px + env(safe-area-inset-bottom));
+        bottom: calc(104px + env(safe-area-inset-bottom));
         width: min(18vw, 66px);
       }
 
