@@ -1194,6 +1194,23 @@
       });
     }
 
+    function leaveOnline() {
+      if (!state.online.enabled || !state.online.onlineId) return;
+      const body = JSON.stringify({ onlineId: state.online.onlineId });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon("/api/leave", new Blob([body], { type: "application/json" }));
+      } else {
+        fetch("/api/leave", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+          keepalive: true
+        }).catch(() => {});
+      }
+      if (state.online.events) state.online.events.close();
+      state.online.connected = false;
+    }
+
     async function connectOnline() {
       if (!state.online.enabled || !state.player.id || state.online.connected) return;
       state.online.playerKey = state.online.playerKey || getPlayerKey();
@@ -2208,6 +2225,7 @@
     renderHud();
     window.addEventListener("resize", resize);
     window.addEventListener("keydown", handleKey, { passive: false, capture: true });
+    window.addEventListener("pagehide", leaveOnline);
     requestAnimationFrame(tick);
   </script>
 </body>

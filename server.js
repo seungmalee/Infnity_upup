@@ -417,6 +417,18 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "POST" && url.pathname === "/api/leave") {
+      const body = await readBody(req);
+      const onlineId = String(body.onlineId || "");
+      if (onlineId) {
+        players.delete(onlineId);
+        clients.delete(onlineId);
+        broadcast("state");
+      }
+      sendJson(res, 200, { ok: true });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/events") {
       const onlineId = String(url.searchParams.get("id") || "");
       if (!players.has(onlineId)) {
@@ -433,7 +445,11 @@ const server = http.createServer(async (req, res) => {
       clients.set(onlineId, res);
       res.write(`data: ${JSON.stringify({ type: "state", players: publicPlayers(), leaderboard, chat })}\n\n`);
       req.on("close", () => {
-        if (clients.get(onlineId) === res) clients.delete(onlineId);
+        if (clients.get(onlineId) === res) {
+          clients.delete(onlineId);
+          players.delete(onlineId);
+          broadcast("state");
+        }
       });
       return;
     }
