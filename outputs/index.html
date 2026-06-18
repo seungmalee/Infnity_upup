@@ -266,6 +266,26 @@
       opacity: 0.78;
     }
 
+    .auto-btn {
+      pointer-events: auto;
+      width: 100%;
+      min-height: 30px;
+      margin-top: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .auto-btn.active {
+      border-color: rgba(77, 216, 166, 0.62);
+      background: rgba(77, 216, 166, 0.18);
+      color: #9ff2cf;
+    }
+
     .boost-main,
     .boost-cost {
       display: block;
@@ -643,6 +663,14 @@
         text-align: center;
       }
 
+      .auto-btn {
+        width: 72px;
+        min-height: 32px;
+        margin-top: 5px;
+        padding: 4px 5px;
+        font-size: 10px;
+      }
+
       .boost-main {
         display: block;
         font-size: 11px;
@@ -1006,6 +1034,7 @@
         <span id="onlineStatus">오프라인</span>
       </div>
       <button class="boost-btn" id="boostBtn" type="button" disabled>100층 위 시작 - 500g</button>
+      <button class="auto-btn" id="autoBtn" type="button">AUTO OFF</button>
     </div>
 
     <div class="combo" id="combo">COMBO x0</div>
@@ -1084,6 +1113,7 @@
       lives: document.getElementById("lives"),
       onlineStatus: document.getElementById("onlineStatus"),
       boostBtn: document.getElementById("boostBtn"),
+      autoBtn: document.getElementById("autoBtn"),
       itemSlots: [
         document.getElementById("item0"),
         document.getElementById("item1"),
@@ -1116,6 +1146,7 @@
     const MISSILE_HIT_AT = 0.9;
     const KILL_GOLD_REWARD = 50;
     const JUMP_DURATION = 240;
+    const AUTO_CLIMB_INTERVAL = 260;
     const BOT_FILLER_COUNT = 5;
     const BOT_REMOVE_POPULATION = 10;
     const PROFILE_KEY = "stairProfile";
@@ -1169,6 +1200,8 @@
       floorHold: { floor: 0, since: 0, punished: false },
       runStartedAt: Date.now(),
       bestTimeMs: 0,
+      autoClimb: false,
+      autoTimer: 0,
       kills: 0,
       gold: 0,
       lives: 0,
@@ -2299,6 +2332,29 @@
       }
     }
 
+    function autoClimbStep() {
+      if (!state.autoClimb || state.mode !== "play") return;
+      if (performance.now() < state.player.stunnedUntil) return;
+      touchComboInput();
+      climb(directionForNextFloor(state.player.floor));
+    }
+
+    function setAutoClimb(enabled) {
+      state.autoClimb = Boolean(enabled);
+      if (state.autoTimer) {
+        clearInterval(state.autoTimer);
+        state.autoTimer = 0;
+      }
+      if (state.autoClimb) {
+        autoClimbStep();
+        state.autoTimer = setInterval(autoClimbStep, AUTO_CLIMB_INTERVAL);
+        showNotice("테스트 자동등반 ON");
+      } else {
+        showNotice("테스트 자동등반 OFF");
+      }
+      renderHud();
+    }
+
     function handleKey(event) {
       if (document.activeElement === chatInput) return;
       if (event.repeat) {
@@ -2678,6 +2734,9 @@
       ui.gold.textContent = `G ${state.gold}`;
       ui.lives.textContent = `L ${state.lives}`;
       ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">${state.gold}/500G</span>`;
+      ui.autoBtn.disabled = state.mode !== "play";
+      ui.autoBtn.classList.toggle("active", state.autoClimb);
+      ui.autoBtn.textContent = state.autoClimb ? "AUTO ON" : "AUTO OFF";
       ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(hideCooldownLeft() / 1000)}s`;
       const idleLeft = state.player.hidden || stunned > 0 ? FLOOR_IDLE_LIMIT : Math.max(0, FLOOR_IDLE_LIMIT - (performance.now() - state.floorHold.since));
       ui.idleTimer.classList.toggle("danger", idleLeft <= 1200 && !state.player.hidden && stunned <= 0);
@@ -2753,11 +2812,12 @@
       event.stopPropagation();
     });
 
-    ui.rankToggle.addEventListener("click", () => {
+      ui.rankToggle.addEventListener("click", () => {
       setRankingCollapsed(!state.rankingCollapsed);
     });
 
     ui.boostBtn.addEventListener("click", useGoldBoost);
+    ui.autoBtn.addEventListener("click", () => setAutoClimb(!state.autoClimb));
 
     resetBots();
     restoreSessionProfile();
