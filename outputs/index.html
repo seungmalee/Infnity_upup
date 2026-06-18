@@ -397,15 +397,22 @@
     .panel-toggle {
       pointer-events: auto;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 6px;
       background: #11141a;
       color: var(--text);
-      min-width: 34px;
-      height: 30px;
-      padding: 0 9px;
+      width: 28px;
+      min-width: 28px;
+      height: 24px;
+      padding: 0;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 15px;
       font-weight: 900;
+      line-height: 1;
+    }
+
+    .panel-toggle:hover {
+      border-color: rgba(240, 189, 91, 0.48);
+      color: var(--bar-active);
     }
 
     .rank-head,
@@ -1103,7 +1110,7 @@
     <section class="ranking" id="rankingPanel">
       <div class="panel-header">
         <h2 class="panel-title" id="rankingTitle">랭킹</h2>
-        <button class="panel-toggle" id="rankToggle" type="button">숨김</button>
+        <button class="panel-toggle" id="rankToggle" type="button" aria-label="랭킹 숨김" title="랭킹 숨김">−</button>
       </div>
       <div class="rank-content">
         <div class="rank-head">
@@ -1796,7 +1803,9 @@
       state.rankingCollapsed = collapsed;
       sessionStorage.setItem("rankingCollapsed", String(collapsed));
       ui.rankingPanel.classList.toggle("collapsed", collapsed);
-      ui.rankToggle.textContent = collapsed ? "보기" : "숨김";
+      ui.rankToggle.textContent = collapsed ? "□" : "−";
+      ui.rankToggle.setAttribute("aria-label", collapsed ? "랭킹 열기" : "랭킹 숨김");
+      ui.rankToggle.title = collapsed ? "랭킹 열기" : "랭킹 숨김";
       ui.rankingTitle.textContent = collapsed ? "랭킹 보기" : "랭킹";
     }
 
