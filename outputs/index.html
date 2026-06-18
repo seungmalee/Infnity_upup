@@ -248,6 +248,23 @@
       font-size: 13px;
     }
 
+    .next-goal {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .next-goal span {
+      display: block;
+      margin-top: 3px;
+      color: var(--bar-active);
+      font-size: 11px;
+    }
+
     .boost-btn {
       pointer-events: auto;
       width: 100%;
@@ -444,6 +461,17 @@
     .rank-content {
       max-height: min(34vh, 310px);
       overflow: auto;
+    }
+
+    .live-leader {
+      margin-bottom: 6px;
+      padding: 5px 0;
+      color: var(--bar-active);
+      font-size: 12px;
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .rank-id {
@@ -948,6 +976,20 @@
         grid-template-columns: 1fr;
       }
 
+      .next-goal {
+        margin-top: 6px;
+        padding-top: 6px;
+        font-size: 9px;
+      }
+
+      .next-goal span {
+        font-size: 8px;
+      }
+
+      .live-leader {
+        display: none;
+      }
+
       .ranking .rank-row {
         grid-template-columns: 18px minmax(0, 1fr) 24px 34px 48px;
         gap: 4px;
@@ -1087,6 +1129,7 @@
         <span id="lives">목숨 0</span>
         <span id="onlineStatus">오프라인</span>
       </div>
+      <div class="next-goal" id="nextGoal">NEXT<span>100F ITEM</span></div>
       <button class="boost-btn" id="boostBtn" type="button" disabled>100층 위 시작 - 500g</button>
       <button class="auto-btn" id="autoBtn" type="button">AUTO OFF</button>
     </div>
@@ -1113,6 +1156,7 @@
         <button class="panel-toggle" id="rankToggle" type="button" aria-label="랭킹 숨김" title="랭킹 숨김">−</button>
       </div>
       <div class="rank-content">
+        <div class="live-leader" id="liveLeader">LIVE #1 -</div>
         <div class="rank-head">
           <span>Rank</span>
           <span>ID</span>
@@ -1169,6 +1213,7 @@
       gold: document.getElementById("gold"),
       lives: document.getElementById("lives"),
       onlineStatus: document.getElementById("onlineStatus"),
+      nextGoal: document.getElementById("nextGoal"),
       boostBtn: document.getElementById("boostBtn"),
       autoBtn: document.getElementById("autoBtn"),
       mobileIdleFill: document.getElementById("mobileIdleFill"),
@@ -1180,6 +1225,7 @@
       rankingPanel: document.getElementById("rankingPanel"),
       rankToggle: document.getElementById("rankToggle"),
       rankingTitle: document.getElementById("rankingTitle"),
+      liveLeader: document.getElementById("liveLeader"),
       rankRows: document.getElementById("rankRows"),
       chatPanel: document.getElementById("chatPanel"),
       chatLog: document.getElementById("chatLog"),
@@ -1205,6 +1251,9 @@
     const MISSILE_DURATION = 1800;
     const MISSILE_HIT_AT = 0.9;
     const KILL_GOLD_REWARD = 50;
+    const COMBO_GOLD_STEP = 30;
+    const COMBO_GOLD_REWARD = 10;
+    const COMBO_ITEM_STEP = 50;
     const JUMP_DURATION = 240;
     const AUTO_CLIMB_INTERVAL = 260;
     const BOT_FILLER_COUNT = 5;
@@ -1281,6 +1330,7 @@
         { id: "SYSTEM", country: "--", text: "채팅창이 준비되었습니다." }
       ],
       flash: 0,
+      shake: 0,
       climbFlash: { floor: -1, start: 0, duration: 0 },
       jump: { start: 0, duration: 0 },
       trails: [],
@@ -1830,6 +1880,26 @@
       return 0;
     }
 
+    function nextGoalInfo() {
+      const floor = state.player.floor;
+      const goals = [
+        { floor: Math.ceil((floor + 1) / 100) * 100, label: "ITEM" },
+        { floor: Math.ceil((floor + 1) / LIFE_REWARD_INTERVAL) * LIFE_REWARD_INTERVAL, label: "LIFE" },
+        { floor: 500, label: "TITLE" },
+        { floor: 1000, label: "TITLE" },
+        { floor: 1500, label: "TITLE" },
+        { floor: 3000, label: "TITLE" }
+      ].filter((goal) => goal.floor > floor).sort((a, b) => a.floor - b.floor);
+      const nextFloor = goals[0] ? goals[0].floor : Math.ceil((floor + 1) / 100) * 100;
+      const labels = [...new Set(goals.filter((goal) => goal.floor === nextFloor).map((goal) => goal.label))];
+      return { floor: nextFloor, label: labels.length ? labels.join("/") : "ITEM" };
+    }
+
+    function pulseDanger(power = 0.45) {
+      state.flash = Math.max(state.flash, power);
+      state.shake = Math.max(state.shake, power);
+    }
+
     function updateBestFloorRecord() {
       if (state.player.floor > state.player.bestFloor) {
         state.player.bestFloor = state.player.floor;
@@ -1871,6 +1941,15 @@
     function addCombo() {
       state.combo += 1;
       state.comboLastInputAt = performance.now();
+      if (state.combo % COMBO_GOLD_STEP === 0) {
+        state.gold += COMBO_GOLD_REWARD;
+        showNotice(`COMBO ${state.combo}: +${COMBO_GOLD_REWARD}G`);
+        saveSessionProfile();
+      }
+      if (state.combo % COMBO_ITEM_STEP === 0) {
+        addRandomItem();
+        showNotice(`COMBO ${state.combo}: ITEM`);
+      }
     }
 
     function updateComboTimeout() {
@@ -1995,6 +2074,7 @@
         return false;
       }
       target.stunnedUntil = performance.now() + ms;
+      if (target === state.player) pulseDanger(0.55);
       return true;
     }
 
@@ -2033,7 +2113,7 @@
       if (applyStun(target, MISSILE_STUN, "미사일")) {
         target.floor = landedFloor;
         target.hidden = false;
-        if (target === state.player) state.flash = 1;
+        if (target === state.player) pulseDanger(1);
         effect.hit = true;
         effect.landedFloor = landedFloor;
         effect.targetFloor = targetFloor;
@@ -2190,7 +2270,7 @@
         state.lives -= 1;
         resetCombo();
         state.player.hidden = false;
-        state.flash = 0.45;
+        pulseDanger(0.45);
         showNotice(`목숨을 사용해 버텼습니다. 남은 목숨 ${state.lives}`);
         addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 목숨을 사용해 추락을 막았습니다.`);
         syncOnlineState();
@@ -2201,7 +2281,7 @@
       state.runStartedAt = Date.now();
       resetFloorHold();
       resetRunState();
-      state.flash = 1;
+      pulseDanger(1);
       state.climbFlash = { floor: -1, start: 0, duration: 0 };
       joinScreen.classList.add("hidden");
       showNotice(reason);
@@ -2215,7 +2295,7 @@
         state.lives -= 1;
         resetCombo();
         state.player.hidden = false;
-        state.flash = 0.32;
+        pulseDanger(0.5);
         showNotice(`${reason} 목숨 -1 / 남은 목숨 ${state.lives}`);
         addChat("SYSTEM", "--", `${state.player.id || "플레이어"}: ${reason} 목숨 -1`);
         syncOnlineState();
@@ -2672,7 +2752,7 @@
           ctx.fillStyle = "#f5f1e8";
           ctx.font = "900 12px system-ui";
           ctx.textAlign = "center";
-          ctx.fillText(`낙석 ${effect.hits}명`, startP.x, y - 72);
+          ctx.fillText(t < 0.35 ? "WARNING" : `낙석 ${effect.hits}명`, startP.x, y - 72);
           ctx.restore();
         }
 
@@ -2742,6 +2822,12 @@
       const width = rect.width;
       const height = rect.height;
       ctx.clearRect(0, 0, width, height);
+      ctx.save();
+      if (state.shake > 0) {
+        const amount = 9 * state.shake;
+        ctx.translate((Math.random() - 0.5) * amount, (Math.random() - 0.5) * amount);
+        state.shake = Math.max(0, state.shake - 0.035);
+      }
 
       if (state.flash > 0) {
         ctx.fillStyle = `rgba(255, 100, 111, ${state.flash * 0.28})`;
@@ -2792,6 +2878,7 @@
       drawRunner(playerLabel, pp.x, pp.y - jumpOffset, varColor("--player"), 1, true);
 
       drawEffects(focus, width, height, now);
+      ctx.restore();
     }
 
     function renderHud() {
@@ -2822,6 +2909,8 @@
       ui.autoBtn.classList.toggle("active", state.autoClimb);
       ui.autoBtn.textContent = state.autoClimb ? "AUTO ON" : "AUTO OFF";
       ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(hideCooldownLeft() / 1000)}s`;
+      const nextGoal = nextGoalInfo();
+      ui.nextGoal.innerHTML = `NEXT<span>${nextGoal.floor}F ${nextGoal.label}</span>`;
       const idleLimit = idleLimitForFloor();
       const idleLeft = state.player.hidden || stunned > 0 ? idleLimit : Math.max(0, idleLimit - (performance.now() - state.floorHold.since));
       const idleProgress = state.player.hidden || stunned > 0 ? 0 : Math.min(1, Math.max(0, 1 - idleLeft / idleLimit));
@@ -2846,6 +2935,10 @@
         if (!previous || row.bestFloor > previous.bestFloor || (row.bestFloor === previous.bestFloor && row.bestTimeMs > 0 && (!previous.bestTimeMs || row.bestTimeMs < previous.bestTimeMs))) rankMap.set(key, row);
       }
       const players = [...rankMap.values()].sort((a, b) => b.bestFloor - a.bestFloor);
+      const liveLeader = [state.player, ...opponents()]
+        .filter((player) => player.id)
+        .sort((a, b) => Number(b.floor || 0) - Number(a.floor || 0))[0];
+      ui.liveLeader.textContent = liveLeader ? `LIVE #1 ${displayName(liveLeader)} ${liveLeader.floor}F` : "LIVE #1 -";
 
       ui.rankRows.innerHTML = players.map((player, index) => (
         `<div class="rank-row">
