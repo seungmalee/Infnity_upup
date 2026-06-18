@@ -1184,7 +1184,9 @@
     const COMBO_TIMEOUT = 3000;
     const SHIELD_DURATION = 5000;
     const LIFE_REWARD_INTERVAL = 250;
-    const FLOOR_IDLE_LIMIT = 3000;
+    const FLOOR_IDLE_START = 3000;
+    const FLOOR_IDLE_END = 1500;
+    const FLOOR_IDLE_MAX_FLOOR = 10000;
     const BOULDER_STUN = 1000;
     const MISSILE_STUN = 3000;
     const MISSILE_DURATION = 1800;
@@ -1834,6 +1836,12 @@
 
     function canHide() {
       return hideCooldownLeft() <= 0;
+    }
+
+    function idleLimitForFloor(floor = state.player.floor) {
+      const progress = Math.min(1, Math.max(0, Number(floor || 0) / FLOOR_IDLE_MAX_FLOOR));
+      const eased = progress * progress * (3 - 2 * progress);
+      return FLOOR_IDLE_START - (FLOOR_IDLE_START - FLOOR_IDLE_END) * eased;
     }
 
     function resetCombo() {
@@ -2549,7 +2557,7 @@
         resetFloorHold(now);
         return;
       }
-      if (!state.floorHold.punished && now - state.floorHold.since >= FLOOR_IDLE_LIMIT) {
+      if (!state.floorHold.punished && now - state.floorHold.since >= idleLimitForFloor()) {
         state.floorHold.punished = true;
         loseLifeOrFall(`${state.player.floor}층에서 3초 이상 머물렀습니다.`);
       }
@@ -2799,8 +2807,9 @@
       ui.autoBtn.classList.toggle("active", state.autoClimb);
       ui.autoBtn.textContent = state.autoClimb ? "AUTO ON" : "AUTO OFF";
       ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(hideCooldownLeft() / 1000)}s`;
-      const idleLeft = state.player.hidden || stunned > 0 ? FLOOR_IDLE_LIMIT : Math.max(0, FLOOR_IDLE_LIMIT - (performance.now() - state.floorHold.since));
-      const idleProgress = state.player.hidden || stunned > 0 ? 0 : Math.min(1, Math.max(0, 1 - idleLeft / FLOOR_IDLE_LIMIT));
+      const idleLimit = idleLimitForFloor();
+      const idleLeft = state.player.hidden || stunned > 0 ? idleLimit : Math.max(0, idleLimit - (performance.now() - state.floorHold.since));
+      const idleProgress = state.player.hidden || stunned > 0 ? 0 : Math.min(1, Math.max(0, 1 - idleLeft / idleLimit));
       ui.idleTimer.classList.toggle("danger", idleLeft <= 1200 && !state.player.hidden && stunned <= 0);
       ui.idleTimer.querySelector(".idle-label").textContent = state.player.hidden ? "HIDE" : stunned > 0 ? "STUN" : "STAY";
       ui.idleTimer.querySelector(".idle-value").textContent = `${(idleLeft / 1000).toFixed(1)}s`;
