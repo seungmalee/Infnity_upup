@@ -421,8 +421,11 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       const onlineId = String(body.onlineId || "");
       if (onlineId) {
+        const leaving = players.get(onlineId);
+        if (leaving) await saveRecord(leaving, true);
         players.delete(onlineId);
         clients.delete(onlineId);
+        await refreshLeaderboard();
         broadcast("state");
       }
       sendJson(res, 200, { ok: true });
@@ -446,9 +449,19 @@ const server = http.createServer(async (req, res) => {
       res.write(`data: ${JSON.stringify({ type: "state", players: publicPlayers(), leaderboard, chat })}\n\n`);
       req.on("close", () => {
         if (clients.get(onlineId) === res) {
+          const leaving = players.get(onlineId);
           clients.delete(onlineId);
-          players.delete(onlineId);
-          broadcast("state");
+          Promise.resolve()
+            .then(() => leaving ? saveRecord(leaving, true) : null)
+            .then(() => {
+              players.delete(onlineId);
+              return refreshLeaderboard();
+            })
+            .then(() => broadcast("state"))
+            .catch(() => {
+              players.delete(onlineId);
+              broadcast("state");
+            });
         }
       });
       return;

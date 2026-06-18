@@ -2163,7 +2163,7 @@
       const rankMap = new Map();
       for (const player of [...state.leaderboard, state.player, ...opponents()]) {
         if (!player.id) continue;
-        const key = player.onlineId || `${player.country}:${player.id}`;
+        const key = `${player.country || "--"}:${player.id}`;
         const row = { ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)) };
         const previous = rankMap.get(key);
         if (!previous || row.bestFloor > previous.bestFloor) rankMap.set(key, row);
