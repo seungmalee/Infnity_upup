@@ -299,13 +299,14 @@ const server = http.createServer(async (req, res) => {
       const country = cleanCountry(body.country);
       const playerKey = cleanPlayerKey(body.playerKey || onlineId);
       const saved = await loadRecord(playerKey);
+      const startFloor = saved && cleanId(saved.id) === id ? clampNumber(saved.currentFloor || 0) : clampNumber(body.floor || 0);
       const player = {
         onlineId,
         playerKey,
         id,
         country,
-        floor: clampNumber(body.floor || 0),
-        bestFloor: Math.max(clampNumber(body.bestFloor || 0), clampNumber(body.floor || 0), clampNumber(saved && saved.bestFloor)),
+        floor: startFloor,
+        bestFloor: Math.max(clampNumber(body.bestFloor || 0), startFloor, clampNumber(saved && saved.bestFloor)),
         hidden: Boolean(body.hidden),
         shield: Boolean(body.shield),
         shieldUntil: clampNumber(body.shieldUntil || 0),

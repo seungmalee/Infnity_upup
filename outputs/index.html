@@ -1037,10 +1037,10 @@
     const SEGMENT_SIZE = 100;
     const HIDE_COOLDOWN = 10 * 60 * 1000;
     const GLOBAL_SEED = "one-public-stair-map-v3";
-    const STEP_X = 88;
-    const STEP_Y = 46;
-    const BAR_W = 82;
-    const BAR_H = 16;
+    const STEP_X = 72;
+    const STEP_Y = 38;
+    const BAR_W = 68;
+    const BAR_H = 14;
     const REST_INTERVAL = 500;
     const COMBO_TIMEOUT = 3000;
     const SHIELD_DURATION = 5000;
@@ -1051,7 +1051,8 @@
     const MISSILE_HIT_AT = 0.9;
     const KILL_GOLD_REWARD = 50;
     const JUMP_DURATION = 240;
-    const BOT_FILLER_COUNT = 0;
+    const BOT_FILLER_COUNT = 5;
+    const BOT_REMOVE_POPULATION = 10;
     const PROFILE_KEY = "stairProfile";
     const PLAYER_KEY = "stairPlayerKey";
     const BOT_DATA = [
@@ -1282,20 +1283,21 @@
     function resetBots(count = BOT_FILLER_COUNT) {
       const now = performance.now();
       state.bots = BOT_DATA.slice(0, count).map(([id, country], i) => ({
-        id,
+        id: `EASY ${id}`,
         country,
         floor: 4 + i * 4,
         bestFloor: 4 + i * 4,
+        easy: true,
         hidden: false,
         shield: false,
         shieldUntil: 0,
-        nextMoveAt: now + 700 + Math.random() * 900,
-        baseSpeed: 620 + Math.random() * 620,
-        rhythm: 0.72 + Math.random() * 0.72,
-        hesitation: 0.08 + Math.random() * 0.12,
-        mistake: 0.025 + Math.random() * 0.045,
-        inventory: [ITEMS[Math.floor(Math.random() * ITEMS.length)]],
-        nextItemAt: now + 18000 + Math.random() * 24000,
+        nextMoveAt: now + 900 + Math.random() * 1300,
+        baseSpeed: 860 + Math.random() * 740,
+        rhythm: 0.92 + Math.random() * 0.82,
+        hesitation: 0.12 + Math.random() * 0.16,
+        mistake: 0.04 + Math.random() * 0.055,
+        inventory: [],
+        nextItemAt: Number.POSITIVE_INFINITY,
         jump: { start: 0, duration: 0 },
         stunnedUntil: 0
       }));
@@ -1309,20 +1311,21 @@
         const [id, country] = BOT_DATA[i % BOT_DATA.length];
         const floor = 4 + i * 4;
         state.bots.push({
-          id: i < BOT_DATA.length ? id : `${id}${i + 1}`,
+          id: i < BOT_DATA.length ? `EASY ${id}` : `EASY ${id}${i + 1}`,
           country,
           floor,
           bestFloor: floor,
+          easy: true,
           hidden: false,
           shield: false,
           shieldUntil: 0,
-          nextMoveAt: now + 700 + Math.random() * 900,
-          baseSpeed: 620 + Math.random() * 620,
-          rhythm: 0.72 + Math.random() * 0.72,
-          hesitation: 0.08 + Math.random() * 0.12,
-          mistake: 0.025 + Math.random() * 0.045,
-          inventory: [ITEMS[Math.floor(Math.random() * ITEMS.length)]],
-          nextItemAt: now + 18000 + Math.random() * 24000,
+          nextMoveAt: now + 900 + Math.random() * 1300,
+          baseSpeed: 860 + Math.random() * 740,
+          rhythm: 0.92 + Math.random() * 0.82,
+          hesitation: 0.12 + Math.random() * 0.16,
+          mistake: 0.04 + Math.random() * 0.055,
+          inventory: [],
+          nextItemAt: Number.POSITIVE_INFINITY,
           jump: { start: 0, duration: 0 },
           stunnedUntil: 0
         });
@@ -1415,10 +1418,11 @@
 
     function opponents() {
       if (!state.online.enabled) return state.bots;
-      if (state.serverPopulation <= 5) {
+      if (state.serverPopulation < BOT_REMOVE_POPULATION) {
         ensureBotCount(BOT_FILLER_COUNT);
         return [...state.remotePlayers, ...state.bots.slice(0, BOT_FILLER_COUNT)];
       }
+      state.bots = [];
       return state.remotePlayers;
     }
 
@@ -1446,6 +1450,10 @@
         if (own && Number(own.kills || 0) > state.kills) state.kills = Number(own.kills || 0);
         if (own && Number.isFinite(Number(own.gold))) state.gold = Number(own.gold || 0);
         if (own && Number.isFinite(Number(own.lives))) state.lives = Number(own.lives || 0);
+        if (own && Number.isFinite(Number(own.floor))) {
+          const serverFloor = Math.max(0, Number(own.floor || 0));
+          if (serverFloor > state.player.floor) state.player.floor = serverFloor;
+        }
         if (own && Number(own.bestFloor || 0) > state.player.bestFloor) state.player.bestFloor = Number(own.bestFloor || 0);
       }
       if (Array.isArray(data.leaderboard)) {
@@ -1880,6 +1888,7 @@
     }
 
     function botUseItem(bot, now) {
+      if (bot.easy) return;
       if (!bot.inventory.length || now < bot.nextItemAt || now < bot.stunnedUntil || state.mode !== "play") return;
       const item = bot.inventory.shift();
       bot.nextItemAt = now + 30000 + Math.random() * 45000;
@@ -2196,11 +2205,14 @@
 
     function updateBots(now) {
       if (state.mode !== "play") return;
-      if (state.online.enabled && state.serverPopulation > 5) return;
+      if (state.online.enabled && state.serverPopulation >= BOT_REMOVE_POPULATION) {
+        state.bots = [];
+        return;
+      }
       if (state.online.enabled) ensureBotCount(BOT_FILLER_COUNT);
       for (const bot of state.bots) {
         const nearPlayer = Math.abs(bot.floor - state.player.floor) <= 45;
-        if (nearPlayer || Math.random() < 0.01) botUseItem(bot, now);
+        if (!bot.easy && (nearPlayer || Math.random() < 0.01)) botUseItem(bot, now);
         if (now < bot.nextMoveAt || now < bot.stunnedUntil) continue;
         const delay = bot.baseSpeed * bot.rhythm + Math.random() * 720;
         bot.nextMoveAt = now + delay;
@@ -2423,8 +2435,8 @@
       }
 
       const focus = state.mode === "play" ? state.player.floor : 0;
-      const start = Math.max(0, focus - 8);
-      const end = focus + 30;
+      const start = Math.max(0, focus - 12);
+      const end = focus + 42;
       const now = performance.now();
       for (let floor = start; floor <= end; floor++) {
         const p = screenPosition(floor, focus, width, height);
