@@ -451,10 +451,11 @@
 
     .mobile-controls {
       position: fixed;
-      left: 0;
+      left: auto;
       right: 0;
       bottom: 0;
       display: none;
+      width: min(72vw, 236px);
       grid-template-columns: 1fr;
       justify-items: center;
       gap: 0;
@@ -471,8 +472,8 @@
     }
 
     .mobile-pad {
-      grid-template-columns: repeat(3, 54px);
-      grid-template-rows: repeat(2, 48px);
+      grid-template-columns: repeat(3, 62px);
+      grid-template-rows: repeat(2, 56px);
       align-content: end;
       justify-content: start;
     }
@@ -484,8 +485,8 @@
       color: var(--text);
       box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
       min-width: 0;
-      min-height: 48px;
-      font-size: 18px;
+      min-height: 56px;
+      font-size: 21px;
       font-weight: 900;
       cursor: pointer;
       user-select: none;
@@ -601,8 +602,8 @@
         left: max(8px, env(safe-area-inset-left));
         right: auto;
         bottom: calc(18px + env(safe-area-inset-bottom));
-        width: min(32vw, 132px);
-        padding: 8px;
+        width: min(17vw, 68px);
+        padding: 6px;
       }
 
       .item-bar .panel-title {
@@ -611,7 +612,7 @@
 
       .inventory {
         grid-template-columns: 1fr;
-        gap: 6px;
+        gap: 5px;
       }
 
       .meta,
@@ -629,10 +630,10 @@
       }
 
       .item-slot {
-        height: 44px;
-        justify-content: flex-start;
-        padding: 0 6px;
-        font-size: 11px;
+        height: 42px;
+        justify-content: center;
+        padding: 0 4px;
+        font-size: 10px;
         cursor: pointer;
         pointer-events: auto;
         touch-action: manipulation;
@@ -645,8 +646,8 @@
       }
 
       .item-key {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
       }
 
       .chat input {
@@ -706,7 +707,7 @@
 
       .item-bar {
         bottom: calc(18px + env(safe-area-inset-bottom));
-        width: min(36vw, 126px);
+        width: min(18vw, 66px);
       }
 
       .combo {
@@ -734,6 +735,7 @@
       }
 
       .mobile-controls {
+        width: min(74vw, 236px);
         gap: 8px;
       }
 
