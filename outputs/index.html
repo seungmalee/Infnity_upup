@@ -177,8 +177,10 @@
 
     .combo {
       position: fixed;
-      right: 24px;
-      bottom: 24px;
+      left: min(calc(50% + 180px), calc(100vw - 180px));
+      top: 58%;
+      right: auto;
+      bottom: auto;
       display: block;
       min-width: 0;
       padding: 0;
@@ -196,13 +198,13 @@
       opacity: 0;
       pointer-events: none;
       z-index: 4;
-      transform: translateY(12px) scale(0.94);
+      transform: translate(18px, 10px) scale(0.94);
       transition: opacity 260ms ease, transform 260ms ease;
     }
 
     .combo.active {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translate(0, 0) scale(1);
     }
 
     .idle-timer {
@@ -770,6 +772,8 @@
       }
 
       .combo {
+        left: auto;
+        top: auto;
         right: 14px;
         bottom: calc(12vh + 150px + env(safe-area-inset-bottom));
         font-size: 19px;
@@ -997,6 +1001,8 @@
       }
 
       .combo {
+        left: auto;
+        top: auto;
         right: 10px;
         bottom: calc(12vh + 148px + env(safe-area-inset-bottom));
         font-size: 18px;
