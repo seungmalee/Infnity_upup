@@ -539,55 +539,80 @@
         position: fixed;
         top: max(8px, env(safe-area-inset-top));
         left: max(8px, env(safe-area-inset-left));
-        right: max(8px, env(safe-area-inset-right));
-        width: auto;
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        gap: 6px 10px;
-        padding: 9px 10px;
+        right: auto;
+        width: min(42vw, 150px);
+        display: block;
+        padding: 8px;
       }
 
       .floor {
-        grid-row: 1 / 3;
-        align-self: center;
-        font-size: 30px;
+        font-size: 25px;
+        margin-bottom: 6px;
       }
 
       .meta {
+        display: grid;
+        grid-template-columns: 1fr;
         margin-top: 0;
-        gap: 5px 8px;
-        align-content: center;
-        font-size: 11px;
-        line-height: 1.15;
+        gap: 3px;
+        font-size: 10px;
+        line-height: 1.1;
       }
 
       .boost-btn {
-        grid-column: 1 / -1;
-        min-height: 30px;
-        margin-top: 0;
-        font-size: 12px;
+        min-height: 28px;
+        margin-top: 6px;
+        font-size: 10px;
       }
 
       .ranking {
         position: fixed;
-        top: calc(max(8px, env(safe-area-inset-top)) + 92px);
+        top: max(8px, env(safe-area-inset-top));
         right: max(8px, env(safe-area-inset-right));
-        width: min(58vw, 260px);
-        max-height: 34dvh;
+        width: min(54vw, 220px);
+        max-height: 152px;
         padding: 8px;
       }
 
       .ranking.collapsed {
-        width: auto;
-        max-height: none;
+        width: min(54vw, 220px);
+        max-height: 152px;
       }
 
-      .rank-content {
-        max-height: 24dvh;
+      .ranking.collapsed .rank-content {
+        display: block;
       }
 
       .panel-header {
-        margin-bottom: 6px;
+        margin-bottom: 4px;
+      }
+
+      .ranking .panel-toggle {
+        display: none;
+      }
+
+      .ranking .panel-title {
+        font-size: 10px;
+      }
+
+      .rank-content {
+        max-height: 124px;
+        overflow: hidden;
+      }
+
+      .rank-head {
+        display: none;
+      }
+
+      .rank-row {
+        grid-template-columns: 18px minmax(0, 1fr) 28px 42px;
+        gap: 4px;
+        min-height: 22px;
+        font-size: 10px;
+      }
+
+      .rank-row:nth-child(n+6) {
+        display: none;
       }
 
       .combo {
@@ -654,6 +679,65 @@
         height: 18px;
       }
 
+      .chat {
+        position: fixed;
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        bottom: max(8px, env(safe-area-inset-bottom));
+        width: auto;
+        height: 34px;
+        display: flex;
+        padding: 7px 9px;
+        pointer-events: auto;
+      }
+
+      .chat .panel-title {
+        display: none;
+      }
+
+      .chat-log {
+        font-size: 11px;
+        gap: 0;
+        padding-right: 0;
+        overflow: hidden;
+      }
+
+      .chat-row {
+        display: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.45;
+      }
+
+      .chat-row:last-child {
+        display: block;
+      }
+
+      .chat form {
+        display: none;
+      }
+
+      .chat.expanded {
+        height: 158px;
+        padding: 9px;
+      }
+
+      .chat.expanded .chat-log {
+        overflow: auto;
+        gap: 5px;
+        padding-right: 4px;
+      }
+
+      .chat.expanded .chat-row {
+        display: block;
+        white-space: normal;
+      }
+
+      .chat.expanded form {
+        display: flex;
+      }
+
       .chat input {
         height: 34px;
       }
@@ -661,6 +745,22 @@
       .chat button {
         width: 48px;
         font-size: 12px;
+      }
+
+      .top-left .meta {
+        font-size: 10px;
+        grid-template-columns: 1fr;
+      }
+
+      .ranking .rank-row {
+        grid-template-columns: 18px minmax(0, 1fr) 28px 42px;
+        gap: 4px;
+        min-height: 22px;
+        font-size: 10px;
+      }
+
+      .ranking .rank-row:nth-child(n+6) {
+        display: none;
       }
 
       .mobile-controls {
@@ -671,17 +771,12 @@
         justify-content: center;
       }
 
-      .chat,
       .notice {
         display: none;
       }
     }
 
     @media (max-height: 560px) {
-      .chat {
-        height: clamp(92px, 24vh, 140px);
-      }
-
       .rank-content {
         max-height: 34vh;
       }
@@ -706,7 +801,7 @@
       }
 
       .top-left {
-        display: grid;
+        display: block;
       }
 
       .item-bar {
@@ -724,15 +819,11 @@
         display: none;
       }
 
-      .chat {
-        display: none;
-      }
-
       .ranking {
-        top: calc(max(8px, env(safe-area-inset-top)) + 116px);
-        left: max(8px, env(safe-area-inset-left));
+        top: max(8px, env(safe-area-inset-top));
+        left: auto;
         right: max(8px, env(safe-area-inset-right));
-        width: auto;
+        width: min(54vw, 210px);
       }
 
       .rank-content {
@@ -822,7 +913,7 @@
       </div>
     </section>
 
-    <section class="chat">
+    <section class="chat" id="chatPanel">
       <h2 class="panel-title">채팅</h2>
       <div class="chat-log" id="chatLog"></div>
       <form id="chatForm">
@@ -873,6 +964,7 @@
       rankToggle: document.getElementById("rankToggle"),
       rankingTitle: document.getElementById("rankingTitle"),
       rankRows: document.getElementById("rankRows"),
+      chatPanel: document.getElementById("chatPanel"),
       chatLog: document.getElementById("chatLog"),
       notice: document.getElementById("notice")
     };
@@ -2382,6 +2474,17 @@
         addChat(state.player.id, state.player.country, text);
       }
       chatInput.value = "";
+      if (window.matchMedia("(max-width: 760px)").matches) ui.chatPanel.classList.remove("expanded");
+    });
+
+    ui.chatPanel.addEventListener("click", () => {
+      if (!window.matchMedia("(max-width: 760px)").matches) return;
+      ui.chatPanel.classList.add("expanded");
+      setTimeout(() => chatInput.focus(), 0);
+    });
+
+    chatForm.addEventListener("click", (event) => {
+      event.stopPropagation();
     });
 
     ui.rankToggle.addEventListener("click", () => {
@@ -2394,8 +2497,8 @@
     restoreSessionProfile();
     resize();
     renderChat();
-    if (window.matchMedia("(max-width: 760px)").matches && sessionStorage.getItem("rankingCollapsed") === null) {
-      state.rankingCollapsed = true;
+    if (window.matchMedia("(max-width: 760px)").matches) {
+      state.rankingCollapsed = false;
     }
     setRankingCollapsed(state.rankingCollapsed);
     renderHud();
