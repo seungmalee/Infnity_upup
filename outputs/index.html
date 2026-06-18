@@ -1045,6 +1045,7 @@
     const COMBO_TIMEOUT = 3000;
     const SHIELD_DURATION = 5000;
     const LIFE_REWARD_INTERVAL = 250;
+    const FLOOR_IDLE_LIMIT = 3000;
     const BOULDER_STUN = 1000;
     const MISSILE_STUN = 3000;
     const MISSILE_DURATION = 1800;
@@ -1101,6 +1102,7 @@
       noticeText: "ID를 만들고 게임을 시작하세요.",
       combo: 0,
       comboLastInputAt: 0,
+      floorHold: { floor: 0, since: 0, punished: false },
       kills: 0,
       gold: 0,
       lives: 0,
@@ -1452,7 +1454,10 @@
         if (own && Number.isFinite(Number(own.lives))) state.lives = Number(own.lives || 0);
         if (own && Number.isFinite(Number(own.floor))) {
           const serverFloor = Math.max(0, Number(own.floor || 0));
-          if (serverFloor > state.player.floor) state.player.floor = serverFloor;
+          if (serverFloor > state.player.floor) {
+            state.player.floor = serverFloor;
+            resetFloorHold();
+          }
         }
         if (own && Number(own.bestFloor || 0) > state.player.bestFloor) state.player.bestFloor = Number(own.bestFloor || 0);
       }
@@ -1549,11 +1554,23 @@
       saveSessionProfile();
       state.online.connected = true;
       applyOnlineSnapshot(joined);
+      resetFloorHold();
       if (state.online.events) state.online.events.close();
       state.online.events = new EventSource(`/events?id=${encodeURIComponent(state.online.onlineId)}`);
       state.online.events.onmessage = (event) => {
         state.online.connected = true;
         const data = JSON.parse(event.data);
+        if (data.type === "attacked" && data.fell) state.lives = 0;
+        if (data.type === "attacked" && !data.fell) {
+          if (Number.isFinite(Number(data.lives))) state.lives = Number(data.lives);
+          state.player.hidden = false;
+          resetCombo();
+          resetFloorHold();
+          showNotice(`${data.reason || "공격"} 목숨 -1 / 남은 목숨 ${state.lives}`);
+          addChat("SYSTEM", "--", `${data.reason || "공격"} 목숨 -1 / 남은 목숨 ${state.lives}`);
+          syncOnlineState();
+          data.type = "state";
+        }
         if (data.type === "attacked") {
           respawnAtZero(data.reason || "다른 플레이어에게 당했습니다.");
           syncOnlineState();
@@ -1590,6 +1607,16 @@
         if (nextGold > state.gold) showNotice(`킬 보상 +${KILL_GOLD_REWARD}g (보유 ${nextGold}g)`);
         state.gold = nextGold;
       }
+      if (result && result.target) {
+        const targetName = result.target.id || target.id || "TARGET";
+        if (result.target.fell) {
+          showNotice(`${targetName} 0층으로 추락`);
+          addChat("SYSTEM", "--", `${targetName} 목숨 0: 0층으로 추락`);
+        } else {
+          showNotice(`${targetName} 목숨 -1 / 남은 목숨 ${result.target.lives}`);
+          addChat("SYSTEM", "--", `${targetName} 목숨 -1 / 남은 목숨 ${result.target.lives}`);
+        }
+      }
       saveSessionProfile();
     }
 
@@ -1612,15 +1639,19 @@
     }
 
     function cooldownText() {
-      const left = HIDE_COOLDOWN - (Date.now() - state.lastHideAt);
+      const left = hideCooldownLeft();
       if (left <= 0) return "숨기 OK";
       const min = Math.floor(left / 60000);
       const sec = Math.ceil((left % 60000) / 1000);
       return `숨기 ${min}:${String(sec).padStart(2, "0")}`;
     }
 
+    function hideCooldownLeft() {
+      return Math.max(0, HIDE_COOLDOWN - (Date.now() - state.lastHideAt));
+    }
+
     function canHide() {
-      return Date.now() - state.lastHideAt >= HIDE_COOLDOWN;
+      return hideCooldownLeft() <= 0;
     }
 
     function resetCombo() {
@@ -1962,6 +1993,7 @@
       }
       state.mode = "play";
       state.player.floor = 0;
+      resetFloorHold();
       resetRunState();
       state.flash = 1;
       state.climbFlash = { floor: -1, start: 0, duration: 0 };
@@ -1969,6 +2001,26 @@
       showNotice(reason);
       addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 0층에서 다시 시작합니다.`);
       syncOnlineState();
+    }
+
+    function loseLifeOrFall(reason) {
+      if (absorbDanger(reason)) return false;
+      if (state.lives > 0) {
+        state.lives -= 1;
+        resetCombo();
+        state.player.hidden = false;
+        state.flash = 0.32;
+        showNotice(`${reason} 목숨 -1 / 남은 목숨 ${state.lives}`);
+        addChat("SYSTEM", "--", `${state.player.id || "플레이어"}: ${reason} 목숨 -1`);
+        syncOnlineState();
+        return true;
+      }
+      respawnAtZero(`${reason} 목숨이 없어 0층으로 추락했습니다.`);
+      return false;
+    }
+
+    function resetFloorHold(now = performance.now()) {
+      state.floorHold = { floor: state.player.floor, since: now, punished: false };
     }
 
     function addKillReward() {
@@ -1989,6 +2041,7 @@
       const previousFloor = state.player.floor;
       state.gold -= 500;
       state.player.floor += 100;
+      resetFloorHold();
       state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
       state.player.hidden = false;
       addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
@@ -2012,6 +2065,7 @@
       resetRunState();
       state.inventory = [null, null, null];
       state.lastHideAt = -HIDE_COOLDOWN;
+      resetFloorHold();
       resetBots();
       joinScreen.classList.add("hidden");
       saveSessionProfile();
@@ -2050,6 +2104,7 @@
         state.trails = [];
         state.effects = [];
         state.climbFlash = { floor: -1, start: 0, duration: 0 };
+        resetFloorHold();
         if (canHide()) {
           state.lastHideAt = Date.now();
           state.player.hidden = true;
@@ -2095,6 +2150,7 @@
       }
       state.lastHideAt = Date.now();
       state.player.hidden = true;
+      resetFloorHold();
       showNotice(`${state.player.floor}층에 숨었습니다.`);
       syncOnlineState();
     }
@@ -2126,6 +2182,7 @@
       }
 
       state.player.floor += 1;
+      resetFloorHold();
       state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
       state.player.hidden = false;
       addCombo();
@@ -2247,6 +2304,15 @@
         }
 
         if (cameOut && Math.abs(bot.floor - state.player.floor) <= 1 && !state.player.hidden) {
+          loseLifeOrFall(`${bot.id} 기습`);
+          break;
+        }
+        if (!cameOut && bot.floor === state.player.floor && !state.player.hidden) {
+          loseLifeOrFall(`${bot.id} 추격`);
+          break;
+        }
+
+        if (cameOut && Math.abs(bot.floor - state.player.floor) <= 1 && !state.player.hidden) {
           respawnAtZero(`${bot.id}의 기습을 받아 0층으로 떨어졌습니다.`);
           break;
         } else if (bot.floor === state.player.floor && !state.player.hidden) {
@@ -2260,6 +2326,22 @@
           bot.hidden = false;
           bot.nextMoveAt = now + 650 + Math.random() * 1300;
         }
+      }
+    }
+
+    function updateFloorHold(now) {
+      if (state.mode !== "play") return;
+      if (state.player.hidden || now < state.player.stunnedUntil) {
+        resetFloorHold(now);
+        return;
+      }
+      if (state.floorHold.floor !== state.player.floor) {
+        resetFloorHold(now);
+        return;
+      }
+      if (!state.floorHold.punished && now - state.floorHold.since >= FLOOR_IDLE_LIMIT) {
+        state.floorHold.punished = true;
+        loseLifeOrFall(`${state.player.floor}층에서 3초 이상 머물렀습니다.`);
       }
     }
 
@@ -2503,7 +2585,7 @@
       ui.gold.textContent = `G ${state.gold}`;
       ui.lives.textContent = `L ${state.lives}`;
       ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">${state.gold}/500G</span>`;
-      ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(Math.max(0, HIDE_COOLDOWN - (performance.now() - state.lastHideAt)) / 1000)}s`;
+      ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(hideCooldownLeft() / 1000)}s`;
 
       state.inventory.forEach((item, index) => {
         ui.itemSlots[index].classList.toggle("ready", Boolean(item));
@@ -2536,6 +2618,7 @@
 
     function tick(now) {
       updateBots(now);
+      updateFloorHold(now);
       renderGame();
       renderHud();
       requestAnimationFrame(tick);

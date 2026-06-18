@@ -379,22 +379,33 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 404, { error: "unknown player" });
         return;
       }
-      attacker.kills += 1;
-      attacker.gold = (attacker.gold || 0) + KILL_GOLD_REWARD;
-      attacker.lastSeen = Date.now();
-      await saveRecord(attacker, true);
-      const reason = String(body.reason || `${attacker.id}에게 당했습니다.`).slice(0, 120);
-      const targetClient = clients.get(targetId);
-      if (targetClient) {
-        targetClient.write(`data: ${JSON.stringify({ type: "attacked", reason, attackerId: attacker.onlineId, players: publicPlayers(), leaderboard, chat })}\n\n`);
+      const reason = String(body.reason || `${attacker.id}이 ${target.id}을 공격했습니다.`).slice(0, 120);
+      const targetLives = Math.max(0, Number(target.lives || 0));
+      const fell = targetLives <= 0;
+      if (fell) {
+        target.floor = 0;
+        target.hidden = false;
+        attacker.kills += 1;
+        attacker.gold = (attacker.gold || 0) + KILL_GOLD_REWARD;
+      } else {
+        target.lives = targetLives - 1;
+        target.hidden = false;
       }
-      chat.push({ id: "SYSTEM", country: "--", text: `${attacker.id}님이 ${target.id}님을 떨어뜨렸습니다.` });
+      attacker.lastSeen = Date.now();
+      target.lastSeen = Date.now();
+      await saveRecord(attacker, true);
+      await saveRecord(target, true);
+      const targetClient = clients.get(targetId);
+      const payload = { type: "attacked", reason, attackerId: attacker.onlineId, fell, lives: target.lives || 0, players: publicPlayers(), leaderboard, chat };
+      if (targetClient) {
+        targetClient.write(`data: ${JSON.stringify(payload)}\n\n`);
+      }
+      chat.push({ id: "SYSTEM", country: "--", text: fell ? `${attacker.id}이 ${target.id}을 0층으로 떨어트렸습니다.` : `${attacker.id}이 ${target.id}의 목숨을 1 깎았습니다.` });
       while (chat.length > 60) chat.shift();
       broadcast("state");
-      sendJson(res, 200, { ok: true, kills: attacker.kills, gold: attacker.gold });
+      sendJson(res, 200, { ok: true, kills: attacker.kills, gold: attacker.gold, target: { id: target.id, lives: target.lives || 0, fell } });
       return;
     }
-
     if (req.method === "POST" && url.pathname === "/api/stun") {
       const body = await readBody(req);
       const source = players.get(String(body.onlineId || ""));
