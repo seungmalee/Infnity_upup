@@ -17,7 +17,7 @@
     :root {
       color-scheme: dark;
       --bg: #111318;
-      --panel: rgba(22, 25, 32, 0.88);
+      --panel: rgba(22, 25, 32, 0.7);
       --panel-solid: #191d25;
       --line: rgba(255, 255, 255, 0.14);
       --text: #f5f1e8;
@@ -65,7 +65,7 @@
       padding: 20px;
       background:
         radial-gradient(circle at 50% 25%, rgba(240, 189, 91, 0.16), transparent 28%),
-        rgba(10, 12, 16, 0.8);
+        rgba(10, 12, 16, 0.7);
       z-index: 10;
     }
 
@@ -77,7 +77,7 @@
       width: min(420px, 100%);
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: rgba(25, 29, 37, 0.96);
+      background: rgba(25, 29, 37, 0.7);
       padding: 22px;
       box-shadow: 0 22px 80px rgba(0, 0, 0, 0.42);
     }
@@ -177,7 +177,7 @@
 
     .help-card {
       width: min(92vw, 420px);
-      background: rgba(13, 18, 28, 0.98);
+      background: rgba(13, 18, 28, 0.7);
       color: #eef5ff;
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.12);
@@ -257,7 +257,7 @@
 
     .idle-label {
       display: block;
-      font-size: 10px;
+      font-size: clamp(9px, min(1.1vw, 1.6vh), 12px);
       color: var(--muted);
       line-height: 1;
       margin-bottom: 4px;
@@ -265,7 +265,7 @@
 
     .idle-value {
       display: block;
-      font-size: 20px;
+      font-size: clamp(16px, min(2.2vw, 3.2vh), 26px);
       line-height: 1;
     }
 
@@ -644,7 +644,7 @@
     .mobile-btn {
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: rgba(25, 29, 37, 0.54);
+      background: rgba(25, 29, 37, 0.7);
       color: var(--text);
       box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
       min-width: 0;
@@ -692,7 +692,7 @@
       margin-top: 8px;
       border: 1px solid rgba(255, 255, 255, 0.18);
       border-radius: 999px;
-      background: rgba(25, 29, 37, 0.58);
+      background: rgba(25, 29, 37, 0.7);
       overflow: hidden;
       pointer-events: none;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
@@ -979,7 +979,7 @@
         display: block;
         padding: 8px;
         border-color: rgba(255, 255, 255, 0.08);
-        background: rgba(18, 21, 28, 0.58);
+        background: rgba(18, 21, 28, 0.7);
       }
 
       .floor {
