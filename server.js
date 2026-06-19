@@ -22,7 +22,7 @@ const clients = new Map();
 let dbPromise = null;
 let records = null;
 let leaderboard = [];
-const chat = [{ id: "SYSTEM", country: "--", text: "온라인 서버가 준비되었습니다." }];
+const chat = [];
 
 async function getRecords() {
   if (!MONGODB_URI || !MongoClient) return null;
@@ -325,8 +325,6 @@ const server = http.createServer(async (req, res) => {
       };
       players.set(onlineId, player);
       await saveRecord(player, true);
-      chat.push({ id: "SYSTEM", country: "--", text: `${id}님이 접속했습니다.` });
-      while (chat.length > 60) chat.shift();
       broadcast("state");
       sendJson(res, 200, { onlineId, players: publicPlayers(), leaderboard, chat });
       return;
@@ -417,8 +415,6 @@ const server = http.createServer(async (req, res) => {
       if (targetClient) {
         targetClient.write(`data: ${JSON.stringify(payload)}\n\n`);
       }
-      chat.push({ id: "SYSTEM", country: "--", text: fell ? `${attacker.id}이 ${target.id}을 0층으로 떨어트렸습니다.` : `${attacker.id}이 ${target.id}의 목숨을 1 깎았습니다.` });
-      while (chat.length > 60) chat.shift();
       broadcast("state");
       sendJson(res, 200, { ok: true, kills: attacker.kills, gold: attacker.gold, target: { id: target.id, lives: target.lives || 0, fell } });
       return;
@@ -439,8 +435,6 @@ const server = http.createServer(async (req, res) => {
       if (targetClient) {
         targetClient.write(`data: ${JSON.stringify({ type: "stunned", reason, ms, sourceId: source.onlineId, players: publicPlayers(), leaderboard, chat })}\n\n`);
       }
-      chat.push({ id: "SYSTEM", country: "--", text: `${source.id}님의 ${reason}: ${target.id} 스턴` });
-      while (chat.length > 60) chat.shift();
       broadcast("state");
       sendJson(res, 200, { ok: true });
       return;
