@@ -2935,6 +2935,32 @@
       }
     }
 
+<<<<<<< HEAD
+=======
+    function autoClimbStep() {
+      if (!state.autoClimb || state.mode !== "play") return;
+      if (performance.now() < state.player.stunnedUntil) return;
+      touchComboInput();
+      climb(directionForNextFloor(state.player.floor));
+    }
+
+    function setAutoClimb(enabled) {
+      state.autoClimb = false;
+      if (state.autoTimer) {
+        clearInterval(state.autoTimer);
+        state.autoTimer = 0;
+      }
+      if (state.autoClimb) {
+        autoClimbStep();
+        state.autoTimer = setInterval(autoClimbStep, AUTO_CLIMB_INTERVAL);
+        showNotice("테스트 자동등반 ON");
+      } else {
+        showNotice("테스트 자동등반 OFF");
+      }
+      renderHud();
+    }
+
+>>>>>>> af9d75c9f504acfdc5750056a6d061d6049da3d8
     function handleKey(event) {
       if (document.activeElement === chatInput) return;
       if (event.repeat) {
