@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>100층 계단 온라인</title>
-  <meta name="description" content="친구와 실시간으로 계단을 오르고, 숨었다가 기습하며 랭킹을 겨루는 웹 멀티플레이 계단 배틀 게임입니다. 설치 없이 브라우저에서 바로 플레이하세요.">
+  <title>무한 계단 온라인</title>
+  <meta name="description" content="계단을 오르고 아이템으로 경쟁하는 온라인 게임입니다.">
   <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="100층 계단 온라인">
-  <meta property="og:description" content="숨고, 따라잡고, 떨어뜨리는 실시간 웹 계단 배틀 게임. 친구와 링크로 바로 플레이하세요.">
-  <meta property="og:site_name" content="100층 계단 온라인">
+  <meta property="og:title" content="무한 계단 온라인">
+  <meta property="og:description" content="계단을 오르고 아이템으로 경쟁하세요.">
+  <meta property="og:site_name" content="무한 계단 온라인">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="100층 계단 온라인">
-  <meta name="twitter:description" content="친구와 실시간으로 계단을 오르고 기습하는 웹 멀티플레이 게임입니다.">
+  <meta name="twitter:title" content="무한 계단 온라인">
+  <meta name="twitter:description" content="계단을 오르고 아이템으로 경쟁하세요.">
   <style>
     :root {
       color-scheme: dark;
       --bg: #111318;
-      --panel: rgba(22, 25, 32, 0.7);
+      --panel: rgba(22, 25, 32, 0.88);
       --panel-solid: #191d25;
       --line: rgba(255, 255, 255, 0.14);
       --text: #f5f1e8;
@@ -65,7 +65,7 @@
       padding: 20px;
       background:
         radial-gradient(circle at 50% 25%, rgba(240, 189, 91, 0.16), transparent 28%),
-        rgba(10, 12, 16, 0.7);
+        rgba(10, 12, 16, 0.8);
       z-index: 10;
     }
 
@@ -77,7 +77,7 @@
       width: min(420px, 100%);
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: rgba(25, 29, 37, 0.7);
+      background: rgba(25, 29, 37, 0.96);
       padding: 22px;
       box-shadow: 0 22px 80px rgba(0, 0, 0, 0.42);
     }
@@ -139,11 +139,18 @@
     .hud {
       position: fixed;
       inset: 0;
+      display: grid;
+      grid-template-columns: minmax(198px, 260px) minmax(180px, 1fr) minmax(260px, 420px);
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      gap: 10px 14px;
+      padding: 14px;
       pointer-events: none;
       z-index: 2;
+      overflow: hidden;
     }
 
     .top-left,
+    .idle-timer,
     .ranking,
     .chat,
     .item-bar,
@@ -154,11 +161,40 @@
       backdrop-filter: blur(8px);
     }
 
+    .help-modal {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(3, 5, 10, 0.66);
+      z-index: 40;
+      padding: 18px;
+    }
+
+    .help-modal[hidden] {
+      display: none !important;
+    }
+
+    .help-card {
+      width: min(92vw, 420px);
+      background: rgba(13, 18, 28, 0.98);
+      color: #eef5ff;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 16px;
+      box-shadow: 0 24px 50px rgba(0,0,0,0.35);
+    }
+    .help-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .help-body { font-size: 14px; line-height: 1.55; margin: 10px 0 14px; color: #d9e6ff; }
+    .help-body p { margin: 0 0 8px; }
+    .help-close, .help-confirm { border:0; border-radius:10px; padding:10px 12px; font-weight:800; }
+    .help-close { background: rgba(255,255,255,0.12); color:#fff; }
+    .help-confirm { width:100%; background:#56aef7; color:#08142f; }
+
     .top-left {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      width: clamp(198px, 24vw, 238px);
+      grid-column: 1;
+      grid-row: 1;
+      width: 100%;
       min-width: 0;
       padding: 12px;
     }
@@ -170,31 +206,67 @@
     }
 
     .combo {
-      position: absolute;
-      right: clamp(300px, 38vw, 470px);
-      top: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 118px;
-      padding: 10px 14px;
-      border: 1px solid rgba(240, 189, 91, 0.58);
-      border-radius: 8px;
-      background: rgba(25, 29, 37, 0.7);
+      position: fixed;
+      left: min(calc(50% + 180px), calc(100vw - 180px));
+      top: 58%;
+      right: auto;
+      bottom: auto;
+      display: block;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
       color: var(--bar-active);
-      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.24), 0 0 26px rgba(240, 189, 91, 0.16);
-      backdrop-filter: blur(8px);
-      font-size: 22px;
+      box-shadow: none;
+      backdrop-filter: none;
+      text-shadow: 0 0 18px rgba(240, 189, 91, 0.48), 0 2px 10px rgba(0, 0, 0, 0.74);
+      font-size: 24px;
       font-weight: 900;
       letter-spacing: 0;
+      line-height: 1;
       opacity: 0;
-      transform: translateY(-50%) translateX(16px) scale(0.96);
+      pointer-events: none;
+      z-index: 4;
+      transform: translate(18px, 10px) scale(0.94);
       transition: opacity 260ms ease, transform 260ms ease;
     }
 
     .combo.active {
       opacity: 1;
-      transform: translateY(-50%) translateX(0) scale(1);
+      transform: translate(0, 0) scale(1);
+    }
+
+    .idle-timer {
+      grid-column: 2;
+      grid-row: 1;
+      place-self: start center;
+      min-width: 128px;
+      padding: 9px 14px;
+      text-align: center;
+      font-weight: 900;
+      color: var(--text);
+      pointer-events: none;
+    }
+
+    .idle-timer.danger {
+      color: #ffdd9a;
+      border-color: rgba(255, 116, 94, 0.54);
+      box-shadow: 0 0 24px rgba(255, 116, 94, 0.18);
+    }
+
+    .idle-label {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .idle-value {
+      display: block;
+      font-size: 20px;
+      line-height: 1;
     }
 
     .meta {
@@ -206,6 +278,76 @@
       font-size: 13px;
     }
 
+    .next-goal {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .next-goal span {
+      display: block;
+      margin-top: 3px;
+      color: var(--bar-active);
+      font-size: 11px;
+    }
+
+    .boost-btn {
+      pointer-events: auto;
+      width: 100%;
+      min-height: 34px;
+      margin-top: 10px;
+      border: 1px solid rgba(240, 189, 91, 0.42);
+      border-radius: 8px;
+      background: rgba(240, 189, 91, 0.16);
+      color: var(--bar-active);
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .boost-btn:disabled {
+      cursor: not-allowed;
+      color: var(--muted);
+      border-color: var(--line);
+      background: rgba(255, 255, 255, 0.05);
+      opacity: 0.78;
+    }
+
+    .auto-btn {
+      pointer-events: auto;
+      width: 100%;
+      min-height: 30px;
+      margin-top: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .auto-btn.active {
+      border-color: rgba(77, 216, 166, 0.62);
+      background: rgba(77, 216, 166, 0.18);
+      color: #9ff2cf;
+    }
+
+    .boost-main,
+    .boost-cost {
+      display: block;
+    }
+
+    .boost-cost {
+      color: var(--muted);
+      font-size: 0.85em;
+      font-weight: 800;
+    }
+
     .inventory {
       display: grid;
       grid-template-columns: 1fr;
@@ -213,10 +355,10 @@
     }
 
     .item-bar {
-      position: absolute;
-      top: 156px;
-      left: 14px;
-      width: clamp(210px, 25vw, 260px);
+      grid-column: 1;
+      grid-row: 2;
+      width: 100%;
+      min-width: 0;
       padding: 10px;
     }
 
@@ -257,25 +399,41 @@
       flex: 0 0 auto;
     }
 
+    .item-short {
+      display: none;
+    }
+
     .ranking {
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      width: clamp(260px, 32vw, 360px);
+      grid-column: 3;
+      grid-row: 1 / 3;
+      width: 100%;
+      min-width: 0;
+      overflow: hidden;
       padding: 12px;
     }
 
     .ranking.collapsed {
-      width: auto;
-      padding: 8px;
+      width: 28px;
+      min-width: 28px;
+      height: 24px;
+      justify-self: end;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      overflow: visible;
     }
 
-    .ranking.collapsed .rank-content {
+    .ranking.collapsed .rank-content,
+    .ranking.collapsed .panel-title {
       display: none;
     }
 
-    .ranking.collapsed .panel-title {
+    .ranking.collapsed .panel-header {
       margin: 0;
+      display: block;
     }
 
     .panel-header {
@@ -296,22 +454,29 @@
     .panel-toggle {
       pointer-events: auto;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 6px;
       background: #11141a;
       color: var(--text);
-      min-width: 34px;
-      height: 30px;
-      padding: 0 9px;
+      width: 28px;
+      min-width: 28px;
+      height: 24px;
+      padding: 0;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 15px;
       font-weight: 900;
+      line-height: 1;
+    }
+
+    .panel-toggle:hover {
+      border-color: rgba(240, 189, 91, 0.48);
+      color: var(--bar-active);
     }
 
     .rank-head,
     .rank-row {
       display: grid;
-      grid-template-columns: 36px minmax(76px, 1fr) 58px 64px;
-      gap: 8px;
+      grid-template-columns: 28px minmax(40px, 1fr) 34px 46px 64px;
+      gap: 6px;
       align-items: center;
       min-height: 28px;
       font-size: 13px;
@@ -333,6 +498,22 @@
       border-top: 0;
     }
 
+    .rank-content {
+      max-height: min(34vh, 310px);
+      overflow: auto;
+    }
+
+    .live-leader {
+      margin-bottom: 6px;
+      padding: 5px 0;
+      color: var(--bar-active);
+      font-size: 12px;
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .rank-id {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -346,15 +527,25 @@
       font-weight: 900;
     }
 
+    .rank-time {
+      color: var(--muted);
+      text-align: right;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+    }
+
     .chat {
-      position: absolute;
-      right: 14px;
-      bottom: 14px;
-      width: clamp(300px, 34vw, 420px);
-      height: clamp(180px, 28vh, 246px);
+      grid-column: 3;
+      grid-row: 4;
+      width: 100%;
+      min-width: 0;
+      height: clamp(132px, 26vh, 246px);
       display: flex;
       flex-direction: column;
-      padding: 12px;
+      padding: clamp(8px, 1.5vh, 12px);
       pointer-events: auto;
     }
 
@@ -386,79 +577,566 @@
     }
 
     .chat input {
-      height: 38px;
+      height: clamp(32px, 4.8vh, 38px);
+      min-width: 0;
     }
 
     .chat button {
-      width: 58px;
+      width: clamp(44px, 5vw, 58px);
       border: 0;
       border-radius: 8px;
       background: #303744;
       color: var(--text);
+      font-size: clamp(11px, 1.6vh, 13px);
       font-weight: 900;
       cursor: pointer;
     }
 
     .notice {
-      position: absolute;
-      left: 14px;
-      bottom: 14px;
-      width: clamp(260px, 32vw, 360px);
-      padding: 12px;
+      grid-column: 1;
+      grid-row: 4;
+      align-self: end;
+      width: 100%;
+      min-width: 0;
+      max-height: clamp(46px, 13vh, 96px);
+      padding: clamp(7px, 1.5vh, 12px);
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
+      font-size: clamp(10px, 1.6vh, 13px);
+      line-height: 1.35;
+      overflow: hidden;
     }
 
     .notice strong {
       color: var(--text);
     }
 
-    @media (max-width: 760px) {
-      .top-left,
-      .item-bar,
-      .notice {
-        left: 10px;
-        width: calc(50vw - 16px);
-      }
+    .mobile-controls {
+      position: fixed;
+      left: 50%;
+      right: auto;
+      top: auto;
+      bottom: 12vh;
+      display: none;
+      width: min(92vw, 282px);
+      grid-template-columns: 1fr;
+      justify-items: center;
+      gap: 0;
+      padding: 12px max(12px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      pointer-events: none;
+      z-index: 5;
+      transform: translateX(-50%);
+    }
 
-      .ranking,
-      .chat {
-        right: 10px;
-        width: calc(50vw - 16px);
-      }
+    .mobile-pad {
+      display: grid;
+      gap: 8px;
+      pointer-events: auto;
+      touch-action: none;
+    }
 
-      .top-left,
-      .ranking {
-        top: 10px;
+    .mobile-pad {
+      grid-template-columns: repeat(3, 72px);
+      grid-template-rows: repeat(2, 64px);
+      align-content: end;
+      justify-content: start;
+    }
+
+    .mobile-btn {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(25, 29, 37, 0.54);
+      color: var(--text);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+      min-width: 0;
+      min-height: 64px;
+      font-size: 24px;
+      font-weight: 900;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobile-btn:active {
+      transform: translateY(1px) scale(0.98);
+      border-color: rgba(240, 189, 91, 0.64);
+      background: rgba(240, 189, 91, 0.2);
+      color: var(--bar-active);
+    }
+
+    .mobile-btn.up {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .mobile-btn.left {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .mobile-btn.hide {
+      grid-column: 2;
+      grid-row: 2;
+      font-size: 13px;
+    }
+
+    .mobile-btn.right {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .mobile-idle-bar {
+      display: none;
+      width: min(216px, 78vw);
+      height: 8px;
+      margin-top: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      background: rgba(25, 29, 37, 0.58);
+      overflow: hidden;
+      pointer-events: none;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.24);
+    }
+
+    .mobile-idle-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #4dd8a6, #f0bd5b, #ff745e);
+      transition: width 90ms linear;
+    }
+
+    @media (min-width: 761px) and (max-width: 1180px) {
+      .hud {
+        grid-template-columns: clamp(154px, 22vw, 220px) minmax(0, 1fr) clamp(214px, 32vw, 340px);
+        grid-template-rows: auto auto minmax(0, 1fr) minmax(88px, clamp(88px, 24vh, 176px));
+        gap: 8px 10px;
         padding: 10px;
       }
 
-      .item-bar {
-        top: 150px;
+      .top-left,
+      .ranking,
+      .item-bar,
+      .chat,
+      .notice {
+        min-width: 0;
+      }
+
+      .chat {
+        height: 100%;
+        min-height: 0;
         padding: 8px;
       }
 
-      .notice,
-      .chat {
-        bottom: 10px;
-        padding: 10px;
+      .chat-log {
+        min-height: 0;
+        font-size: 12px;
       }
 
-      .chat {
-        height: clamp(150px, 30vh, 220px);
+      .chat form {
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .chat input {
+        height: 32px;
+      }
+
+      .chat button {
+        width: 46px;
+        font-size: 11px;
+      }
+
+      .notice {
+        align-self: stretch;
+        height: 100%;
+        max-height: none;
+        padding: 8px;
+        font-size: 11px;
+        line-height: 1.28;
+      }
+    }
+
+    @media (min-width: 761px) and (max-width: 940px) {
+      .hud {
+        grid-template-columns: clamp(118px, 20vw, 166px) minmax(0, 1fr) clamp(170px, 31vw, 240px);
+        grid-template-rows: auto auto minmax(0, 1fr) minmax(72px, clamp(72px, 23vh, 132px));
+        gap: 6px;
+        padding: 8px;
+      }
+
+      .top-left,
+      .item-bar,
+      .ranking {
+        padding: 8px;
       }
 
       .floor {
-        font-size: 28px;
+        font-size: clamp(26px, 4vw, 42px);
+      }
+
+      .meta {
+        gap: 5px;
+        font-size: 11px;
+      }
+
+      .boost-btn {
+        min-height: 34px;
+        padding: 5px 6px;
+        font-size: 10px;
+      }
+
+      .item-slot {
+        height: 42px;
+        padding: 0 7px;
+        font-size: 11px;
+      }
+
+      .rank-content {
+        max-height: 30vh;
+      }
+
+      .rank-row,
+      .rank-head {
+        grid-template-columns: 22px minmax(0, 1fr) 28px 38px 52px;
+        gap: 5px;
+        font-size: 10px;
+      }
+
+      .panel-title {
+        font-size: 11px;
+      }
+
+      .notice strong {
+        display: inline;
+      }
+
+      .notice br {
+        display: none;
+      }
+    }
+
+    @media (min-width: 761px) and (max-height: 640px) {
+      .hud {
+        grid-template-rows: auto auto minmax(0, 1fr) minmax(62px, clamp(62px, 20vh, 112px));
+        gap: 6px 10px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+
+      .chat {
+        padding: 7px;
+      }
+
+      .chat-log {
+        gap: 3px;
+      }
+
+      .chat form {
+        margin-top: 5px;
+      }
+
+      .chat input {
+        height: 28px;
+      }
+
+      .notice {
+        padding: 7px;
+        font-size: 10px;
+        line-height: 1.22;
+      }
+
+      .notice br {
+        display: none;
+      }
+    }
+
+    @media (max-width: 760px) and (pointer: fine) {
+      .hud {
+        grid-template-columns: clamp(96px, 24vw, 130px) minmax(0, 1fr) clamp(138px, 34vw, 188px);
+        grid-template-rows: auto auto minmax(0, 1fr) minmax(60px, clamp(60px, 22vh, 104px));
+        gap: 5px;
+        padding: 6px;
+      }
+
+      .top-left,
+      .item-bar,
+      .ranking,
+      .chat,
+      .notice {
+        min-width: 0;
+        padding: 6px;
+      }
+
+      .floor {
+        font-size: clamp(22px, 4vw, 32px);
+        margin-bottom: 5px;
+      }
+
+      .meta {
+        gap: 4px;
+        font-size: 9px;
+      }
+
+      .boost-btn {
+        min-height: 30px;
+        padding: 4px;
+        font-size: 9px;
+      }
+
+      .item-slot {
+        height: 36px;
+        padding: 0 5px;
+        font-size: 10px;
+      }
+
+      .item-name {
+        display: none;
+      }
+
+      .item-short {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ranking {
+        overflow: hidden;
+      }
+
+      .rank-content {
+        max-height: 28vh;
+      }
+
+      .rank-head {
+        display: none;
+      }
+
+      .rank-row {
+        grid-template-columns: 18px minmax(0, 1fr) 24px 34px 46px;
+        gap: 3px;
+        min-height: 20px;
+        font-size: 9px;
+      }
+
+      .chat {
+        height: 100%;
+        min-height: 0;
+      }
+
+      .chat-log {
+        min-height: 0;
+        font-size: 10px;
+        gap: 3px;
+      }
+
+      .chat form {
+        gap: 5px;
+        margin-top: 5px;
+      }
+
+      .chat input {
+        height: 27px;
+        padding: 0 7px;
+        font-size: 10px;
+      }
+
+      .chat button {
+        width: 38px;
+        font-size: 10px;
+      }
+
+      .notice {
+        align-self: stretch;
+        height: 100%;
+        max-height: none;
+        font-size: 9px;
+        line-height: 1.18;
+      }
+
+      .notice br {
+        display: none;
+      }
+    }
+
+    @media (max-width: 760px) and (pointer: coarse) {
+      #game {
+        height: 100dvh;
+      }
+
+      .hud {
+        display: block;
+        padding: 0;
+        overflow: visible;
+      }
+
+      .top-left {
+        position: fixed;
+        top: max(8px, env(safe-area-inset-top));
+        left: max(8px, env(safe-area-inset-left));
+        right: auto;
+        width: min(38vw, 132px);
+        display: block;
+        padding: 8px;
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(18, 21, 28, 0.58);
+      }
+
+      .floor {
+        font-size: 27px;
+        margin-bottom: 7px;
+      }
+
+      .meta {
+        display: grid;
+        grid-template-columns: 1fr;
+        margin-top: 0;
+        gap: 4px;
+        font-size: 10px;
+        line-height: 1.1;
+      }
+
+      .meta span {
+        display: flex;
+        justify-content: space-between;
+        gap: 5px;
+        min-width: 0;
+        padding: 3px 5px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      #block,
+      #onlineStatus {
+        display: none;
+      }
+
+      .boost-btn {
+        width: 72px;
+        min-height: 38px;
+        margin-top: 6px;
+        padding: 4px 5px;
+        font-size: 10px;
+        line-height: 1.05;
+        text-align: center;
+      }
+
+      .auto-btn {
+        width: 72px;
+        min-height: 32px;
+        margin-top: 5px;
+        padding: 4px 5px;
+        font-size: 10px;
+      }
+
+      .boost-main {
+        display: block;
+        font-size: 11px;
+        font-weight: 900;
+      }
+
+      .boost-cost {
+        display: block;
+        margin-top: 2px;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 800;
+      }
+
+      .ranking {
+        position: fixed;
+        top: max(8px, env(safe-area-inset-top));
+        right: max(8px, env(safe-area-inset-right));
+        width: min(54vw, 220px);
+        max-height: 152px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        backdrop-filter: none;
+      }
+
+      .ranking.collapsed {
+        width: min(54vw, 220px);
+        max-height: 152px;
+      }
+
+      .ranking.collapsed .rank-content {
+        display: block;
+      }
+
+      .panel-header {
+        margin-bottom: 4px;
+      }
+
+      .ranking .panel-toggle {
+        display: none;
+      }
+
+      .ranking .panel-title {
+        font-size: 10px;
+        text-align: right;
+        text-shadow: 0 1px 5px rgba(0, 0, 0, 0.72);
+      }
+
+      .rank-content {
+        max-height: 124px;
+        overflow: hidden;
+      }
+
+      .rank-head {
+        display: none;
+      }
+
+      .rank-row {
+        grid-template-columns: 18px minmax(0, 1fr) 24px 34px 48px;
+        gap: 4px;
+        min-height: 22px;
+        font-size: 10px;
+        border-top-color: rgba(255, 255, 255, 0.05);
+        text-shadow: 0 1px 5px rgba(0, 0, 0, 0.82);
+      }
+
+      .rank-row:nth-child(n+6) {
+        display: none;
       }
 
       .combo {
-        right: 10px;
+        left: auto;
+        top: auto;
+        right: 14px;
+        bottom: calc(12vh + 150px + env(safe-area-inset-bottom));
+        font-size: 19px;
+      }
+
+      .idle-timer {
+        display: none;
+      }
+
+      .mobile-idle-bar {
+        display: block;
+      }
+
+      .item-bar {
+        position: fixed;
+        left: max(8px, env(safe-area-inset-left));
+        right: auto;
         top: 50%;
-        min-width: 96px;
-        padding: 8px 10px;
-        font-size: 18px;
+        bottom: auto;
+        width: min(17vw, 68px);
+        padding: 6px;
+        transform: translateY(-50%);
+      }
+
+      .item-bar .panel-title {
+        display: none;
+      }
+
+      .inventory {
+        grid-template-columns: 1fr;
+        gap: 5px;
       }
 
       .meta,
@@ -471,19 +1149,115 @@
 
       .rank-head,
       .rank-row {
-        grid-template-columns: 28px minmax(48px, 1fr) 36px 48px;
+        grid-template-columns: 18px minmax(0, 1fr) 24px 34px 48px;
         gap: 5px;
       }
 
       .item-slot {
-        height: 44px;
-        padding: 0 8px;
-        font-size: 12px;
+        height: 42px;
+        justify-content: center;
+        padding: 0 4px;
+        font-size: 10px;
+        flex-direction: column;
+        gap: 2px;
+        cursor: pointer;
+        pointer-events: auto;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .item-name {
+        display: none;
+      }
+
+      .item-short {
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        text-align: center;
+        color: var(--text);
+        font-size: 9px;
+        line-height: 1;
+        white-space: nowrap;
+      }
+
+      .item-slot:active {
+        transform: translateY(1px) scale(0.99);
+        border-color: rgba(240, 189, 91, 0.68);
       }
 
       .item-key {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
+      }
+
+      .chat {
+        position: fixed;
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        bottom: max(8px, env(safe-area-inset-bottom));
+        width: auto;
+        height: clamp(30px, 6.5vh, 34px);
+        display: flex;
+        flex-direction: column;
+        padding: clamp(5px, 1.3vh, 7px) 9px;
+        pointer-events: auto;
+      }
+
+      .chat .panel-title {
+        display: none;
+      }
+
+      .chat-log {
+        flex: 1 1 auto;
+        min-height: 0;
+        font-size: 11px;
+        gap: 0;
+        padding-right: 0;
+        overflow: hidden;
+      }
+
+      .chat-row {
+        display: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.45;
+      }
+
+      .chat-row:last-child {
+        display: block;
+      }
+
+      .chat form {
+        display: none;
+      }
+
+      .chat.expanded {
+        height: min(34vh, 210px);
+        max-height: calc(100dvh - 188px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        padding: 9px;
+      }
+
+      .chat.expanded .chat-log {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding-right: 4px;
+      }
+
+      .chat.expanded .chat-row {
+        display: block;
+        white-space: normal;
+      }
+
+      .chat.expanded form {
+        display: flex;
+        flex: 0 0 auto;
+        margin-top: 8px;
       }
 
       .chat input {
@@ -491,32 +1265,240 @@
       }
 
       .chat button {
-        width: 48px;
+        width: clamp(42px, 13vw, 48px);
         font-size: 12px;
+      }
+
+      .top-left .meta {
+        font-size: 10px;
+        grid-template-columns: 1fr;
+      }
+
+      .next-goal {
+        margin-top: 6px;
+        padding-top: 6px;
+        font-size: 9px;
+      }
+
+      .next-goal span {
+        font-size: 8px;
+      }
+
+      .live-leader {
+        display: none;
+      }
+
+      .ranking .rank-row {
+        grid-template-columns: 18px minmax(0, 1fr) 24px 34px 48px;
+        gap: 4px;
+        min-height: 22px;
+        font-size: 10px;
+      }
+
+      .ranking .rank-row:nth-child(n+6) {
+        display: none;
+      }
+
+      .mobile-controls {
+        display: grid;
+      }
+
+      .mobile-pad {
+        justify-content: center;
+      }
+
+      .notice {
+        display: none;
       }
     }
 
     @media (max-height: 560px) {
+      .rank-content {
+        max-height: 34vh;
+      }
+
       .chat {
-        height: 140px;
+        height: clamp(76px, 22vh, 124px);
+        padding: 8px;
+      }
+
+      .chat form {
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .chat input {
+        height: 30px;
+      }
+
+      .chat button {
+        width: 44px;
+        font-size: 11px;
+      }
+
+      .notice {
+        max-height: 48px;
+        padding: 7px 8px;
+        font-size: 10px;
+        line-height: 1.25;
+      }
+
+      .notice br {
+        display: none;
       }
 
       .item-slot {
         height: 40px;
       }
     }
+
+    @media (max-width: 520px) and (pointer: coarse) {
+      .hud {
+        display: block;
+      }
+
+      .top-left,
+      .item-bar,
+      .ranking,
+      .notice,
+      .chat,
+      .idle-timer,
+      .combo {
+        grid-column: 1;
+      }
+
+      .top-left {
+        display: block;
+      }
+
+      .item-bar {
+        top: 50%;
+        bottom: auto;
+        width: min(18vw, 66px);
+      }
+
+      .combo {
+        left: auto;
+        top: auto;
+        right: 10px;
+        bottom: calc(12vh + 148px + env(safe-area-inset-bottom));
+        font-size: 18px;
+      }
+
+      .notice {
+        display: none;
+      }
+
+      .ranking {
+        top: max(8px, env(safe-area-inset-top));
+        left: auto;
+        right: max(8px, env(safe-area-inset-right));
+        width: min(54vw, 210px);
+      }
+
+      .mobile-idle-bar {
+        width: min(216px, 80vw);
+      }
+
+      .rank-content {
+        max-height: 118px;
+      }
+
+      .mobile-controls {
+        width: min(94vw, 282px);
+        gap: 8px;
+      }
+
+      .mobile-pad {
+        justify-content: center;
+      }
+
+
+      /* chat mobile rollback */
+      .chat {
+        position: fixed;
+        left: max(8px, env(safe-area-inset-left));
+        right: max(8px, env(safe-area-inset-right));
+        bottom: max(8px, env(safe-area-inset-bottom));
+        width: auto;
+        height: clamp(30px, 6.8vh, 36px);
+        max-height: 36px;
+        display: flex;
+        flex-direction: column;
+        padding: clamp(5px, 1.3vh, 7px) 10px;
+        overflow: hidden;
+      }
+
+      .chat .panel-title,
+      .chat form {
+        display: none;
+      }
+
+      .chat-log {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+        display: block;
+        padding: 0;
+        font-size: 11px;
+      }
+
+      .chat-row {
+        display: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.5;
+      }
+
+      .chat-row:last-child {
+        display: block;
+      }
+
+      .chat.expanded {
+        height: min(34vh, 210px);
+        max-height: min(34vh, calc(100dvh - 188px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 210px);
+        padding: 9px;
+        overflow: hidden;
+      }
+
+      .chat.expanded .chat-log {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding-right: 4px;
+        font-size: 12px;
+      }
+
+      .chat.expanded .chat-row {
+        display: block;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+      }
+
+      .chat.expanded form {
+        display: flex;
+        flex: 0 0 auto;
+        gap: 8px;
+        margin-top: 8px;
+      }
+    }
   </style>
 </head>
 <body>
-  <canvas id="game" aria-label="계단 게임 화면"></canvas>
+  <canvas id="game" aria-label="game canvas"></canvas>
 
   <section class="screen" id="joinScreen">
     <form class="join-card" id="joinForm">
-      <h1>100층 계단 온라인</h1>
-      <p class="sub">ID와 국가를 정하고 같은 100층 맵에서 올라가세요. 같은 세션에서는 ID가 유지됩니다.</p>
+      <h1>무한 계단 온라인</h1>
+      <p class="sub">ID와 국가를 정하고 최대한 높은 층까지 올라가세요.</p>
 
       <label for="playerId">ID</label>
-      <input id="playerId" maxlength="14" autocomplete="off" placeholder="예: stairking" required>
+      <input id="playerId" maxlength="14" autocomplete="off" placeholder="stairking" required>
 
       <label for="country">국가</label>
       <select id="country" required>
@@ -540,43 +1522,53 @@
     <div class="top-left">
       <div class="floor" id="floor">0F</div>
       <div class="meta">
-        <span id="playerLabel">ID</span>
-        <span id="block">1구간</span>
-        <span id="cooldown">숨기 OK</span>
-        <span id="kills">킬 0</span>
-        <span id="lives">목숨 0</span>
+        <span id="playerLabel">ID -</span>
+        <span id="block">S1</span>
+        <span id="cooldown">HIDE OK</span>
+        <span id="kills">K 0</span>
+        <span id="gold">G 0</span>
+        <span id="lives">L 0</span>
         <span id="onlineStatus">오프라인</span>
       </div>
+      <div class="next-goal" id="nextGoal">NEXT<span>100F ITEM</span></div>
+      <button class="boost-btn" id="boostBtn" type="button" disabled>100F UP! <span class="boost-cost">(0/500G)</span></button>
     </div>
 
     <div class="combo" id="combo">COMBO x0</div>
 
+    <div class="idle-timer" id="idleTimer">
+      <span class="idle-label">STAY</span>
+      <span class="idle-value">3.0</span>
+    </div>
+
     <div class="item-bar">
       <h2 class="panel-title">아이템</h2>
       <div class="inventory">
-        <div class="item-slot" id="item0"><span class="item-key">1</span> 빈칸</div>
-        <div class="item-slot" id="item1"><span class="item-key">2</span> 빈칸</div>
-        <div class="item-slot" id="item2"><span class="item-key">3</span> 빈칸</div>
+        <div class="item-slot" id="item0"><span class="item-key">1</span> 비어있음</div>
+        <div class="item-slot" id="item1"><span class="item-key">2</span> 비어있음</div>
+        <div class="item-slot" id="item2"><span class="item-key">3</span> 비어있음</div>
       </div>
     </div>
 
     <section class="ranking" id="rankingPanel">
       <div class="panel-header">
         <h2 class="panel-title" id="rankingTitle">랭킹</h2>
-        <button class="panel-toggle" id="rankToggle" type="button">숨김</button>
+        <button class="panel-toggle" id="rankToggle" type="button" aria-label="랭킹 숨김" title="랭킹 숨김">-</button>
       </div>
       <div class="rank-content">
+        <div class="live-leader" id="liveLeader">LIVE #1 -</div>
         <div class="rank-head">
-          <span>순위</span>
+          <span>Rank</span>
           <span>ID</span>
           <span>국가</span>
-          <span>최고</span>
+          <span>층수</span>
+          <span>시간</span>
         </div>
         <div id="rankRows"></div>
       </div>
     </section>
 
-    <section class="chat">
+    <section class="chat" id="chatPanel">
       <h2 class="panel-title">채팅</h2>
       <div class="chat-log" id="chatLog"></div>
       <form id="chatForm">
@@ -587,7 +1579,34 @@
 
     <div class="notice" id="notice">
       <strong>조작</strong><br>
-      &larr; 왼쪽 위 계단 / &uarr; 머리 위 계단 / &rarr; 오른쪽 계단 / &darr; 숨기 / 1,2,3 아이템 / 0 테스트 지급
+      ← / ↑ / →: 이동, ↓: 숨기, 1/2/3: 아이템
+    </div>
+  </div>
+
+  <div class="help-modal" id="helpModal" hidden>
+    <div class="help-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="help-head">
+        <h2 id="helpTitle">도움말</h2>
+        <button class="help-close" id="helpClose" type="button" aria-label="닫기">x</button>
+      </div>
+      <div class="help-body">
+        <p>방향키로 이동하고, 아래키로 숨을 수 있습니다.</p>
+        <p>아이템은 1, 2, 3번 키로 사용합니다.</p>
+        <p>F1을 누르면 도움말을 다시 볼 수 있습니다.</p>
+      </div>
+      <button class="help-confirm" id="helpConfirm" type="button">확인</button>
+    </div>
+  </div>
+
+  <div class="mobile-controls" aria-label="Mobile controls">
+    <div class="mobile-pad">
+      <button class="mobile-btn up" type="button" data-mobile-action="up" aria-label="Up">^</button>
+      <button class="mobile-btn left" type="button" data-mobile-action="left" aria-label="Left">&lt;</button>
+      <button class="mobile-btn hide" type="button" data-mobile-action="hide" aria-label="Hide">v</button>
+      <button class="mobile-btn right" type="button" data-mobile-action="right" aria-label="Right">&gt;</button>
+    </div>
+    <div class="mobile-idle-bar" aria-hidden="true">
+      <div class="mobile-idle-fill" id="mobileIdleFill"></div>
     </div>
   </div>
 
@@ -600,13 +1619,21 @@
     const chatInput = document.getElementById("chatInput");
     const ui = {
       floor: document.getElementById("floor"),
+      idleTimer: document.getElementById("idleTimer"),
       combo: document.getElementById("combo"),
       playerLabel: document.getElementById("playerLabel"),
       block: document.getElementById("block"),
       cooldown: document.getElementById("cooldown"),
       kills: document.getElementById("kills"),
+      gold: document.getElementById("gold"),
       lives: document.getElementById("lives"),
       onlineStatus: document.getElementById("onlineStatus"),
+      nextGoal: document.getElementById("nextGoal"),
+      boostBtn: document.getElementById("boostBtn"),
+      mobileIdleFill: document.getElementById("mobileIdleFill"),
+      helpModal: document.getElementById("helpModal"),
+      helpClose: document.getElementById("helpClose"),
+      helpConfirm: document.getElementById("helpConfirm"),
       itemSlots: [
         document.getElementById("item0"),
         document.getElementById("item1"),
@@ -615,7 +1642,9 @@
       rankingPanel: document.getElementById("rankingPanel"),
       rankToggle: document.getElementById("rankToggle"),
       rankingTitle: document.getElementById("rankingTitle"),
+      liveLeader: document.getElementById("liveLeader"),
       rankRows: document.getElementById("rankRows"),
+      chatPanel: document.getElementById("chatPanel"),
       chatLog: document.getElementById("chatLog"),
       notice: document.getElementById("notice")
     };
@@ -623,15 +1652,31 @@
     const SEGMENT_SIZE = 100;
     const HIDE_COOLDOWN = 10 * 60 * 1000;
     const GLOBAL_SEED = "one-public-stair-map-v3";
-    const STEP_X = 88;
-    const STEP_Y = 46;
-    const BAR_W = 82;
-    const BAR_H = 16;
+    const STEP_X = 72;
+    const STEP_Y = 38;
+    const BAR_W = 68;
+    const BAR_H = 14;
     const REST_INTERVAL = 500;
     const COMBO_TIMEOUT = 3000;
     const SHIELD_DURATION = 5000;
     const LIFE_REWARD_INTERVAL = 250;
+    const FLOOR_IDLE_START = 3000;
+    const FLOOR_IDLE_END = 1500;
+    const FLOOR_IDLE_MAX_FLOOR = 10000;
+    const BOULDER_STUN = 1000;
+    const MISSILE_STUN = 3000;
+    const MISSILE_DURATION = 2800;
+    const MISSILE_HIT_AT = 0.96;
+    const KILL_GOLD_REWARD = 100;
+    const COMBO_GOLD_STEP = 30;
+    const COMBO_GOLD_REWARD = 10;
+    const COMBO_ITEM_STEP = 50;
+    const JUMP_DURATION = 240;
+    const BOT_FILLER_COUNT = 5;
+    const BOT_REMOVE_POPULATION = 10;
     const PROFILE_KEY = "stairProfile";
+    const PLAYER_KEY = "stairPlayerKey";
+    const HELP_SEEN_KEY = "stairHelpSeen";
     const BOT_DATA = [
       ["NOVA", "US"],
       ["MIN", "KR"],
@@ -646,14 +1691,13 @@
       ["YUI", "JP"]
     ];
     const ITEMS = [
-      { type: "boulder", name: "낙석" },
-      { type: "warp", name: "워프" },
-      { type: "shield", name: "보호막" },
-      { type: "hideReset", name: "쿨초기화" },
-      { type: "missile", name: "미사일" }
+      { type: "boulder", name: "낙석", short: "ROCK" },
+      { type: "warp", name: "워프", short: "WARP" },
+      { type: "shield", name: "보호막", short: "SHLD" },
+      { type: "hideReset", name: "숨기 초기화", short: "HIDE" },
+      { type: "missile", name: "미사일", short: "MSL" }
     ];
     const FOOTSTEP_SOUND_URL = "";
-    const TEST_ITEMS_ENABLED = true;
     const footstepPool = FOOTSTEP_SOUND_URL ? Array.from({ length: 4 }, () => {
       const audio = new Audio(FOOTSTEP_SOUND_URL);
       audio.preload = "auto";
@@ -676,41 +1720,73 @@
       rankingCollapsed: sessionStorage.getItem("rankingCollapsed") === "true",
       lastHideAt: -HIDE_COOLDOWN,
       noticeUntil: 0,
-      noticeText: "ID를 만들고 게임을 시작하세요.",
+      noticeText: "ID와 국가를 설정하고 게임을 시작하세요.",
       combo: 0,
       comboLastInputAt: 0,
+      floorHold: { floor: 0, since: 0, punished: false },
+      runStartedAt: Date.now(),
+      bestTimeMs: 0,
       kills: 0,
+      gold: 0,
       lives: 0,
       rewardedLifeMilestones: new Set(),
       remotePlayers: [],
+      leaderboard: [],
       serverPopulation: 1,
       online: {
         enabled: location.protocol === "http:" || location.protocol === "https:",
         connected: false,
         onlineId: "",
+        playerKey: "",
         events: null,
         syncTimer: 0
       },
       chat: [
-        { id: "SYSTEM", country: "--", text: "채팅창이 준비되었습니다." }
+        { id: "SYSTEM", country: "--", text: "같은 맵에서 계단을 오르고 아이템으로 경쟁하세요." }
       ],
       flash: 0,
+      shake: 0,
       climbFlash: { floor: -1, start: 0, duration: 0 },
+      jump: { start: 0, duration: 0 },
       trails: [],
       effects: [],
     };
 
     function flagEmoji(country) {
       const code = String(country || "").trim().toUpperCase();
-      if (!/^[A-Z]{2}$/.test(code)) return "🏳";
+      if (!/^[A-Z]{2}$/.test(code)) return "--";
       return code.replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)));
     }
 
     function displayName(player) {
-      if (!player || !player.id) return "ID 없음";
-      return `${flagEmoji(player.country)} ${player.id}`;
+      if (!player || !player.id) return "ID NONE";
+      const title = titleForFloor(Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)));
+      return `${title ? `${title} ` : ""}${flagEmoji(player.country)} ${player.id}`;
     }
 
+    function titleForFloor(floor) {
+      if (floor >= 5000) return "별끝";
+      if (floor >= 4500) return "은하";
+      if (floor >= 4000) return "유성";
+      if (floor >= 3500) return "광휘";
+      if (floor >= 3000) return "건휘친구";
+      if (floor >= 2500) return "심연";
+      if (floor >= 2000) return "우주";
+      if (floor >= 1500) return "점육점";
+      if (floor >= 1000) return "까망이";
+      if (floor >= 500) return "누랭이";
+      return "";
+    }
+
+    function floorTheme(floor) {
+      if (floor <= 1000) return { top: "#89d5ff", mid: "#56aef7", bottom: "#dff5ff", stars: 0 };
+      if (floor <= 2000) return { top: "#0e2b66", mid: "#08142f", bottom: "#02040c", stars: 0 };
+      return { top: "#040404", mid: "#07070d", bottom: "#000000", stars: 1 };
+    }
+
+    function resetLeaderboard() {
+      state.leaderboard = [];
+    }
     function escapeHtml(text) {
       return text.replace(/[&<>"']/g, (char) => ({
         "&": "&amp;",
@@ -719,6 +1795,15 @@
         '"': "&quot;",
         "'": "&#039;"
       }[char]));
+    }
+
+    function getPlayerKey() {
+      let key = localStorage.getItem(PLAYER_KEY);
+      if (!key) {
+        key = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        localStorage.setItem(PLAYER_KEY, key);
+      }
+      return key;
     }
 
     function itemFromType(type) {
@@ -736,13 +1821,17 @@
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
         stunnedUntil: state.player.stunnedUntil,
+        runStartedAt: state.runStartedAt,
+        bestTimeMs: state.bestTimeMs,
         lastHideAt: state.lastHideAt,
         inventory: state.inventory.map((item) => item ? item.type : null),
         testItemCursor: state.testItemCursor,
         kills: state.kills,
+        gold: state.gold,
         lives: state.lives,
         rewardedMilestones: [...state.rewardedMilestones],
         rewardedLifeMilestones: [...state.rewardedLifeMilestones],
+        playerKey: state.online.playerKey,
         onlineId: state.online.onlineId
       }));
     }
@@ -834,23 +1923,25 @@
       return state.positions[floor];
     }
 
-    function resetBots(count = 5) {
+    function resetBots(count = BOT_FILLER_COUNT) {
       const now = performance.now();
       state.bots = BOT_DATA.slice(0, count).map(([id, country], i) => ({
-        id,
+        id: `EASY ${id}`,
         country,
         floor: 4 + i * 4,
         bestFloor: 4 + i * 4,
+        easy: true,
         hidden: false,
         shield: false,
         shieldUntil: 0,
-        nextMoveAt: now + 700 + Math.random() * 900,
-        baseSpeed: 620 + Math.random() * 620,
-        rhythm: 0.72 + Math.random() * 0.72,
-        hesitation: 0.08 + Math.random() * 0.12,
-        mistake: 0.025 + Math.random() * 0.045,
-        inventory: [ITEMS[Math.floor(Math.random() * ITEMS.length)]],
-        nextItemAt: now + 5000 + Math.random() * 10000,
+        nextMoveAt: now + 900 + Math.random() * 1300,
+        baseSpeed: 860 + Math.random() * 740,
+        rhythm: 0.92 + Math.random() * 0.82,
+        hesitation: 0.12 + Math.random() * 0.16,
+        mistake: 0.04 + Math.random() * 0.055,
+        inventory: [],
+        nextItemAt: Number.POSITIVE_INFINITY,
+        jump: { start: 0, duration: 0 },
         stunnedUntil: 0
       }));
     }
@@ -863,20 +1954,22 @@
         const [id, country] = BOT_DATA[i % BOT_DATA.length];
         const floor = 4 + i * 4;
         state.bots.push({
-          id: i < BOT_DATA.length ? id : `${id}${i + 1}`,
+          id: i < BOT_DATA.length ? `EASY ${id}` : `EASY ${id}${i + 1}`,
           country,
           floor,
           bestFloor: floor,
+          easy: true,
           hidden: false,
           shield: false,
           shieldUntil: 0,
-          nextMoveAt: now + 700 + Math.random() * 900,
-          baseSpeed: 620 + Math.random() * 620,
-          rhythm: 0.72 + Math.random() * 0.72,
-          hesitation: 0.08 + Math.random() * 0.12,
-          mistake: 0.025 + Math.random() * 0.045,
-          inventory: [ITEMS[Math.floor(Math.random() * ITEMS.length)]],
-          nextItemAt: now + 5000 + Math.random() * 10000,
+          nextMoveAt: now + 900 + Math.random() * 1300,
+          baseSpeed: 860 + Math.random() * 740,
+          rhythm: 0.92 + Math.random() * 0.82,
+          hesitation: 0.12 + Math.random() * 0.16,
+          mistake: 0.04 + Math.random() * 0.055,
+          inventory: [],
+          nextItemAt: Number.POSITIVE_INFINITY,
+          jump: { start: 0, duration: 0 },
           stunnedUntil: 0
         });
       }
@@ -893,7 +1986,7 @@
     function showNotice(text) {
       state.noticeText = text;
       state.noticeUntil = performance.now() + 2600;
-      ui.notice.innerHTML = `<strong>알림</strong><br>${escapeHtml(text)}`;
+        ui.notice.innerHTML = "<strong>조작</strong><br>← / ↑ / →: 이동, ↓: 숨기, 1/2/3: 아이템";
     }
 
     function playFootstep() {
@@ -968,10 +2061,11 @@
 
     function opponents() {
       if (!state.online.enabled) return state.bots;
-      if (state.serverPopulation <= 5) {
-        ensureBotCount(10);
-        return [...state.remotePlayers, ...state.bots.slice(0, 10)];
+      if (state.serverPopulation < BOT_REMOVE_POPULATION) {
+        ensureBotCount(BOT_FILLER_COUNT);
+        return [...state.remotePlayers, ...state.bots.slice(0, BOT_FILLER_COUNT)];
       }
+      state.bots = [];
       return state.remotePlayers;
     }
 
@@ -991,12 +2085,39 @@
             shield: Boolean(player.shield),
             shieldUntil: Number(player.shieldUntil || 0),
             stunnedUntil: Number(player.stunnedUntil || 0),
-            kills: Number(player.kills || 0),
-            lives: Number(player.lives || 0)
+          kills: Number(player.kills || 0),
+          gold: Number(player.gold || 0),
+          lives: Number(player.lives || 0),
+          bestTimeMs: Number(player.bestTimeMs || 0),
+          runElapsedMs: Number(player.runElapsedMs || 0)
           }));
         const own = data.players.find((player) => player.onlineId === state.online.onlineId);
         if (own && Number(own.kills || 0) > state.kills) state.kills = Number(own.kills || 0);
+        if (own && Number.isFinite(Number(own.gold))) state.gold = Number(own.gold || 0);
+        if (own && Number.isFinite(Number(own.lives))) state.lives = Number(own.lives || 0);
+        if (own && Number.isFinite(Number(own.bestTimeMs)) && Number(own.bestTimeMs) > 0) state.bestTimeMs = Number(own.bestTimeMs);
+        if (own && Number.isFinite(Number(own.floor))) {
+          const serverFloor = Math.max(0, Number(own.floor || 0));
+          if (serverFloor > state.player.floor) {
+            state.player.floor = serverFloor;
+            resetFloorHold();
+          }
+        }
         if (own && Number(own.bestFloor || 0) > state.player.bestFloor) state.player.bestFloor = Number(own.bestFloor || 0);
+      }
+      if (Array.isArray(data.leaderboard)) {
+        state.leaderboard = data.leaderboard.map((player) => ({
+          ...player,
+          id: String(player.id || "PLAYER"),
+          country: String(player.country || "--"),
+          floor: Number(player.floor || 0),
+          bestFloor: Number(player.bestFloor || player.floor || 0),
+          kills: Number(player.kills || 0),
+          gold: Number(player.gold || 0),
+          lives: Number(player.lives || 0),
+          bestTimeMs: Number(player.bestTimeMs || 0),
+          record: true
+        }));
       }
       if (Array.isArray(data.chat)) {
         state.chat = data.chat.slice(-60);
@@ -1033,14 +2154,36 @@
         shieldUntil: state.player.shieldUntil,
         stunnedUntil: state.player.stunnedUntil,
         kills: state.kills,
-        lives: state.lives
+        gold: state.gold,
+        lives: state.lives,
+        bestTimeMs: state.bestTimeMs,
+        runElapsedMs: runElapsedMs()
       });
+    }
+
+    function leaveOnline() {
+      if (!state.online.enabled || !state.online.onlineId) return;
+      const body = JSON.stringify({ onlineId: state.online.onlineId });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon("/api/leave", new Blob([body], { type: "application/json" }));
+      } else {
+        fetch("/api/leave", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body,
+          keepalive: true
+        }).catch(() => {});
+      }
+      if (state.online.events) state.online.events.close();
+      state.online.connected = false;
     }
 
     async function connectOnline() {
       if (!state.online.enabled || !state.player.id || state.online.connected) return;
+      state.online.playerKey = state.online.playerKey || getPlayerKey();
       const joined = await postOnline("/api/join", {
         onlineId: state.online.onlineId,
+        playerKey: state.online.playerKey,
         id: state.player.id,
         country: state.player.country,
         floor: state.player.floor,
@@ -1050,25 +2193,40 @@
         shieldUntil: state.player.shieldUntil,
         stunnedUntil: state.player.stunnedUntil,
         kills: state.kills,
-        lives: state.lives
+        gold: state.gold,
+        lives: state.lives,
+        bestTimeMs: state.bestTimeMs,
+        runElapsedMs: runElapsedMs()
       });
       if (!joined || !joined.onlineId) return;
       state.online.onlineId = joined.onlineId;
       saveSessionProfile();
       state.online.connected = true;
       applyOnlineSnapshot(joined);
+      resetFloorHold();
       if (state.online.events) state.online.events.close();
       state.online.events = new EventSource(`/events?id=${encodeURIComponent(state.online.onlineId)}`);
       state.online.events.onmessage = (event) => {
         state.online.connected = true;
         const data = JSON.parse(event.data);
+        if (data.type === "attacked" && data.fell) state.lives = 0;
+        if (data.type === "attacked" && !data.fell) {
+          if (Number.isFinite(Number(data.lives))) state.lives = Number(data.lives);
+          state.player.hidden = false;
+          resetCombo();
+          resetFloorHold();
+          showNotice(`${data.reason || "공격"}: 목숨 -1 / ${state.lives}`);
+          addChat("SYSTEM", "--", `${data.reason || "공격"}: 목숨 -1 / ${state.lives}`);
+          syncOnlineState();
+          data.type = "state";
+        }
         if (data.type === "attacked") {
-          respawnAtZero(data.reason || "다른 플레이어에게 당했습니다.");
+          respawnAtZero(data.reason || "공격받았습니다.");
           syncOnlineState();
         }
         if (data.type === "stunned") {
           if (applyStun(state.player, Number(data.ms || 3000), data.reason || "스턴")) {
-            showNotice(`${data.reason || "공격"}에 맞아 스턴!`);
+            showNotice(`${data.reason || "스턴"}: 스턴`);
           }
           syncOnlineState();
         }
@@ -1076,12 +2234,12 @@
       };
       state.online.events.onerror = () => {
         state.online.connected = false;
-        ui.onlineStatus.textContent = "재연결 중";
+        ui.onlineStatus.textContent = "온라인";
       };
       clearInterval(state.online.syncTimer);
       state.online.syncTimer = setInterval(syncOnlineState, 900);
-      showNotice("온라인 서버에 접속했습니다.");
-      addChat("SYSTEM", "--", "온라인 모드가 켜졌습니다.");
+      showNotice("온라인에 연결되었습니다.");
+      addChat("SYSTEM", "--", "온라인에 연결되었습니다.");
       syncOnlineState();
     }
 
@@ -1093,6 +2251,22 @@
         reason
       });
       if (result && Number.isFinite(Number(result.kills))) state.kills = Number(result.kills);
+      if (result && Number.isFinite(Number(result.gold))) {
+        const nextGold = Number(result.gold);
+        if (nextGold > state.gold) showNotice(`처치 보상 +${KILL_GOLD_REWARD}g (보유 ${nextGold}g)`);
+        state.gold = nextGold;
+      }
+      if (result && result.target) {
+        const targetName = result.target.id || target.id || "TARGET";
+        if (result.target.fell) {
+          showNotice(`${targetName} 0층으로 추락`);
+          addChat("SYSTEM", "--", `${targetName} 0층으로 추락`);
+        } else {
+          showNotice(`${targetName}: 목숨 -1 / ${result.target.lives}`);
+          addChat("SYSTEM", "--", `${targetName}: 목숨 -1 / ${result.target.lives}`);
+        }
+      }
+      saveSessionProfile();
     }
 
     function stunRemote(target, reason, ms = 3000) {
@@ -1109,20 +2283,80 @@
       state.rankingCollapsed = collapsed;
       sessionStorage.setItem("rankingCollapsed", String(collapsed));
       ui.rankingPanel.classList.toggle("collapsed", collapsed);
-      ui.rankToggle.textContent = collapsed ? "보기" : "숨김";
-      ui.rankingTitle.textContent = collapsed ? "랭킹 보기" : "랭킹";
+      ui.rankToggle.textContent = collapsed ? "+" : "-";
+      ui.rankToggle.setAttribute("aria-label", collapsed ? "랭킹 열기" : "랭킹 숨김");
+      ui.rankToggle.title = collapsed ? "랭킹 열기" : "랭킹 숨김";
+      ui.rankingTitle.textContent = "랭킹";
+    }
+
+    function formatDuration(ms) {
+      const total = Math.max(0, Math.floor(Number(ms || 0) / 1000));
+      const hours = Math.floor(total / 3600);
+      const minutes = Math.floor((total % 3600) / 60);
+      const seconds = total % 60;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function runElapsedMs() {
+      return Math.max(0, Date.now() - state.runStartedAt);
+    }
+
+    function rankingTimeMs(player) {
+      const savedTime = Number(player.bestTimeMs || 0);
+      if (savedTime > 0) return savedTime;
+      const liveTime = Number(player.runElapsedMs || 0);
+      if (liveTime > 0 && Number(player.floor || 0) >= Number(player.bestFloor || 0)) return liveTime;
+      if (player === state.player && state.player.floor >= state.player.bestFloor) return runElapsedMs();
+      return 0;
+    }
+
+    function nextGoalInfo() {
+      const floor = state.player.floor;
+      const goals = [
+        { floor: Math.ceil((floor + 1) / 100) * 100, label: "ITEM" },
+        { floor: Math.ceil((floor + 1) / LIFE_REWARD_INTERVAL) * LIFE_REWARD_INTERVAL, label: "LIFE" },
+        { floor: 500, label: "TITLE" },
+        { floor: 1000, label: "TITLE" },
+        { floor: 1500, label: "TITLE" },
+        { floor: 3000, label: "TITLE" }
+      ].filter((goal) => goal.floor > floor).sort((a, b) => a.floor - b.floor);
+      const nextFloor = goals[0] ? goals[0].floor : Math.ceil((floor + 1) / 100) * 100;
+      const labels = [...new Set(goals.filter((goal) => goal.floor === nextFloor).map((goal) => goal.label))];
+      return { floor: nextFloor, label: labels.length ? labels.join("/") : "ITEM" };
+    }
+
+    function pulseDanger(power = 0.45) {
+      state.flash = Math.max(state.flash, power);
+      state.shake = Math.max(state.shake, power);
+    }
+
+    function updateBestFloorRecord() {
+      if (state.player.floor > state.player.bestFloor) {
+        state.player.bestFloor = state.player.floor;
+        state.bestTimeMs = runElapsedMs();
+      }
     }
 
     function cooldownText() {
-      const left = HIDE_COOLDOWN - (Date.now() - state.lastHideAt);
+      const left = hideCooldownLeft();
       if (left <= 0) return "숨기 OK";
       const min = Math.floor(left / 60000);
       const sec = Math.ceil((left % 60000) / 1000);
       return `숨기 ${min}:${String(sec).padStart(2, "0")}`;
     }
 
+    function hideCooldownLeft() {
+      return Math.max(0, HIDE_COOLDOWN - (Date.now() - state.lastHideAt));
+    }
+
     function canHide() {
-      return Date.now() - state.lastHideAt >= HIDE_COOLDOWN;
+      return hideCooldownLeft() <= 0;
+    }
+
+    function idleLimitForFloor(floor = state.player.floor) {
+      const progress = Math.min(1, Math.max(0, Number(floor || 0) / FLOOR_IDLE_MAX_FLOOR));
+      const eased = progress * progress * (3 - 2 * progress);
+      return FLOOR_IDLE_START - (FLOOR_IDLE_START - FLOOR_IDLE_END) * eased;
     }
 
     function resetCombo() {
@@ -1137,6 +2371,15 @@
     function addCombo() {
       state.combo += 1;
       state.comboLastInputAt = performance.now();
+      if (state.combo % COMBO_GOLD_STEP === 0) {
+        state.gold += COMBO_GOLD_REWARD;
+        showNotice(`COMBO ${state.combo}: +${COMBO_GOLD_REWARD}G`);
+        saveSessionProfile();
+      }
+      if (state.combo % COMBO_ITEM_STEP === 0) {
+        addRandomItem();
+        showNotice(`COMBO ${state.combo}: ITEM`);
+      }
     }
 
     function updateComboTimeout() {
@@ -1203,7 +2446,7 @@
         hit,
         resolved: false,
         start: performance.now(),
-        duration: 920
+        duration: MISSILE_DURATION
       });
     }
 
@@ -1223,19 +2466,8 @@
       const emptyIndex = state.inventory.findIndex((slot) => !slot);
       const index = emptyIndex >= 0 ? emptyIndex : 0;
       state.inventory[index] = item;
-      showNotice(`${item.name} 아이템 획득!`);
-      addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 ${item.name} 아이템을 얻었습니다.`);
-      saveSessionProfile();
-    }
-
-    function grantTestItems() {
-      if (!TEST_ITEMS_ENABLED) return;
-      state.inventory = [0, 1, 2].map(() => {
-        const item = ITEMS[state.testItemCursor % ITEMS.length];
-        state.testItemCursor += 1;
-        return item;
-      });
-      showNotice("테스트 아이템 3개 지급!");
+      showNotice(`${item.name} 획득!`);
+      addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 ${item.name} 아이템을 획득했습니다.`);
       saveSessionProfile();
     }
 
@@ -1259,7 +2491,7 @@
           state.rewardedLifeMilestones.add(rewardKey);
           state.lives += 1;
           showNotice(`${milestone * LIFE_REWARD_INTERVAL}층 보너스: 목숨 +1`);
-          addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 목숨을 1개 얻었습니다.`);
+          addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 목숨 +1을 획득했습니다.`);
         }
       }
     }
@@ -1267,11 +2499,12 @@
     function applyStun(target, ms, source) {
       if (hasShield(target)) {
         clearShield(target);
-        showNotice(`${target.id} 보호막이 ${source}을 막았습니다.`);
-        addChat("SYSTEM", "--", `${target.id} 보호막이 ${source}을 막았습니다.`);
+        showNotice(`${target.id} 蹂댄샇留됱씠 ${source}??瑜? 留됱븯?듬땲??`);
+        addChat("SYSTEM", "--", `${target.id} 蹂댄샇留됱씠 ${source}??瑜? 留됱븯?듬땲??`);
         return false;
       }
       target.stunnedUntil = performance.now() + ms;
+      if (target === state.player) pulseDanger(0.55);
       return true;
     }
 
@@ -1292,14 +2525,13 @@
           ? state.remotePlayers.find((player) => player.onlineId === effect.targetId)
           : state.bots.find((bot) => bot.id === effect.targetId);
       if (!target) {
-        addChat("SYSTEM", "--", `미사일 소멸: ${effect.targetName} 대상 없음`);
+        addChat("SYSTEM", "--", `미사일 실패: ${effect.targetName}`);
         return;
       }
-
       const targetFloor = target.floor;
       const landedFloor = nearestLowerSamePositionFloor(targetFloor);
       if (effect.targetKind === "remote") {
-        attackRemote(target, `${effect.sourceId}의 미사일에 맞아 0층으로 떨어졌습니다.`);
+        attackRemote(target, `${effect.sourceId} 미사일 명중`);
         effect.hit = true;
         effect.landedFloor = landedFloor;
         effect.targetFloor = targetFloor;
@@ -1307,32 +2539,32 @@
         addChat("SYSTEM", "--", `미사일 명중: ${effect.sourceId} -> ${target.id}`);
         return;
       }
-      if (applyStun(target, 3000, "미사일")) {
+      if (applyStun(target, MISSILE_STUN, "미사일")) {
         target.floor = landedFloor;
         target.hidden = false;
-        if (target === state.player) state.flash = 1;
+        if (target === state.player) pulseDanger(1);
         effect.hit = true;
         effect.landedFloor = landedFloor;
         effect.targetFloor = targetFloor;
         showNotice(`${effect.sourceId} 미사일이 ${target.id || "플레이어"}에게 명중!`);
-        addChat("SYSTEM", "--", `미사일 명중: ${effect.sourceId} -> ${target.id || "플레이어"}, ${targetFloor}층에서 ${landedFloor}층으로 추락`);
+        addChat("SYSTEM", "--", `미사일 명중: ${effect.sourceId} -> ${target.id || "플레이어"}, ${targetFloor}F에서 ${landedFloor}F로 추락`);
       } else {
         effect.hit = false;
         effect.landedFloor = targetFloor;
         effect.targetFloor = targetFloor;
-        addChat("SYSTEM", "--", `미사일 방어: ${target.id || "플레이어"} 보호막`);
+        addChat("SYSTEM", "--", `미사일 방어: ${target.id || "플레이어"}`);
       }
     }
 
     function useItem(index) {
       if (state.mode !== "play") return;
       if (performance.now() < state.player.stunnedUntil) {
-        showNotice("스턴 중에는 아이템을 쓸 수 없습니다.");
+        showNotice("스턴 중에는 사용할 수 없습니다.");
         return;
       }
       const item = state.inventory[index];
       if (!item) {
-        showNotice(`${index + 1}번 아이템칸이 비어 있습니다.`);
+        showNotice(`Slot ${index + 1} is empty`);
         return;
       }
       state.inventory[index] = null;
@@ -1345,92 +2577,85 @@
         for (const target of opponents()) {
           if (target.floor >= minFloor && target.floor <= state.player.floor) {
             if (target.onlineId) {
-              stunRemote(target, "낙석", 3000);
+              stunRemote(target, "Boulder", BOULDER_STUN);
               hits += 1;
               hitNames.push(target.id);
-            } else if (applyStun(target, 3000, "낙석")) {
+            } else if (applyStun(target, BOULDER_STUN, "Boulder")) {
               hits += 1;
               hitNames.push(target.id);
             }
           }
         }
         addBoulderEffect(state.player.floor, minFloor, hits);
-        showNotice(`낙석 사용: ${hits}명 스턴`);
-        addChat("SYSTEM", "--", `낙석 발동: ${state.player.floor}층부터 ${minFloor}층까지 타격, ${hits ? hitNames.join(", ") : "명중 없음"}`);
+        showNotice(`Boulder used: ${hits} hit`);
+        addChat("SYSTEM", "--", `Boulder: ${hits ? hitNames.join(", ") : "no hit"}`);
       }
 
       if (item.type === "warp") {
         const previousFloor = state.player.floor;
         state.player.floor += 100;
-        state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
+        updateBestFloorRecord();
         state.player.hidden = false;
         addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
         state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 640 };
         checkItemReward(previousFloor, state.player.floor);
         checkLifeReward(previousFloor, state.player.floor);
-        showNotice("100층 위로 워프했습니다.");
+        showNotice("Warp +100F");
         syncOnlineState();
       }
 
       if (item.type === "shield") {
         setShield(state.player);
-        showNotice("보호막이 5초간 활성화되었습니다.");
+        showNotice("Shield 5s");
         syncOnlineState();
       }
 
       if (item.type === "hideReset") {
         state.lastHideAt = -HIDE_COOLDOWN;
-        showNotice("숨기 쿨타임이 초기화되었습니다.");
+        showNotice("Hide cooldown reset");
       }
 
       if (item.type === "missile") {
-        const target = opponents()
-          .filter((bot) => bot.floor >= state.player.floor)
-          .sort((a, b) => a.floor - b.floor)[0]
-          || opponents().slice().sort((a, b) => Math.abs(a.floor - state.player.floor) - Math.abs(b.floor - state.player.floor))[0];
+        const target = randomUpperTarget(state.player);
         if (!target) {
-          showNotice("미사일 대상이 없습니다.");
-          addMissileEffect(state.player.floor, state.player.floor + 8, "없음", state.player.floor + 8, false, "bot", state.player.id || "YOU");
-          addChat("SYSTEM", "--", "미사일 발동: 대상 없음");
+          showNotice("No target above");
+          addChat("SYSTEM", "--", "Missile failed: no upper target");
           saveSessionProfile();
           return;
         }
-        addMissileEffect(state.player.floor, target.floor, target.onlineId || target.id, target.floor, false, target.onlineId ? "remote" : "bot", state.player.id || "YOU", target.id);
-        showNotice(`${target.id}에게 미사일 발사!`);
-        addChat("SYSTEM", "--", `미사일 발사: ${state.player.id || "플레이어"} -> ${target.id}`);
+        fireMissile(state.player, target);
       }
       saveSessionProfile();
     }
 
     function botUseItem(bot, now) {
+      if (bot.easy) return;
       if (!bot.inventory.length || now < bot.nextItemAt || now < bot.stunnedUntil || state.mode !== "play") return;
       const item = bot.inventory.shift();
-      bot.nextItemAt = now + 12000 + Math.random() * 18000;
+      bot.nextItemAt = now + 45000 + Math.random() * 65000;
       bot.inventory.push(ITEMS[Math.floor(Math.random() * ITEMS.length)]);
 
       if (item.type === "boulder") {
         const minFloor = Math.max(0, bot.floor - 100);
         const hit = state.player.floor >= minFloor && state.player.floor <= bot.floor;
         addBoulderEffect(bot.floor, minFloor, hit ? 1 : 0);
-        if (hit && applyStun(state.player, 3000, "낙석")) {
-          showNotice(`${bot.id} 낙석에 맞아 스턴!`);
-          addChat("SYSTEM", "--", `${bot.id} 낙석 발동: 플레이어 스턴`);
+        if (hit && applyStun(state.player, BOULDER_STUN, "낙석")) {
+          showNotice(`${bot.id} 낙석 적중`);
+          addChat("SYSTEM", "--", `${bot.id} 낙석: 플레이어 스턴`);
+          addKillReward();
         } else {
-          addChat("SYSTEM", "--", `${bot.id} 낙석 발동: 명중 없음`);
+          addChat("SYSTEM", "--", `${bot.id} 낙석: 명중 없음`);
         }
       }
 
       if (item.type === "missile") {
-        const fromFloor = bot.floor;
-        const targetFloor = state.player.floor;
-        addMissileEffect(fromFloor, targetFloor, state.player.id || "YOU", targetFloor, false, "player", bot.id);
-        showNotice(`${bot.id} 미사일 발사!`);
-        addChat("SYSTEM", "--", `${bot.id} 미사일 발사: 플레이어를 향해 날아옵니다.`);
+        const target = randomUpperTarget(bot);
+        if (target) fireMissile(bot, target);
       }
 
       if (item.type === "shield") {
         setShield(bot);
-        addChat("SYSTEM", "--", `${bot.id} 보호막 5초 사용`);
+        addChat("SYSTEM", "--", `${bot.id} 蹂댄샇留?5珥??ъ슜`);
       }
 
       if (item.type === "warp") {
@@ -1445,7 +2670,7 @@
       if (item.type === "hideReset") {
         bot.hidden = true;
         bot.nextMoveAt = now + 900 + Math.random() * 1200;
-        addChat("SYSTEM", "--", `${bot.id} 은신 준비`);
+        addChat("SYSTEM", "--", `${bot.id} 은신 상태`);
       }
     }
 
@@ -1453,8 +2678,8 @@
       if (!hasShield(state.player)) return false;
       clearShield(state.player);
       state.player.hidden = false;
-      showNotice(`보호막으로 방어했습니다: ${reason}`);
-      addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님의 보호막이 공격을 막았습니다.`);
+      showNotice(`보호막 방어: ${reason}`);
+      addChat("SYSTEM", "--", `${state.player.id || "플레이어"}의 보호막이 공격을 막았습니다.`);
       return true;
     }
 
@@ -1464,20 +2689,86 @@
         state.lives -= 1;
         resetCombo();
         state.player.hidden = false;
-        state.flash = 0.45;
-        showNotice(`목숨을 사용해 버텼습니다. 남은 목숨 ${state.lives}`);
-        addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 목숨을 사용해 추락을 막았습니다.`);
+        pulseDanger(0.45);
+        showNotice(`목숨 -1 / ${state.lives}`);
+        addChat("SYSTEM", "--", `${state.player.id || "플레이어"}: 목숨 -1`);
         syncOnlineState();
         return;
       }
       state.mode = "play";
       state.player.floor = 0;
+      state.runStartedAt = Date.now();
+      resetFloorHold();
       resetRunState();
-      state.flash = 1;
+      pulseDanger(1);
       state.climbFlash = { floor: -1, start: 0, duration: 0 };
       joinScreen.classList.add("hidden");
       showNotice(reason);
-      addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 0층에서 다시 시작합니다.`);
+      addChat("SYSTEM", "--", `${state.player.id || "플레이어"} 0층으로 추락`);
+      syncOnlineState();
+    }
+
+    function loseLifeOrFall(reason) {
+      if (absorbDanger(reason)) return false;
+      if (state.lives > 0) {
+        state.lives -= 1;
+        resetCombo();
+        state.player.hidden = false;
+        pulseDanger(0.5);
+        showNotice(`${reason}: 목숨 -1 / ${state.lives}`);
+        addChat("SYSTEM", "--", `${state.player.id || "플레이어"}: ${reason} 목숨 -1`);
+        syncOnlineState();
+        return true;
+      }
+      respawnAtZero(`${reason}: 0층으로 추락`);
+      return false;
+    }
+
+    function resetFloorHold(now = performance.now()) {
+      state.floorHold = { floor: state.player.floor, since: now, punished: false };
+    }
+
+
+    function randomUpperTarget(fromPlayer) {
+      const pool = [...opponents(), state.player].filter((candidate) => candidate.id && candidate !== fromPlayer && Number(candidate.floor || 0) > Number(fromPlayer.floor || 0) && !candidate.hidden);
+      if (!pool.length) return null;
+      const nearestFloor = Math.min(...pool.map((candidate) => candidate.floor));
+      const nearest = pool.filter((candidate) => candidate.floor === nearestFloor);
+      return nearest[Math.floor(Math.random() * nearest.length)];
+    }
+
+    function fireMissile(fromEntity, target) {
+      addMissileEffect(fromEntity.floor, target.floor, target.onlineId || target.id, target.floor, false, target.onlineId ? "remote" : target === state.player ? "player" : "bot", fromEntity.id || "YOU", target.id);
+      showNotice(`${target.id}을(를) 미사일로 저격!`);
+      addChat("SYSTEM", "--", `${fromEntity.id || "YOU"} 미사일 발사 -> ${target.id}`);
+    }
+    function addKillReward() {
+      state.gold += KILL_GOLD_REWARD;
+      saveSessionProfile();
+      showNotice(`泥섏튂 蹂댁긽 +${KILL_GOLD_REWARD}g`);
+    }
+
+    function useGoldBoost() {
+      if (state.mode !== "play") return;
+      if (state.gold < 500) {
+      showNotice("500g 사용: 100층 위로 이동했습니다.");
+        return;
+      }
+      if (performance.now() < state.player.stunnedUntil) {
+        showNotice("스턴 중에는 사용할 수 없습니다.");
+        return;
+      }
+      const previousFloor = state.player.floor;
+      state.gold -= 500;
+      state.player.floor += 100;
+      resetFloorHold();
+      updateBestFloorRecord();
+      state.player.hidden = false;
+      addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
+      state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 640 };
+      checkItemReward(previousFloor, state.player.floor);
+      checkLifeReward(previousFloor, state.player.floor);
+      showNotice("500g 사용: 100층 위로 이동했습니다.");
       syncOnlineState();
     }
 
@@ -1487,16 +2778,26 @@
       state.player.country = country;
       state.player.floor = 0;
       state.player.bestFloor = 0;
+      state.runStartedAt = Date.now();
+      state.bestTimeMs = 0;
       state.kills = 0;
+      state.gold = 0;
       state.lives = 0;
+      state.online.playerKey = getPlayerKey();
       resetRunState();
       state.inventory = [null, null, null];
       state.lastHideAt = -HIDE_COOLDOWN;
-      resetBots();
+      resetFloorHold();
+      resetLeaderboard();
+    resetBots();
       joinScreen.classList.add("hidden");
       saveSessionProfile();
       showNotice("게임 시작!");
-      addChat("SYSTEM", "--", `${id}님이 입장했습니다.`);
+      addChat("SYSTEM", "--", `${id}님이 게임을 시작했습니다.`);
+      if (!sessionStorage.getItem(HELP_SEEN_KEY)) {
+        openHelp();
+        sessionStorage.setItem(HELP_SEEN_KEY, "1");
+      }
       connectOnline();
     }
 
@@ -1511,6 +2812,8 @@
         state.player.country = String(profile.country).slice(0, 3);
         state.player.floor = Math.max(0, Number(profile.floor || 0));
         state.player.bestFloor = Math.max(state.player.floor, Number(profile.bestFloor || 0));
+        state.runStartedAt = Number.isFinite(Number(profile.runStartedAt)) ? Number(profile.runStartedAt) : Date.now();
+        state.bestTimeMs = Number(profile.bestTimeMs || 0);
         state.player.hidden = false;
         state.player.shield = Boolean(profile.shield);
         state.player.shieldUntil = Number(profile.shieldUntil || 0);
@@ -1520,23 +2823,26 @@
         while (state.inventory.length < 3) state.inventory.push(null);
         state.testItemCursor = Number(profile.testItemCursor || 0);
         state.kills = Number(profile.kills || 0);
+        state.gold = Number(profile.gold || 0);
         state.lives = Number(profile.lives || 0);
         state.rewardedMilestones = new Set(Array.isArray(profile.rewardedMilestones) ? profile.rewardedMilestones : []);
         state.rewardedLifeMilestones = new Set(Array.isArray(profile.rewardedLifeMilestones) ? profile.rewardedLifeMilestones : []);
+        state.online.playerKey = String(profile.playerKey || "") || getPlayerKey();
         state.online.onlineId = String(profile.onlineId || "");
         resetCombo();
         state.trails = [];
         state.effects = [];
         state.climbFlash = { floor: -1, start: 0, duration: 0 };
+        resetFloorHold();
         if (canHide()) {
           state.lastHideAt = Date.now();
           state.player.hidden = true;
-          showNotice(`${state.player.floor}층에서 자동 은신했습니다.`);
-        } else {
           showNotice(`${state.player.floor}층에서 다시 시작합니다.`);
+        } else {
+          showNotice(`${state.player.floor}층 기록을 복구했습니다.`);
         }
         joinScreen.classList.add("hidden");
-        addChat("SYSTEM", "--", `${state.player.id}님이 세션으로 재입장했습니다.`);
+        addChat("SYSTEM", "--", `${state.player.id}님이 세션을 복구했습니다.`);
         saveSessionProfile();
         connectOnline();
         return true;
@@ -1551,7 +2857,8 @@
       bot.hidden = false;
       bot.stunnedUntil = performance.now() + 1800;
       state.kills += 1;
-      showNotice(`${bot.id} ${reason}`);
+      addKillReward();
+      showNotice(`${bot.id} ${reason} / +${KILL_GOLD_REWARD}g`);
       addChat("SYSTEM", "--", `${bot.id} ${reason}`);
       saveSessionProfile();
     }
@@ -1559,19 +2866,20 @@
     function tryHide() {
       if (state.mode !== "play") return;
       if (performance.now() < state.player.stunnedUntil) {
-        showNotice("스턴 중입니다.");
+        showNotice("스턴 중에는 사용할 수 없습니다.");
         return;
       }
       if (state.player.hidden) {
         showNotice("이미 숨어 있습니다.");
         return;
       }
-      if (!TEST_ITEMS_ENABLED && !canHide()) {
-        showNotice(`${cooldownText()} 후 다시 숨을 수 있습니다.`);
+      if (!canHide()) {
+        showNotice(`${cooldownText()} 후 숨을 수 있습니다.`);
         return;
       }
       state.lastHideAt = Date.now();
       state.player.hidden = true;
+      resetFloorHold();
       showNotice(`${state.player.floor}층에 숨었습니다.`);
       syncOnlineState();
     }
@@ -1581,7 +2889,7 @@
       if (victim.onlineId) {
         showNotice(`${victim.id} ${reason}`);
         addChat("SYSTEM", "--", `${victim.id} ${reason}`);
-        attackRemote(victim, `${state.player.id || "플레이어"}에게 ${reason}`);
+        attackRemote(victim, `${state.player.id || "Player"}: ${reason}`);
         return;
       }
       knockDownBot(victim, reason);
@@ -1598,14 +2906,16 @@
       const previousFloor = state.player.floor;
 
       if (expected !== inputDir) {
-        respawnAtZero("계단 방향을 놓쳐 0층으로 떨어졌습니다.");
+        respawnAtZero("계단 방향을 틀려 0층으로 떨어졌습니다.");
         return;
       }
 
       state.player.floor += 1;
-      state.player.bestFloor = Math.max(state.player.bestFloor, state.player.floor);
+      resetFloorHold();
+      updateBestFloorRecord();
       state.player.hidden = false;
       addCombo();
+      state.jump = { start: performance.now(), duration: JUMP_DURATION };
       playFootstep();
       addTrail(state.player, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--player").trim());
       state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 520 };
@@ -1614,27 +2924,28 @@
       syncOnlineState();
 
       if (isRestFloor(state.player.floor)) {
-        showNotice(`${state.player.floor}층 휴식공간입니다.`);
+        showNotice(`${state.player.floor}F REST`);
       } else if (wasHidden) {
         const victim = opponents().find((opponent) => Math.abs(opponent.floor - state.player.floor) <= 1 && !opponent.hidden);
-        if (victim) knockDownOpponent(victim, "기습 성공으로 0층 추락");
-        else showNotice("기습 이동!");
+        if (victim) knockDownOpponent(victim, "Ambush");
+        else showNotice("Ambush move");
       } else {
         const victim = opponents().find((opponent) => opponent.floor === state.player.floor && !opponent.hidden);
-        if (victim) knockDownOpponent(victim, "따라잡혀 0층 추락");
+        if (victim) knockDownOpponent(victim, "Chase");
       }
     }
 
     function handleKey(event) {
       if (document.activeElement === chatInput) return;
+      if (event.repeat) {
+        const repeatCode = event.code || event.key;
+        if (["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft", "Down", "Right", "Up", "Left", "Digit1", "Digit2", "Digit3", "Numpad1", "Numpad2", "Numpad3"].includes(repeatCode)) {
+          event.preventDefault();
+          return;
+        }
+      }
       const key = event.key || event.code;
       const code = event.code || event.key;
-      if (event.code === "Digit0" || event.code === "Numpad0") {
-        event.preventDefault();
-        touchComboInput();
-        grantTestItems();
-        return;
-      }
       if (["Digit1", "Digit2", "Digit3", "Numpad1", "Numpad2", "Numpad3"].includes(event.code)) {
         event.preventDefault();
         touchComboInput();
@@ -1655,13 +2966,39 @@
       else climb("L");
     }
 
+    function handleMobileControl(event) {
+      event.preventDefault();
+      const button = event.currentTarget;
+      touchComboInput();
+      if (button.dataset.mobileItem !== undefined) {
+        useItem(Number(button.dataset.mobileItem));
+        return;
+      }
+      const action = button.dataset.mobileAction;
+      if (action === "hide") tryHide();
+      if (action === "left") climb("L");
+      if (action === "up") climb("U");
+      if (action === "right") climb("R");
+    }
+
+    function handleMobileItemSlot(event) {
+      event.preventDefault();
+      const index = ui.itemSlots.indexOf(event.currentTarget);
+      if (index < 0) return;
+      touchComboInput();
+      useItem(index);
+    }
+
     function updateBots(now) {
       if (state.mode !== "play") return;
-      if (state.online.enabled && state.serverPopulation > 5) return;
-      if (state.online.enabled) ensureBotCount(10);
+      if (state.online.enabled && state.serverPopulation >= BOT_REMOVE_POPULATION) {
+        state.bots = [];
+        return;
+      }
+      if (state.online.enabled) ensureBotCount(BOT_FILLER_COUNT);
       for (const bot of state.bots) {
         const nearPlayer = Math.abs(bot.floor - state.player.floor) <= 45;
-        if (nearPlayer || Math.random() < 0.01) botUseItem(bot, now);
+        if (!bot.easy && (nearPlayer || Math.random() < 0.01)) botUseItem(bot, now);
         if (now < bot.nextMoveAt || now < bot.stunnedUntil) continue;
         const delay = bot.baseSpeed * bot.rhythm + Math.random() * 720;
         bot.nextMoveAt = now + delay;
@@ -1686,6 +3023,7 @@
         }
         bot.floor += 1;
         bot.bestFloor = Math.max(bot.bestFloor || 0, bot.floor);
+        bot.jump = { start: now, duration: JUMP_DURATION };
         addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
         const cameOut = bot.hidden;
         bot.hidden = false;
@@ -1695,10 +3033,19 @@
         }
 
         if (cameOut && Math.abs(bot.floor - state.player.floor) <= 1 && !state.player.hidden) {
-          respawnAtZero(`${bot.id}의 기습을 받아 0층으로 떨어졌습니다.`);
+          loseLifeOrFall(`${bot.id} Ambush`);
+          break;
+        }
+        if (!cameOut && bot.floor === state.player.floor && !state.player.hidden) {
+          loseLifeOrFall(`${bot.id} Chase`);
+          break;
+        }
+
+        if (cameOut && Math.abs(bot.floor - state.player.floor) <= 1 && !state.player.hidden) {
+          respawnAtZero(`${bot.id} Ambush`);
           break;
         } else if (bot.floor === state.player.floor && !state.player.hidden) {
-          respawnAtZero(`${bot.id}에게 따라잡혀 0층으로 떨어졌습니다.`);
+          respawnAtZero(`${bot.id} Chase`);
           break;
         }
 
@@ -1708,6 +3055,22 @@
           bot.hidden = false;
           bot.nextMoveAt = now + 650 + Math.random() * 1300;
         }
+      }
+    }
+
+    function updateFloorHold(now) {
+      if (state.mode !== "play") return;
+      if (state.player.hidden || now < state.player.stunnedUntil) {
+        resetFloorHold(now);
+        return;
+      }
+      if (state.floorHold.floor !== state.player.floor) {
+        resetFloorHold(now);
+        return;
+      }
+      if (!state.floorHold.punished && now - state.floorHold.since >= idleLimitForFloor()) {
+        state.floorHold.punished = true;
+        loseLifeOrFall(`${state.player.floor}F idle timeout`);
       }
     }
 
@@ -1754,7 +3117,7 @@
 
     function drawRunner(entity, x, y, color, alpha = 1, selfView = false) {
       if (entity.hidden && !selfView) return;
-      const label = `${flagEmoji(entity.country)} ${entity.id} ${entity.floor}F`;
+      const label = `${displayName(entity)} ${entity.floor}F`;
       ctx.save();
       ctx.translate(x, y - 22);
       const visibleAlpha = entity.hidden && selfView ? Math.min(alpha, 0.42) : alpha;
@@ -1805,7 +3168,7 @@
           ctx.fillStyle = "#f5f1e8";
           ctx.font = "900 12px system-ui";
           ctx.textAlign = "center";
-          ctx.fillText(`낙석 ${effect.hits}명`, startP.x, y - 72);
+          ctx.fillText(t < 0.35 ? "WARNING" : `ROCK ${effect.hits}`, startP.x, y - 72);
           ctx.restore();
         }
 
@@ -1818,23 +3181,37 @@
               : state.bots.find((bot) => bot.id === effect.targetId);
           const liveTargetFloor = liveTarget ? liveTarget.floor : effect.targetFloor;
           const targetP = screenPosition(liveTargetFloor, focus, width, height);
-          const x = startP.x + (targetP.x - startP.x) * t;
-          const y = startP.y + (targetP.y - startP.y) * t - Math.sin(t * Math.PI) * 70;
-          if (t >= 0.78 && !effect.resolved) resolveMissileHit(effect);
+          const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          const x = startP.x + (targetP.x - startP.x) * eased;
+          const y = startP.y + (targetP.y - startP.y) * eased - Math.sin(eased * Math.PI) * 58;
+          if (t >= MISSILE_HIT_AT && !effect.resolved) resolveMissileHit(effect);
           ctx.save();
-          ctx.strokeStyle = effect.resolved && !effect.hit ? "#aeb6c4" : "#ff626f";
-          ctx.lineWidth = 4;
-          ctx.globalAlpha = 0.75;
-          ctx.beginPath();
-          ctx.moveTo(startP.x, startP.y - 26);
-          ctx.lineTo(x, y);
-          ctx.stroke();
-          ctx.globalAlpha = 1;
+          const rocketColor = effect.resolved && !effect.hit ? "#aeb6c4" : "#ff626f";
+          const angle = Math.atan2(targetP.y - startP.y, targetP.x - startP.x);
+          const pulse = 0.7 + Math.sin(t * Math.PI * 8) * 0.3;
+          ctx.translate(x, y);
+          ctx.rotate(angle);
+          ctx.shadowColor = rocketColor;
+          ctx.shadowBlur = 14 * pulse;
           ctx.fillStyle = effect.resolved && !effect.hit ? "#aeb6c4" : "#ff626f";
           ctx.beginPath();
-          ctx.roundRect(x - 18, y - 7, 36, 14, 7);
+          ctx.roundRect(-20, -8, 40, 16, 8);
           ctx.fill();
+          ctx.fillStyle = "#fff3b0";
+          ctx.beginPath();
+          ctx.moveTo(-24, 0);
+          ctx.lineTo(-38 - pulse * 8, -7);
+          ctx.lineTo(-34 - pulse * 10, 0);
+          ctx.lineTo(-38 - pulse * 8, 7);
+          ctx.closePath();
+          ctx.fill();
+          ctx.fillStyle = "#f5f1e8";
+          ctx.beginPath();
+          ctx.arc(11, 0, 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
           if (t > 0.72) {
+            ctx.save();
             const boom = (t - 0.72) / 0.28;
             ctx.globalAlpha = Math.max(0, 1 - boom);
             ctx.strokeStyle = "#fff3b0";
@@ -1845,9 +3222,9 @@
             ctx.fillStyle = "#f5f1e8";
             ctx.font = "900 12px system-ui";
             ctx.textAlign = "center";
-            ctx.fillText(effect.resolved ? (effect.hit ? `${effect.targetName} 명중` : "방어/실패") : "접근 중", targetP.x, targetP.y - 72);
+            ctx.fillText(effect.resolved ? (effect.hit ? `${effect.targetName} HIT` : "BLOCK/MISS") : "INCOMING", targetP.x, targetP.y - 72);
+            ctx.restore();
           }
-          ctx.restore();
         }
       }
     }
@@ -1861,6 +3238,19 @@
       const width = rect.width;
       const height = rect.height;
       ctx.clearRect(0, 0, width, height);
+      const theme = floorTheme(state.mode === "play" ? state.player.floor : 0);
+      const bg = ctx.createLinearGradient(0, 0, 0, height);
+      bg.addColorStop(0, theme.top);
+      bg.addColorStop(0.5, theme.mid);
+      bg.addColorStop(1, theme.bottom);
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, width, height);
+      ctx.save();
+      if (state.shake > 0) {
+        const amount = 9 * state.shake;
+        ctx.translate((Math.random() - 0.5) * amount, (Math.random() - 0.5) * amount);
+        state.shake = Math.max(0, state.shake - 0.035);
+      }
 
       if (state.flash > 0) {
         ctx.fillStyle = `rgba(255, 100, 111, ${state.flash * 0.28})`;
@@ -1869,8 +3259,8 @@
       }
 
       const focus = state.mode === "play" ? state.player.floor : 0;
-      const start = Math.max(0, focus - 8);
-      const end = focus + 30;
+      const start = Math.max(0, focus - 12);
+      const end = focus + 42;
       const now = performance.now();
       for (let floor = start; floor <= end; floor++) {
         const p = screenPosition(floor, focus, width, height);
@@ -1893,14 +3283,25 @@
       for (const opponent of opponents()) {
         if (Math.abs(opponent.floor - focus) > 30) continue;
         const p = screenPosition(opponent.floor, focus, width, height);
-        drawRunner(opponent, p.x, p.y, varColor("--bot"));
+        let opponentJump = 0;
+        if (opponent.jump && opponent.jump.duration > 0) {
+          const jumpT = (now - opponent.jump.start) / opponent.jump.duration;
+          if (jumpT >= 0 && jumpT <= 1) opponentJump = Math.sin(jumpT * Math.PI) * 14;
+        }
+        drawRunner(opponent, p.x, p.y - opponentJump, varColor("--bot"));
       }
 
       const pp = screenPosition(state.player.floor, focus, width, height);
       const playerLabel = state.player.id ? state.player : { id: "YOU", floor: 0, hidden: false };
-      drawRunner(playerLabel, pp.x, pp.y, varColor("--player"), 1, true);
+      let jumpOffset = 0;
+      if (state.jump.duration > 0) {
+        const jumpT = (now - state.jump.start) / state.jump.duration;
+        if (jumpT >= 0 && jumpT <= 1) jumpOffset = Math.sin(jumpT * Math.PI) * 18;
+      }
+      drawRunner(playerLabel, pp.x, pp.y - jumpOffset, varColor("--player"), 1, true);
 
       drawEffects(focus, width, height, now);
+      ctx.restore();
     }
 
     function renderHud() {
@@ -1909,42 +3310,75 @@
       ui.floor.textContent = `${state.player.floor}F`;
       ui.combo.textContent = `COMBO x${state.combo}`;
       ui.combo.classList.toggle("active", state.combo > 0);
-      ui.playerLabel.textContent = state.player.id ? `${flagEmoji(state.player.country)} ${state.player.id} / ${state.player.country}` : "ID 없음";
-      ui.block.textContent = `${Math.floor(state.player.floor / SEGMENT_SIZE) + 1}구간`;
-      ui.kills.textContent = `킬 ${state.kills}`;
-      ui.lives.textContent = `목숨 ${state.lives}`;
-      ui.onlineStatus.textContent = state.online.connected ? `온라인 ${state.remotePlayers.length + 1}명` : state.online.enabled ? "서버 연결 중" : "오프라인";
+      ui.playerLabel.textContent = state.player.id ? `ID ${displayName(state.player)}` : "ID -";
+      ui.block.textContent = `S${Math.floor(state.player.floor / SEGMENT_SIZE) + 1}`;
+      ui.kills.textContent = `K ${state.kills}`;
+      ui.gold.textContent = `G ${state.gold}`;
+      ui.lives.textContent = `L ${state.lives}`;
+      ui.boostBtn.disabled = state.gold < 500 || state.mode !== "play";
       const stunned = Math.max(0, state.player.stunnedUntil - performance.now());
       const shieldLeft = shieldSecondsLeft(state.player);
-      ui.cooldown.textContent = stunned > 0 ? `스턴 ${Math.ceil(stunned / 1000)}초` : state.player.hidden ? "은신 중" : shieldLeft > 0 ? `보호막 ${shieldLeft}초` : cooldownText();
+      ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">(${state.gold}/500G)</span>`;
+      ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(hideCooldownLeft() / 1000)}s`;
+      const nextGoal = nextGoalInfo();
+      ui.nextGoal.innerHTML = `NEXT<span>${nextGoal.floor}F ${nextGoal.label}</span>`;
+      const idleLimit = idleLimitForFloor();
+      const idleLeft = state.player.hidden || stunned > 0 ? idleLimit : Math.max(0, idleLimit - (performance.now() - state.floorHold.since));
+      const idleProgress = state.player.hidden || stunned > 0 ? 0 : Math.min(1, Math.max(0, 1 - idleLeft / idleLimit));
+      ui.idleTimer.classList.toggle("danger", idleLeft <= 1200 && !state.player.hidden && stunned <= 0);
+      ui.idleTimer.querySelector(".idle-label").textContent = state.player.hidden ? "HIDE" : stunned > 0 ? "STUN" : "STAY";
+      ui.idleTimer.querySelector(".idle-value").textContent = `${(idleLeft / 1000).toFixed(1)}s`;
+      ui.mobileIdleFill.style.width = `${Math.round(idleProgress * 100)}%`;
 
       state.inventory.forEach((item, index) => {
         ui.itemSlots[index].classList.toggle("ready", Boolean(item));
-        ui.itemSlots[index].innerHTML = `<span class="item-key">${index + 1}</span> ${item ? escapeHtml(item.name) : "빈칸"}`;
+        const fullName = item ? item.name : "EMPTY";
+        const shortName = item ? item.short : "-";
+        ui.itemSlots[index].innerHTML = `<span class="item-key">${index + 1}</span><span class="item-name">${escapeHtml(fullName)}</span><span class="item-short">${escapeHtml(shortName)}</span>`;
       });
 
-      const players = [state.player, ...opponents()]
+      const rankMap = new Map();
+      for (const player of [...state.leaderboard, state.player, ...opponents()]) {
+        if (!player.id) continue;
+        const key = `${player.country || "--"}:${player.id}`;
+        const row = { ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)), bestTimeMs: Number(player.bestTimeMs || 0), runElapsedMs: Number(player.runElapsedMs || 0) };
+        const previous = rankMap.get(key);
+        if (!previous || row.bestFloor > previous.bestFloor || (row.bestFloor === previous.bestFloor && row.bestTimeMs > 0 && (!previous.bestTimeMs || row.bestTimeMs < previous.bestTimeMs))) rankMap.set(key, row);
+      }
+      const players = [...rankMap.values()].sort((a, b) => b.bestFloor - a.bestFloor);
+      const liveLeader = [state.player, ...opponents()]
         .filter((player) => player.id)
-        .map((player) => ({ ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)) }))
-        .slice()
-        .sort((a, b) => b.bestFloor - a.bestFloor);
+        .sort((a, b) => Number(b.floor || 0) - Number(a.floor || 0))[0];
+      ui.liveLeader.textContent = liveLeader ? `LIVE #1 ${displayName(liveLeader)} ${liveLeader.floor}F` : "LIVE #1 -";
 
       ui.rankRows.innerHTML = players.map((player, index) => (
         `<div class="rank-row">
-          <span>${index === 0 ? "👑" : index + 1}</span>
-          <span class="rank-id">${escapeHtml(flagEmoji(player.country))} ${escapeHtml(player.id)}</span>
+          <span>${index === 0 ? "#1" : index + 1}</span>
+          <span class="rank-id">${escapeHtml(displayName(player))}</span>
           <span>${escapeHtml(player.country)}</span>
           <span class="rank-floor">${player.bestFloor}F</span>
+          <span class="rank-time">${formatDuration(rankingTimeMs(player))}</span>
         </div>`
       )).join("");
 
       if (performance.now() > state.noticeUntil) {
-        ui.notice.innerHTML = "<strong>조작</strong><br>&larr; 왼쪽 위 계단 / &uarr; 머리 위 계단 / &rarr; 오른쪽 계단 / &darr; 숨기 / 1,2,3 아이템 / 0 테스트 지급";
+        ui.notice.innerHTML = "<strong>조작</strong><br>← / ↑ / →: 이동, ↓: 숨기, 1/2/3: 아이템";
       }
+    }
+
+    function openHelp() {
+      if (!ui.helpModal) return;
+      ui.helpModal.hidden = false;
+    }
+
+    function closeHelp() {
+      if (!ui.helpModal) return;
+      ui.helpModal.hidden = true;
     }
 
     function tick(now) {
       updateBots(now);
+      updateFloorHold(now);
       renderGame();
       renderHud();
       requestAnimationFrame(tick);
@@ -1968,20 +3402,51 @@
         addChat(state.player.id, state.player.country, text);
       }
       chatInput.value = "";
+      if (window.matchMedia("(max-width: 760px) and (pointer: coarse)").matches) ui.chatPanel.classList.remove("expanded");
     });
 
-    ui.rankToggle.addEventListener("click", () => {
+    ui.chatPanel.addEventListener("click", () => {
+      if (!window.matchMedia("(max-width: 760px) and (pointer: coarse)").matches) return;
+      ui.chatPanel.classList.add("expanded");
+      setTimeout(() => chatInput.focus(), 0);
+    });
+
+    chatForm.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+
+      ui.rankToggle.addEventListener("click", () => {
       setRankingCollapsed(!state.rankingCollapsed);
+    });
+
+    ui.boostBtn.addEventListener("click", useGoldBoost);
+    ui.helpClose.addEventListener("click", closeHelp);
+    ui.helpConfirm.addEventListener("click", closeHelp);
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "F1") {
+        event.preventDefault();
+        openHelp();
+      }
     });
 
     resetBots();
     restoreSessionProfile();
     resize();
     renderChat();
+    if (window.matchMedia("(max-width: 760px) and (pointer: coarse)").matches) {
+      state.rankingCollapsed = false;
+    }
     setRankingCollapsed(state.rankingCollapsed);
     renderHud();
     window.addEventListener("resize", resize);
     window.addEventListener("keydown", handleKey, { passive: false, capture: true });
+    window.addEventListener("pagehide", leaveOnline);
+    document.querySelectorAll("[data-mobile-action]").forEach((button) => {
+      button.addEventListener("pointerdown", handleMobileControl, { passive: false });
+    });
+    ui.itemSlots.forEach((slot) => {
+      slot.addEventListener("pointerdown", handleMobileItemSlot, { passive: false });
+    });
     requestAnimationFrame(tick);
   </script>
 </body>
