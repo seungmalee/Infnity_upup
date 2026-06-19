@@ -60,6 +60,10 @@ function cleanCountry(value) {
   return String(value || "KR").slice(0, 3).toUpperCase();
 }
 
+function cleanTitle(value) {
+  return String(value || "").trim().slice(0, 16);
+}
+
 function cleanPlayerKey(value) {
   return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80);
 }
@@ -70,6 +74,7 @@ function publicRecord(record) {
     country: cleanCountry(record.country),
     floor: clampNumber(record.currentFloor || 0),
     bestFloor: clampNumber(record.bestFloor || 0),
+    selectedTitle: cleanTitle(record.selectedTitle),
     hidden: false,
     shield: false,
     shieldUntil: 0,
@@ -117,6 +122,7 @@ async function saveRecord(player, force = false) {
     playerKey: player.playerKey,
     id: cleanId(player.id),
     country: cleanCountry(player.country),
+    selectedTitle: cleanTitle(player.selectedTitle),
     currentFloor: clampNumber(player.floor),
     gold: clampNumber(player.gold),
     lives: clampNumber(player.lives),
@@ -176,6 +182,7 @@ function publicPlayers() {
     country: player.country,
     floor: player.floor,
     bestFloor: player.bestFloor || player.floor || 0,
+    selectedTitle: cleanTitle(player.selectedTitle),
     hidden: player.hidden,
     shield: player.shield,
     shieldUntil: player.shieldUntil,
@@ -313,6 +320,7 @@ const server = http.createServer(async (req, res) => {
         country,
         floor: startFloor,
         bestFloor: Math.max(clampNumber(body.bestFloor || 0), startFloor, clampNumber(saved && saved.bestFloor)),
+        selectedTitle: saved ? cleanTitle(saved.selectedTitle) : cleanTitle(body.selectedTitle),
         bestTimeMs: saved ? clampNumber(saved.bestTimeMs || 0) : clampNumber(body.bestTimeMs || 0),
         hidden: Boolean(body.hidden),
         shield: Boolean(body.shield),
@@ -342,6 +350,7 @@ const server = http.createServer(async (req, res) => {
       const previousKills = player.kills;
       const previousBestFloor = player.bestFloor;
       const previousBestTimeMs = player.bestTimeMs || 0;
+      const previousSelectedTitle = player.selectedTitle || "";
       const incomingBestFloor = Number.isFinite(Number(body.bestFloor)) ? clampNumber(body.bestFloor) : 0;
       for (const key of ["floor", "stunnedUntil", "shieldUntil", "kills", "gold", "lives"]) {
         if (Number.isFinite(Number(body[key]))) player[key] = Number(body[key]);
@@ -356,12 +365,13 @@ const server = http.createServer(async (req, res) => {
         player.bestFloor = Math.max(player.bestFloor || 0, incomingBestFloor);
       }
       if (Number.isFinite(Number(body.runElapsedMs))) player.runElapsedMs = clampNumber(body.runElapsedMs || 0);
+      if (typeof body.selectedTitle === "string") player.selectedTitle = cleanTitle(body.selectedTitle);
       player.bestFloor = Math.max(player.bestFloor || 0, player.floor || 0);
       for (const key of ["hidden", "shield"]) {
         if (typeof body[key] === "boolean") player[key] = body[key];
       }
       player.lastSeen = Date.now();
-      await saveRecord(player, player.gold !== previousGold || player.lives !== previousLives || player.kills !== previousKills || player.bestFloor !== previousBestFloor || (player.bestTimeMs || 0) !== previousBestTimeMs);
+      await saveRecord(player, player.gold !== previousGold || player.lives !== previousLives || player.kills !== previousKills || player.bestFloor !== previousBestFloor || (player.bestTimeMs || 0) !== previousBestTimeMs || (player.selectedTitle || "") !== previousSelectedTitle);
       broadcast("state");
       sendJson(res, 200, { ok: true });
       return;

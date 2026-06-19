@@ -191,6 +191,75 @@
     .help-close { background: rgba(255,255,255,0.12); color:#fff; }
     .help-confirm { width:100%; background:#56aef7; color:#08142f; }
 
+    .title-modal {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(3, 5, 10, 0.58);
+      z-index: 41;
+      padding: 18px;
+    }
+
+    .title-modal[hidden] {
+      display: none !important;
+    }
+
+    .title-card {
+      width: min(92vw, 380px);
+      max-height: min(76vh, 520px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      background: rgba(13, 18, 28, 0.98);
+      color: #eef5ff;
+      padding: 14px;
+      box-shadow: 0 24px 50px rgba(0,0,0,0.35);
+    }
+
+    .title-list {
+      display: grid;
+      gap: 7px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .title-choice {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .title-choice small {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .title-choice.active {
+      border-color: rgba(240, 189, 91, 0.7);
+      background: rgba(240, 189, 91, 0.15);
+      color: var(--bar-active);
+    }
+
+    .title-choice.locked {
+      cursor: not-allowed;
+      opacity: 0.42;
+    }
+
     .top-left {
       grid-column: 1;
       grid-row: 1;
@@ -241,8 +310,9 @@
       grid-column: 2;
       grid-row: 1;
       place-self: start center;
-      min-width: 128px;
-      padding: 9px 14px;
+      min-width: clamp(72px, 11vw, 128px);
+      max-width: min(128px, 100%);
+      padding: clamp(5px, 1.2vh, 9px) clamp(7px, 1.4vw, 14px);
       text-align: center;
       font-weight: 900;
       color: var(--text);
@@ -257,15 +327,15 @@
 
     .idle-label {
       display: block;
-      font-size: 10px;
+      font-size: clamp(8px, min(1vw, 1.45vh), 10px);
       color: var(--muted);
       line-height: 1;
-      margin-bottom: 4px;
+      margin-bottom: clamp(2px, 0.6vh, 4px);
     }
 
     .idle-value {
       display: block;
-      font-size: 20px;
+      font-size: clamp(13px, min(2vw, 3vh), 20px);
       line-height: 1;
     }
 
@@ -335,6 +405,23 @@
       border-color: rgba(77, 216, 166, 0.62);
       background: rgba(77, 216, 166, 0.18);
       color: #9ff2cf;
+    }
+
+    .title-btn {
+      pointer-events: auto;
+      width: 100%;
+      min-height: 30px;
+      margin-top: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .boost-main,
@@ -755,6 +842,15 @@
         font-size: 11px;
         line-height: 1.28;
       }
+
+      .idle-timer {
+        min-width: clamp(66px, 9vw, 104px);
+        padding: 5px 8px;
+      }
+
+      .idle-value {
+        font-size: clamp(13px, 1.8vw, 17px);
+      }
     }
 
     @media (min-width: 761px) and (max-width: 940px) {
@@ -786,6 +882,12 @@
         font-size: 10px;
       }
 
+      .title-btn {
+        min-height: 30px;
+        padding: 4px 6px;
+        font-size: 10px;
+      }
+
       .item-slot {
         height: 42px;
         padding: 0 7px;
@@ -807,12 +909,34 @@
         font-size: 11px;
       }
 
+      .idle-timer {
+        min-width: 62px;
+        padding: 4px 7px;
+      }
+
+      .idle-label {
+        font-size: 8px;
+      }
+
+      .idle-value {
+        font-size: 14px;
+      }
+
       .notice strong {
         display: inline;
       }
 
       .notice br {
         display: none;
+      }
+
+      .idle-timer {
+        min-width: 60px;
+        padding: 4px 7px;
+      }
+
+      .idle-value {
+        font-size: 13px;
       }
     }
 
@@ -884,6 +1008,12 @@
         font-size: 9px;
       }
 
+      .title-btn {
+        min-height: 28px;
+        padding: 3px 4px;
+        font-size: 9px;
+      }
+
       .item-slot {
         height: 36px;
         padding: 0 5px;
@@ -952,6 +1082,20 @@
         max-height: none;
         font-size: 9px;
         line-height: 1.18;
+      }
+
+      .idle-timer {
+        min-width: 54px;
+        padding: 3px 5px;
+      }
+
+      .idle-label {
+        font-size: 7px;
+        margin-bottom: 2px;
+      }
+
+      .idle-value {
+        font-size: 12px;
       }
 
       .notice br {
@@ -1027,6 +1171,14 @@
       .auto-btn {
         width: 72px;
         min-height: 32px;
+        margin-top: 5px;
+        padding: 4px 5px;
+        font-size: 10px;
+      }
+
+      .title-btn {
+        width: 72px;
+        min-height: 30px;
         margin-top: 5px;
         padding: 4px 5px;
         font-size: 10px;
@@ -1531,6 +1683,7 @@
         <span id="onlineStatus">오프라인</span>
       </div>
       <div class="next-goal" id="nextGoal">NEXT<span>100F ITEM</span></div>
+      <button class="title-btn" id="titleBtn" type="button">칭호: 자동</button>
       <button class="boost-btn" id="boostBtn" type="button" disabled>100F UP! <span class="boost-cost">(0/500G)</span></button>
     </div>
 
@@ -1598,6 +1751,16 @@
     </div>
   </div>
 
+  <div class="title-modal" id="titleModal" hidden>
+    <div class="title-card" role="dialog" aria-modal="true" aria-labelledby="titleModalTitle">
+      <div class="help-head">
+        <h2 id="titleModalTitle">칭호 선택</h2>
+        <button class="help-close" id="titleClose" type="button" aria-label="닫기">x</button>
+      </div>
+      <div class="title-list" id="titleList"></div>
+    </div>
+  </div>
+
   <div class="mobile-controls" aria-label="Mobile controls">
     <div class="mobile-pad">
       <button class="mobile-btn up" type="button" data-mobile-action="up" aria-label="Up">^</button>
@@ -1630,6 +1793,10 @@
       onlineStatus: document.getElementById("onlineStatus"),
       nextGoal: document.getElementById("nextGoal"),
       boostBtn: document.getElementById("boostBtn"),
+      titleBtn: document.getElementById("titleBtn"),
+      titleModal: document.getElementById("titleModal"),
+      titleClose: document.getElementById("titleClose"),
+      titleList: document.getElementById("titleList"),
       mobileIdleFill: document.getElementById("mobileIdleFill"),
       helpModal: document.getElementById("helpModal"),
       helpClose: document.getElementById("helpClose"),
@@ -1710,7 +1877,7 @@
 
     const state = {
       mode: "join",
-      player: { id: "", country: "KR", floor: 0, bestFloor: 0, hidden: false, shield: false, shieldUntil: 0, stunnedUntil: 0 },
+      player: { id: "", country: "KR", floor: 0, bestFloor: 0, selectedTitle: "", hidden: false, shield: false, shieldUntil: 0, stunnedUntil: 0 },
       bots: [],
       generated: new Map(),
       positions: [{ x: 0, y: 0 }],
@@ -1760,21 +1927,36 @@
 
     function displayName(player) {
       if (!player || !player.id) return "ID NONE";
-      const title = titleForFloor(Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)));
+      const title = selectedTitleForPlayer(player);
       return `${title ? `${title} ` : ""}${flagEmoji(player.country)} ${player.id}`;
     }
 
+    const TITLE_TIERS = [
+      { floor: 500, title: "누랭" },
+      { floor: 1000, title: "까망" },
+      { floor: 1500, title: "삐꾸" },
+      { floor: 3000, title: "건휘" }
+    ];
+
+    function titleFloor(player) {
+      return Math.max(Number(player && player.bestFloor || 0), Number(player && player.floor || 0));
+    }
+
+    function unlockedTitlesForFloor(floor) {
+      return TITLE_TIERS.filter((tier) => floor >= tier.floor);
+    }
+
+    function selectedTitleForPlayer(player) {
+      const floor = titleFloor(player);
+      const selected = String(player && player.selectedTitle || "");
+      if (selected && unlockedTitlesForFloor(floor).some((tier) => tier.title === selected)) return selected;
+      return titleForFloor(floor);
+    }
+
     function titleForFloor(floor) {
-      if (floor >= 5000) return "별끝";
-      if (floor >= 4500) return "은하";
-      if (floor >= 4000) return "유성";
-      if (floor >= 3500) return "광휘";
-      if (floor >= 3000) return "건휘친구";
-      if (floor >= 2500) return "심연";
-      if (floor >= 2000) return "우주";
-      if (floor >= 1500) return "점육점";
-      if (floor >= 1000) return "까망이";
-      if (floor >= 500) return "누랭이";
+      for (let index = TITLE_TIERS.length - 1; index >= 0; index -= 1) {
+        if (floor >= TITLE_TIERS[index].floor) return TITLE_TIERS[index].title;
+      }
       return "";
     }
 
@@ -1817,6 +1999,7 @@
         country: state.player.country,
         floor: state.player.floor,
         bestFloor: state.player.bestFloor,
+        selectedTitle: state.player.selectedTitle,
         hidden: state.player.hidden,
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
@@ -2081,6 +2264,7 @@
             country: String(player.country || "--"),
             floor: Number(player.floor || 0),
             bestFloor: Number(player.bestFloor || player.floor || 0),
+            selectedTitle: String(player.selectedTitle || ""),
             hidden: Boolean(player.hidden),
             shield: Boolean(player.shield),
             shieldUntil: Number(player.shieldUntil || 0),
@@ -2095,6 +2279,7 @@
         if (own && Number(own.kills || 0) > state.kills) state.kills = Number(own.kills || 0);
         if (own && Number.isFinite(Number(own.gold))) state.gold = Number(own.gold || 0);
         if (own && Number.isFinite(Number(own.lives))) state.lives = Number(own.lives || 0);
+        if (own && typeof own.selectedTitle === "string") state.player.selectedTitle = own.selectedTitle;
         if (own && Number.isFinite(Number(own.bestTimeMs)) && Number(own.bestTimeMs) > 0) state.bestTimeMs = Number(own.bestTimeMs);
         if (own && Number.isFinite(Number(own.floor))) {
           const serverFloor = Math.max(0, Number(own.floor || 0));
@@ -2112,6 +2297,7 @@
           country: String(player.country || "--"),
           floor: Number(player.floor || 0),
           bestFloor: Number(player.bestFloor || player.floor || 0),
+          selectedTitle: String(player.selectedTitle || ""),
           kills: Number(player.kills || 0),
           gold: Number(player.gold || 0),
           lives: Number(player.lives || 0),
@@ -2149,6 +2335,7 @@
         onlineId: state.online.onlineId,
         floor: state.player.floor,
         bestFloor: state.player.bestFloor,
+        selectedTitle: state.player.selectedTitle,
         hidden: state.player.hidden,
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
@@ -2188,6 +2375,7 @@
         country: state.player.country,
         floor: state.player.floor,
         bestFloor: state.player.bestFloor,
+        selectedTitle: state.player.selectedTitle,
         hidden: state.player.hidden,
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
@@ -2315,10 +2503,7 @@
       const goals = [
         { floor: Math.ceil((floor + 1) / 100) * 100, label: "ITEM" },
         { floor: Math.ceil((floor + 1) / LIFE_REWARD_INTERVAL) * LIFE_REWARD_INTERVAL, label: "LIFE" },
-        { floor: 500, label: "TITLE" },
-        { floor: 1000, label: "TITLE" },
-        { floor: 1500, label: "TITLE" },
-        { floor: 3000, label: "TITLE" }
+        ...TITLE_TIERS.map((tier) => ({ floor: tier.floor, label: "TITLE" }))
       ].filter((goal) => goal.floor > floor).sort((a, b) => a.floor - b.floor);
       const nextFloor = goals[0] ? goals[0].floor : Math.ceil((floor + 1) / 100) * 100;
       const labels = [...new Set(goals.filter((goal) => goal.floor === nextFloor).map((goal) => goal.label))];
@@ -2778,6 +2963,7 @@
       state.player.country = country;
       state.player.floor = 0;
       state.player.bestFloor = 0;
+      state.player.selectedTitle = "";
       state.runStartedAt = Date.now();
       state.bestTimeMs = 0;
       state.kills = 0;
@@ -2812,6 +2998,7 @@
         state.player.country = String(profile.country).slice(0, 3);
         state.player.floor = Math.max(0, Number(profile.floor || 0));
         state.player.bestFloor = Math.max(state.player.floor, Number(profile.bestFloor || 0));
+        state.player.selectedTitle = String(profile.selectedTitle || "");
         state.runStartedAt = Number.isFinite(Number(profile.runStartedAt)) ? Number(profile.runStartedAt) : Date.now();
         state.bestTimeMs = Number(profile.bestTimeMs || 0);
         state.player.hidden = false;
@@ -3319,6 +3506,7 @@
       const stunned = Math.max(0, state.player.stunnedUntil - performance.now());
       const shieldLeft = shieldSecondsLeft(state.player);
       ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">(${state.gold}/500G)</span>`;
+      ui.titleBtn.textContent = `칭호: ${state.player.selectedTitle || "자동"}`;
       ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(hideCooldownLeft() / 1000)}s`;
       const nextGoal = nextGoalInfo();
       ui.nextGoal.innerHTML = `NEXT<span>${nextGoal.floor}F ${nextGoal.label}</span>`;
@@ -3376,6 +3564,45 @@
       ui.helpModal.hidden = true;
     }
 
+    function renderTitleList() {
+      const floor = titleFloor(state.player);
+      const current = state.player.selectedTitle || "";
+      const rows = [
+        `<button class="title-choice ${current ? "" : "active"}" type="button" data-title="">
+          <span>자동</span><small>최고 칭호</small>
+        </button>`,
+        ...TITLE_TIERS.map((tier) => {
+          const unlocked = floor >= tier.floor;
+          const active = current === tier.title;
+          return `<button class="title-choice ${active ? "active" : ""} ${unlocked ? "" : "locked"}" type="button" data-title="${escapeHtml(tier.title)}" ${unlocked ? "" : "disabled"}>
+            <span>${escapeHtml(tier.title)}</span><small>${tier.floor}F${unlocked ? "" : " 잠김"}</small>
+          </button>`;
+        })
+      ];
+      ui.titleList.innerHTML = rows.join("");
+    }
+
+    function openTitleModal() {
+      if (!ui.titleModal) return;
+      renderTitleList();
+      ui.titleModal.hidden = false;
+    }
+
+    function closeTitleModal() {
+      if (!ui.titleModal) return;
+      ui.titleModal.hidden = true;
+    }
+
+    function chooseTitle(title) {
+      const nextTitle = String(title || "");
+      if (nextTitle && !unlockedTitlesForFloor(titleFloor(state.player)).some((tier) => tier.title === nextTitle)) return;
+      state.player.selectedTitle = nextTitle;
+      saveSessionProfile();
+      syncOnlineState();
+      renderHud();
+      closeTitleModal();
+    }
+
     function tick(now) {
       updateBots(now);
       updateFloorHold(now);
@@ -3420,6 +3647,16 @@
     });
 
     ui.boostBtn.addEventListener("click", useGoldBoost);
+    ui.titleBtn.addEventListener("click", openTitleModal);
+    ui.titleClose.addEventListener("click", closeTitleModal);
+    ui.titleModal.addEventListener("click", (event) => {
+      if (event.target === ui.titleModal) closeTitleModal();
+    });
+    ui.titleList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-title]");
+      if (!button || button.disabled) return;
+      chooseTitle(button.dataset.title || "");
+    });
     ui.helpClose.addEventListener("click", closeHelp);
     ui.helpConfirm.addEventListener("click", closeHelp);
     window.addEventListener("keydown", (event) => {
