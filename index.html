@@ -4,15 +4,20 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>무한 계단 온라인</title>
-  <meta name="description" content="계단을 오르고 아이템으로 경쟁하는 온라인 게임입니다.">
+  <meta name="description" content="실시간으로 다른 플레이어와 기록을 겨루는 무한 계단 온라인 게임입니다.">
   <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
   <meta property="og:title" content="무한 계단 온라인">
-  <meta property="og:description" content="계단을 오르고 아이템으로 경쟁하세요.">
+  <meta property="og:description" content="계단을 오르며 아이템과 기록 경쟁을 즐겨보세요.">
   <meta property="og:site_name" content="무한 계단 온라인">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="무한 계단 온라인">
-  <meta name="twitter:description" content="계단을 오르고 아이템으로 경쟁하세요.">
+  <meta name="twitter:description" content="계단을 오르며 아이템과 기록 경쟁을 즐겨보세요.">
+  <!--
+    Google AdSense 준비 위치:
+    승인 신청 후 발급받은 ca-pub ID로 아래 스크립트의 주석을 해제하세요.
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0000000000000000" crossorigin="anonymous"></script>
+  -->
   <style>
     :root {
       color-scheme: dark;
@@ -80,6 +85,44 @@
       background: rgba(25, 29, 37, 0.96);
       padding: 22px;
       box-shadow: 0 22px 80px rgba(0, 0, 0, 0.42);
+    }
+
+    .site-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      justify-content: center;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .site-links a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .site-links a:hover {
+      color: var(--text);
+      text-decoration: underline;
+    }
+
+    .ad-slot {
+      min-height: 90px;
+      margin-top: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.22);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .ranking .ad-slot {
+      min-height: 70px;
+      margin: 10px 0 0;
     }
 
     h1 {
@@ -1667,6 +1710,13 @@
       </select>
 
       <button class="start-btn" type="submit">게임 시작</button>
+      <div class="ad-slot" aria-label="advertisement">
+        AdSense 승인 후 광고가 표시될 영역입니다.
+      </div>
+      <div class="site-links" aria-label="site links">
+        <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>
+        <a href="/contact.html" target="_blank" rel="noopener">문의</a>
+      </div>
     </form>
   </section>
 
@@ -1718,6 +1768,7 @@
           <span>시간</span>
         </div>
         <div id="rankRows"></div>
+        <div class="ad-slot" aria-label="advertisement">광고 영역</div>
       </div>
     </section>
 

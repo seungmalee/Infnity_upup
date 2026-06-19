@@ -248,8 +248,10 @@ function serveStatic(req, res) {
 }
 
 function siteOrigin(req) {
-  const proto = req.headers["x-forwarded-proto"] || "https";
   const host = req.headers["x-forwarded-host"] || req.headers.host || `localhost:${PORT}`;
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const isLocal = /^localhost(?::\d+)?$|^127\.0\.0\.1(?::\d+)?$/.test(host);
+  const proto = forwardedProto || (isLocal ? "http" : "https");
   return `${proto}://${host}`;
 }
 
@@ -275,6 +277,18 @@ function serveSitemap(req, res) {
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${origin}/privacy.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>${origin}/contact.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
   </url>
 </urlset>
 `);
