@@ -36,9 +36,11 @@ const MAX_FLOOR = 1000000;
 const MAX_GOLD = 10000000;
 const MAX_LIVES = 999;
 const MAX_KILLS = 100000;
+const MAX_DEATHS = 100000;
 const MAX_STATE_FLOOR_JUMP = 250;
 const MAX_STATE_GOLD_GAIN = 1000;
 const MAX_STATE_KILL_GAIN = 20;
+const MAX_STATE_DEATH_GAIN = 20;
 const MAX_STATE_LIFE_GAIN = 20;
 
 const players = new Map();
@@ -162,6 +164,7 @@ function publicRecord(record) {
     shieldUntil: 0,
     stunnedUntil: 0,
     kills: clampNumber(record.kills || 0),
+    deaths: clampNumber(record.deaths || 0),
     gold: clampNumber(record.gold || 0),
     lives: clampNumber(record.lives || 0),
     bestTimeMs: clampNumber(record.bestTimeMs || 0),
@@ -208,6 +211,7 @@ async function saveRecord(player, force = false) {
     currentFloor: clampNumber(player.floor),
     gold: clampNumber(player.gold),
     lives: clampNumber(player.lives),
+    deaths: clampNumber(player.deaths),
     updatedAt: new Date()
   };
   if (bestTimeMs > 0) setFields.bestTimeMs = bestTimeMs;
@@ -272,6 +276,7 @@ function publicPlayers() {
     shieldUntil: player.shieldUntil,
     stunnedUntil: player.stunnedUntil,
     kills: player.kills,
+    deaths: player.deaths || 0,
     gold: player.gold || 0,
     lives: player.lives,
     bestTimeMs: player.bestTimeMs || 0,
@@ -443,6 +448,7 @@ const server = http.createServer(async (req, res) => {
         shieldUntil: clampNumber(body.shieldUntil || 0),
         stunnedUntil: clampNumber(body.stunnedUntil || 0),
         kills: Math.max(saved ? 0 : clampNumber(body.kills || 0, 0, 20), clampNumber(saved && saved.kills, 0, MAX_KILLS)),
+        deaths: Math.max(saved ? 0 : clampNumber(body.deaths || 0, 0, 10), clampNumber(saved && saved.deaths, 0, MAX_DEATHS)),
         gold: saved ? clampNumber(saved.gold, 0, MAX_GOLD) : clampNumber(body.gold || 0, 0, 500),
         lives: saved ? clampNumber(saved.lives, 0, MAX_LIVES) : clampNumber(body.lives || 0, 0, 10),
         lastSeen: Date.now()
@@ -468,12 +474,14 @@ const server = http.createServer(async (req, res) => {
       const previousGold = player.gold;
       const previousLives = player.lives;
       const previousKills = player.kills;
+      const previousDeaths = player.deaths || 0;
       const previousBestFloor = player.bestFloor;
       const previousBestTimeMs = player.bestTimeMs || 0;
       const previousSelectedTitle = player.selectedTitle || "";
       const incomingBestFloor = Number.isFinite(Number(body.bestFloor)) ? clampNumber(body.bestFloor) : 0;
       if (Number.isFinite(Number(body.floor))) player.floor = clampPlayerNumber(body.floor, player.floor, MAX_STATE_FLOOR_JUMP, MAX_FLOOR);
       if (Number.isFinite(Number(body.kills))) player.kills = clampPlayerNumber(body.kills, player.kills, MAX_STATE_KILL_GAIN, MAX_KILLS);
+      if (Number.isFinite(Number(body.deaths))) player.deaths = clampPlayerNumber(body.deaths, player.deaths || 0, MAX_STATE_DEATH_GAIN, MAX_DEATHS);
       if (Number.isFinite(Number(body.gold))) player.gold = clampPlayerNumber(body.gold, player.gold, MAX_STATE_GOLD_GAIN, MAX_GOLD);
       if (Number.isFinite(Number(body.lives))) player.lives = clampPlayerNumber(body.lives, player.lives, MAX_STATE_LIFE_GAIN, MAX_LIVES);
       if (Number.isFinite(Number(body.stunnedUntil))) player.stunnedUntil = clampNumber(body.stunnedUntil, 0, Date.now() + 30000);
@@ -494,7 +502,7 @@ const server = http.createServer(async (req, res) => {
         if (typeof body[key] === "boolean") player[key] = body[key];
       }
       player.lastSeen = Date.now();
-      await saveRecord(player, player.gold !== previousGold || player.lives !== previousLives || player.kills !== previousKills || player.bestFloor !== previousBestFloor || (player.bestTimeMs || 0) !== previousBestTimeMs || (player.selectedTitle || "") !== previousSelectedTitle);
+      await saveRecord(player, player.gold !== previousGold || player.lives !== previousLives || player.kills !== previousKills || (player.deaths || 0) !== previousDeaths || player.bestFloor !== previousBestFloor || (player.bestTimeMs || 0) !== previousBestTimeMs || (player.selectedTitle || "") !== previousSelectedTitle);
       broadcast("state");
       sendJson(req, res, 200, { ok: true });
       return;

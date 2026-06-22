@@ -303,12 +303,19 @@
       opacity: 0.42;
     }
 
+    .player-title.legend,
+    .title-name.legend {
+      color: #ff3b4f;
+      text-shadow: 0 0 10px rgba(255, 59, 79, 0.58), 0 1px 6px rgba(0, 0, 0, 0.72);
+    }
+
     .top-left {
       grid-column: 1;
       grid-row: 1;
       width: 100%;
       min-width: 0;
       padding: 12px;
+      pointer-events: auto;
     }
 
     .floor {
@@ -1955,6 +1962,7 @@
       runStartedAt: Date.now(),
       bestTimeMs: 0,
       kills: 0,
+      deaths: 0,
       gold: 0,
       lives: 0,
       rewardedLifeMilestones: new Set(),
@@ -1992,33 +2000,87 @@
       return `${title ? `${title} ` : ""}${flagEmoji(player.country)} ${player.id}`;
     }
 
+    function displayNameHtml(player) {
+      if (!player || !player.id) return "ID NONE";
+      const title = titleHtml(player);
+      return `${title ? `${title} ` : ""}${escapeHtml(flagEmoji(player.country))} ${escapeHtml(player.id)}`;
+    }
+
     const TITLE_TIERS = [
-      { floor: 500, title: "누랭" },
-      { floor: 1000, title: "까망" },
-      { floor: 1500, title: "삐꾸" },
-      { floor: 3000, title: "건휘" }
+      { type: "floor", floor: 0, title: "Beginner" },
+      { type: "floor", floor: 500, title: "Rookie Climber" },
+      { type: "floor", floor: 1000, title: "Step Runner" },
+      { type: "floor", floor: 1500, title: "Sky Walker" },
+      { type: "floor", floor: 2000, title: "Cloud Hopper" },
+      { type: "floor", floor: 2500, title: "High Stepper" },
+      { type: "floor", floor: 3000, title: "Tower Climber" },
+      { type: "floor", floor: 3500, title: "Air Chaser" },
+      { type: "floor", floor: 4000, title: "Peak Jumper" },
+      { type: "floor", floor: 4500, title: "Stair Master" },
+      { type: "floor", floor: 5000, title: "Skybound" },
+      { type: "floor", floor: 5500, title: "Cloud Breaker" },
+      { type: "floor", floor: 6000, title: "Ascender" },
+      { type: "floor", floor: 6500, title: "Step Champion" },
+      { type: "floor", floor: 7000, title: "Heaven Walker" },
+      { type: "floor", floor: 7500, title: "Limit Breaker" },
+      { type: "floor", floor: 8000, title: "Infinity Climber" },
+      { type: "floor", floor: 8500, title: "Sky Emperor" },
+      { type: "floor", floor: 9000, title: "Eternal Runner" },
+      { type: "floor", floor: 9500, title: "Mythic Climber" },
+      { type: "floor", floor: 10000, title: "Legend", className: "legend" },
+      { type: "kill", kills: 10, title: "Killer" },
+      { type: "kill", kills: 30, title: "Hunter" },
+      { type: "kill", kills: 50, title: "Slayer" },
+      { type: "kill", kills: 100, title: "Assassin" },
+      { type: "death", deaths: 10, title: "Chick" }
     ];
 
     function titleFloor(player) {
       return Math.max(Number(player && player.bestFloor || 0), Number(player && player.floor || 0));
     }
 
-    function unlockedTitlesForFloor(floor) {
-      return TITLE_TIERS.filter((tier) => floor >= tier.floor);
+    function titleUnlocked(tier, player) {
+      if (tier.type === "floor") return titleFloor(player) >= tier.floor;
+      if (tier.type === "kill") return Number(player && player.kills || (player === state.player ? state.kills : 0) || 0) >= tier.kills;
+      if (tier.type === "death") return Number(player && player.deaths || (player === state.player ? state.deaths : 0) || 0) >= tier.deaths;
+      return false;
+    }
+
+    function unlockedTitlesForPlayer(player) {
+      return TITLE_TIERS.filter((tier) => titleUnlocked(tier, player));
+    }
+
+    function titleRequirement(tier) {
+      if (tier.type === "floor") return `${tier.floor}F`;
+      if (tier.type === "kill") return `${tier.kills} kills`;
+      if (tier.type === "death") return `${tier.deaths} deaths`;
+      return "";
+    }
+
+    function titleClass(title) {
+      const tier = TITLE_TIERS.find((entry) => entry.title === title);
+      return tier && tier.className ? tier.className : "";
     }
 
     function selectedTitleForPlayer(player) {
-      const floor = titleFloor(player);
       const selected = String(player && player.selectedTitle || "");
-      if (selected && unlockedTitlesForFloor(floor).some((tier) => tier.title === selected)) return selected;
-      return titleForFloor(floor);
+      if (selected && unlockedTitlesForPlayer(player).some((tier) => tier.title === selected)) return selected;
+      return titleForPlayer(player);
     }
 
-    function titleForFloor(floor) {
-      for (let index = TITLE_TIERS.length - 1; index >= 0; index -= 1) {
-        if (floor >= TITLE_TIERS[index].floor) return TITLE_TIERS[index].title;
+    function titleForPlayer(player) {
+      const floorTitles = TITLE_TIERS.filter((tier) => tier.type === "floor");
+      const floor = titleFloor(player);
+      for (let index = floorTitles.length - 1; index >= 0; index -= 1) {
+        if (floor >= floorTitles[index].floor) return floorTitles[index].title;
       }
-      return "";
+      return "Beginner";
+    }
+
+    function titleHtml(player) {
+      const title = selectedTitleForPlayer(player);
+      const className = titleClass(title);
+      return title ? `<span class="player-title ${escapeHtml(className)}">${escapeHtml(title)}</span>` : "";
     }
 
     function floorTheme(floor) {
@@ -2071,6 +2133,7 @@
         inventory: state.inventory.map((item) => item ? item.type : null),
         testItemCursor: state.testItemCursor,
         kills: state.kills,
+        deaths: state.deaths,
         gold: state.gold,
         lives: state.lives,
         rewardedMilestones: [...state.rewardedMilestones],
@@ -2330,14 +2393,16 @@
             shield: Boolean(player.shield),
             shieldUntil: Number(player.shieldUntil || 0),
             stunnedUntil: Number(player.stunnedUntil || 0),
-          kills: Number(player.kills || 0),
-          gold: Number(player.gold || 0),
-          lives: Number(player.lives || 0),
-          bestTimeMs: Number(player.bestTimeMs || 0),
-          runElapsedMs: Number(player.runElapsedMs || 0)
+            kills: Number(player.kills || 0),
+            deaths: Number(player.deaths || 0),
+            gold: Number(player.gold || 0),
+            lives: Number(player.lives || 0),
+            bestTimeMs: Number(player.bestTimeMs || 0),
+            runElapsedMs: Number(player.runElapsedMs || 0)
           }));
         const own = data.players.find((player) => player.onlineId === state.online.onlineId);
         if (own && Number(own.kills || 0) > state.kills) state.kills = Number(own.kills || 0);
+        if (own && Number(own.deaths || 0) > state.deaths) state.deaths = Number(own.deaths || 0);
         if (own && Number.isFinite(Number(own.gold))) state.gold = Number(own.gold || 0);
         if (own && Number.isFinite(Number(own.lives))) state.lives = Number(own.lives || 0);
         if (own && typeof own.selectedTitle === "string") state.player.selectedTitle = own.selectedTitle;
@@ -2360,6 +2425,7 @@
           bestFloor: Number(player.bestFloor || player.floor || 0),
           selectedTitle: String(player.selectedTitle || ""),
           kills: Number(player.kills || 0),
+          deaths: Number(player.deaths || 0),
           gold: Number(player.gold || 0),
           lives: Number(player.lives || 0),
           bestTimeMs: Number(player.bestTimeMs || 0),
@@ -2402,6 +2468,7 @@
         shieldUntil: state.player.shieldUntil,
         stunnedUntil: state.player.stunnedUntil,
         kills: state.kills,
+        deaths: state.deaths,
         gold: state.gold,
         lives: state.lives,
         bestTimeMs: state.bestTimeMs,
@@ -2442,6 +2509,7 @@
         shieldUntil: state.player.shieldUntil,
         stunnedUntil: state.player.stunnedUntil,
         kills: state.kills,
+        deaths: state.deaths,
         gold: state.gold,
         lives: state.lives,
         bestTimeMs: state.bestTimeMs,
@@ -2564,7 +2632,7 @@
       const goals = [
         { floor: Math.ceil((floor + 1) / 100) * 100, label: "ITEM" },
         { floor: Math.ceil((floor + 1) / LIFE_REWARD_INTERVAL) * LIFE_REWARD_INTERVAL, label: "LIFE" },
-        ...TITLE_TIERS.map((tier) => ({ floor: tier.floor, label: "TITLE" }))
+        ...TITLE_TIERS.filter((tier) => tier.type === "floor").map((tier) => ({ floor: tier.floor, label: "TITLE" }))
       ].filter((goal) => goal.floor > floor).sort((a, b) => a.floor - b.floor);
       const nextFloor = goals[0] ? goals[0].floor : Math.ceil((floor + 1) / 100) * 100;
       const labels = [...new Set(goals.filter((goal) => goal.floor === nextFloor).map((goal) => goal.label))];
@@ -2929,8 +2997,13 @@
       return true;
     }
 
+    function addDeath() {
+      state.deaths += 1;
+    }
+
     function respawnAtZero(reason) {
       if (absorbDanger(reason)) return;
+      addDeath();
       if (state.lives > 0) {
         state.lives -= 1;
         resetCombo();
@@ -2957,6 +3030,7 @@
     function loseLifeOrFall(reason) {
       if (absorbDanger(reason)) return false;
       if (state.lives > 0) {
+        addDeath();
         state.lives -= 1;
         resetCombo();
         state.player.hidden = false;
@@ -3028,6 +3102,7 @@
       state.runStartedAt = Date.now();
       state.bestTimeMs = 0;
       state.kills = 0;
+      state.deaths = 0;
       state.gold = 0;
       state.lives = 0;
       state.online.playerKey = getPlayerKey();
@@ -3071,6 +3146,7 @@
         while (state.inventory.length < 3) state.inventory.push(null);
         state.testItemCursor = Number(profile.testItemCursor || 0);
         state.kills = Number(profile.kills || 0);
+        state.deaths = Number(profile.deaths || 0);
         state.gold = Number(profile.gold || 0);
         state.lives = Number(profile.lives || 0);
         state.rewardedMilestones = new Set(Array.isArray(profile.rewardedMilestones) ? profile.rewardedMilestones : []);
@@ -3308,6 +3384,10 @@
 
     function updateFloorHold(now) {
       if (state.mode !== "play") return;
+      if (isRestFloor(state.player.floor)) {
+        resetFloorHold(now);
+        return;
+      }
       if (state.player.hidden || now < state.player.stunnedUntil) {
         resetFloorHold(now);
         return;
@@ -3572,11 +3652,12 @@
       const nextGoal = nextGoalInfo();
       ui.nextGoal.innerHTML = `NEXT<span>${nextGoal.floor}F ${nextGoal.label}</span>`;
       const idleLimit = idleLimitForFloor();
-      const idleLeft = state.player.hidden || stunned > 0 ? idleLimit : Math.max(0, idleLimit - (performance.now() - state.floorHold.since));
-      const idleProgress = state.player.hidden || stunned > 0 ? 0 : Math.min(1, Math.max(0, 1 - idleLeft / idleLimit));
-      ui.idleTimer.classList.toggle("danger", idleLeft <= 1200 && !state.player.hidden && stunned <= 0);
-      ui.idleTimer.querySelector(".idle-label").textContent = state.player.hidden ? "HIDE" : stunned > 0 ? "STUN" : "STAY";
-      ui.idleTimer.querySelector(".idle-value").textContent = `${(idleLeft / 1000).toFixed(1)}s`;
+      const resting = isRestFloor(state.player.floor);
+      const idleLeft = resting || state.player.hidden || stunned > 0 ? idleLimit : Math.max(0, idleLimit - (performance.now() - state.floorHold.since));
+      const idleProgress = resting || state.player.hidden || stunned > 0 ? 0 : Math.min(1, Math.max(0, 1 - idleLeft / idleLimit));
+      ui.idleTimer.classList.toggle("danger", !resting && idleLeft <= 1200 && !state.player.hidden && stunned <= 0);
+      ui.idleTimer.querySelector(".idle-label").textContent = resting ? "REST" : state.player.hidden ? "HIDE" : stunned > 0 ? "STUN" : "STAY";
+      ui.idleTimer.querySelector(".idle-value").textContent = resting ? "SAFE" : `${(idleLeft / 1000).toFixed(1)}s`;
       ui.mobileIdleFill.style.width = `${Math.round(idleProgress * 100)}%`;
 
       state.inventory.forEach((item, index) => {
@@ -3591,6 +3672,10 @@
         if (!player.id) continue;
         const key = `${player.country || "--"}:${player.id}`;
         const row = { ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)), bestTimeMs: Number(player.bestTimeMs || 0), runElapsedMs: Number(player.runElapsedMs || 0) };
+        if (player === state.player) {
+          row.kills = state.kills;
+          row.deaths = state.deaths;
+        }
         const previous = rankMap.get(key);
         if (!previous || row.bestFloor > previous.bestFloor || (row.bestFloor === previous.bestFloor && row.bestTimeMs > 0 && (!previous.bestTimeMs || row.bestTimeMs < previous.bestTimeMs))) rankMap.set(key, row);
       }
@@ -3603,7 +3688,7 @@
       ui.rankRows.innerHTML = players.map((player, index) => (
         `<div class="rank-row">
           <span>${index === 0 ? "#1" : index + 1}</span>
-          <span class="rank-id">${escapeHtml(displayName(player))}</span>
+          <span class="rank-id">${displayNameHtml(player)}</span>
           <span>${escapeHtml(player.country)}</span>
           <span class="rank-floor">${player.bestFloor}F</span>
           <span class="rank-time">${formatDuration(rankingTimeMs(player))}</span>
@@ -3626,17 +3711,16 @@
     }
 
     function renderTitleList() {
-      const floor = titleFloor(state.player);
       const current = state.player.selectedTitle || "";
       const rows = [
         `<button class="title-choice ${current ? "" : "active"}" type="button" data-title="">
           <span>자동</span><small>최고 칭호</small>
         </button>`,
         ...TITLE_TIERS.map((tier) => {
-          const unlocked = floor >= tier.floor;
+          const unlocked = titleUnlocked(tier, state.player);
           const active = current === tier.title;
           return `<button class="title-choice ${active ? "active" : ""} ${unlocked ? "" : "locked"}" type="button" data-title="${escapeHtml(tier.title)}" ${unlocked ? "" : "disabled"}>
-            <span>${escapeHtml(tier.title)}</span><small>${tier.floor}F${unlocked ? "" : " 잠김"}</small>
+            <span class="title-name ${escapeHtml(tier.className || "")}">${escapeHtml(tier.title)}</span><small>${escapeHtml(titleRequirement(tier))}${unlocked ? "" : " 잠김"}</small>
           </button>`;
         })
       ];
@@ -3661,7 +3745,7 @@
 
     function chooseTitle(title) {
       const nextTitle = String(title || "");
-      if (nextTitle && !unlockedTitlesForFloor(titleFloor(state.player)).some((tier) => tier.title === nextTitle)) return;
+      if (nextTitle && !unlockedTitlesForPlayer(state.player).some((tier) => tier.title === nextTitle)) return;
       state.player.selectedTitle = nextTitle;
       saveSessionProfile();
       syncOnlineState();
