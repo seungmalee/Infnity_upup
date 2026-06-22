@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>무한 계단 온라인</title>
-  <meta name="description" content="실시간으로 다른 플레이어와 기록을 겨루는 무한 계단 온라인 게임입니다.">
+  <title>Endless Up Up - 실시간 무한 계단 온라인 게임</title>
+  <meta name="description" content="Endless Up Up은 계단을 끝없이 오르며 아이템, 채팅, 랭킹으로 다른 플레이어와 경쟁하는 실시간 온라인 게임입니다.">
   <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="무한 계단 온라인">
-  <meta property="og:description" content="계단을 오르며 아이템과 기록 경쟁을 즐겨보세요.">
-  <meta property="og:site_name" content="무한 계단 온라인">
+  <meta property="og:title" content="Endless Up Up - 실시간 무한 계단 온라인 게임">
+  <meta property="og:description" content="끝없이 이어지는 계단을 오르고, 아이템과 랭킹으로 전 세계 플레이어와 경쟁하세요.">
+  <meta property="og:site_name" content="Endless Up Up">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="무한 계단 온라인">
-  <meta name="twitter:description" content="계단을 오르며 아이템과 기록 경쟁을 즐겨보세요.">
+  <meta name="twitter:title" content="Endless Up Up - 실시간 무한 계단 온라인 게임">
+  <meta name="twitter:description" content="끝없이 이어지는 계단을 오르고, 아이템과 랭킹으로 전 세계 플레이어와 경쟁하세요.">
   <!--
     Google AdSense 준비 위치:
     승인 신청 후 발급받은 ca-pub ID로 아래 스크립트의 주석을 해제하세요.
@@ -319,7 +319,7 @@
 
     .combo {
       position: fixed;
-      left: min(calc(50% + 180px), calc(100vw - 180px));
+      left: 50%;
       top: 58%;
       right: auto;
       bottom: auto;
@@ -745,13 +745,13 @@
       left: 50%;
       right: auto;
       top: auto;
-      bottom: 12vh;
+      bottom: calc(50px + env(safe-area-inset-bottom));
       display: none;
       width: min(92vw, 282px);
       grid-template-columns: 1fr;
       justify-items: center;
       gap: 0;
-      padding: 12px max(12px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
       pointer-events: none;
       z-index: 5;
       transform: translateX(-50%);
@@ -834,6 +834,10 @@
       border-radius: inherit;
       background: linear-gradient(90deg, #4dd8a6, #f0bd5b, #ff745e);
       transition: width 90ms linear;
+    }
+
+    .mobile-controls.chat-expanded {
+      display: none !important;
     }
 
     @media (min-width: 761px) and (max-width: 1180px) {
@@ -1146,7 +1150,7 @@
       }
     }
 
-    @media (max-width: 760px) and (pointer: coarse) {
+    @media (max-width: 760px) {
       #game {
         height: 100dvh;
       }
@@ -1247,10 +1251,11 @@
         right: max(8px, env(safe-area-inset-right));
         width: min(54vw, 220px);
         max-height: 152px;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        backdrop-filter: none;
+        padding: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        background: rgba(25, 29, 37, 0.78);
+        backdrop-filter: blur(14px);
       }
 
       .ranking.collapsed {
@@ -1302,7 +1307,7 @@
         left: auto;
         top: auto;
         right: 14px;
-        bottom: calc(12vh + 150px + env(safe-area-inset-bottom));
+        bottom: calc(190px + env(safe-area-inset-bottom));
         font-size: 19px;
       }
 
@@ -1494,6 +1499,10 @@
         display: none;
       }
 
+      .ranking .ad-slot {
+        display: none;
+      }
+
       .mobile-controls {
         display: grid;
       }
@@ -1547,7 +1556,7 @@
       }
     }
 
-    @media (max-width: 520px) and (pointer: coarse) {
+    @media (max-width: 520px) {
       .hud {
         display: block;
       }
@@ -1576,7 +1585,7 @@
         left: auto;
         top: auto;
         right: 10px;
-        bottom: calc(12vh + 148px + env(safe-area-inset-bottom));
+        bottom: calc(188px + env(safe-area-inset-bottom));
         font-size: 18px;
       }
 
@@ -1689,7 +1698,7 @@
 
   <section class="screen" id="joinScreen">
     <form class="join-card" id="joinForm">
-      <h1>무한 계단 온라인</h1>
+      <h1>Endless Up Up</h1>
       <p class="sub">ID와 국가를 정하고 최대한 높은 층까지 올라가세요.</p>
 
       <label for="playerId">ID</label>
@@ -1864,7 +1873,8 @@
       rankRows: document.getElementById("rankRows"),
       chatPanel: document.getElementById("chatPanel"),
       chatLog: document.getElementById("chatLog"),
-      notice: document.getElementById("notice")
+      notice: document.getElementById("notice"),
+      mobileControls: document.querySelector(".mobile-controls")
     };
 
     const SEGMENT_SIZE = 100;
@@ -3644,6 +3654,11 @@
       ui.titleModal.hidden = true;
     }
 
+    function setChatExpanded(expanded) {
+      ui.chatPanel.classList.toggle("expanded", expanded);
+      if (ui.mobileControls) ui.mobileControls.classList.toggle("chat-expanded", expanded);
+    }
+
     function chooseTitle(title) {
       const nextTitle = String(title || "");
       if (nextTitle && !unlockedTitlesForFloor(titleFloor(state.player)).some((tier) => tier.title === nextTitle)) return;
@@ -3680,12 +3695,12 @@
         addChat(state.player.id, state.player.country, text);
       }
       chatInput.value = "";
-      if (window.matchMedia("(max-width: 760px) and (pointer: coarse)").matches) ui.chatPanel.classList.remove("expanded");
+      if (window.matchMedia("(max-width: 760px)").matches) setChatExpanded(false);
     });
 
     ui.chatPanel.addEventListener("click", () => {
-      if (!window.matchMedia("(max-width: 760px) and (pointer: coarse)").matches) return;
-      ui.chatPanel.classList.add("expanded");
+      if (!window.matchMedia("(max-width: 760px)").matches) return;
+      setChatExpanded(true);
       setTimeout(() => chatInput.focus(), 0);
     });
 
@@ -3721,7 +3736,7 @@
     restoreSessionProfile();
     resize();
     renderChat();
-    if (window.matchMedia("(max-width: 760px) and (pointer: coarse)").matches) {
+    if (window.matchMedia("(max-width: 760px)").matches) {
       state.rankingCollapsed = false;
     }
     setRankingCollapsed(state.rankingCollapsed);

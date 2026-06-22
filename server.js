@@ -16,9 +16,34 @@ const INDEX = path.join(ROOT, "outputs", "index.html");
 const KILL_GOLD_REWARD = 50;
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "stairgame";
+const ALLOWED_ORIGINS = new Set(
+  String(process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
+const BODY_LIMIT = 64 * 1024;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMITS = {
+  api: { limit: 240, windowMs: RATE_LIMIT_WINDOW_MS },
+  join: { limit: 30, windowMs: RATE_LIMIT_WINDOW_MS },
+  state: { limit: 180, windowMs: RATE_LIMIT_WINDOW_MS },
+  chat: { limit: 30, windowMs: RATE_LIMIT_WINDOW_MS },
+  action: { limit: 120, windowMs: RATE_LIMIT_WINDOW_MS },
+  events: { limit: 60, windowMs: RATE_LIMIT_WINDOW_MS }
+};
+const MAX_FLOOR = 1000000;
+const MAX_GOLD = 10000000;
+const MAX_LIVES = 999;
+const MAX_KILLS = 100000;
+const MAX_STATE_FLOOR_JUMP = 250;
+const MAX_STATE_GOLD_GAIN = 1000;
+const MAX_STATE_KILL_GAIN = 20;
+const MAX_STATE_LIFE_GAIN = 20;
 
 const players = new Map();
 const clients = new Map();
+const rateBuckets = new Map();
 let dbPromise = null;
 let records = null;
 let leaderboard = [];
@@ -53,11 +78,11 @@ function clampNumber(value, min = 0, max = Number.MAX_SAFE_INTEGER) {
 }
 
 function cleanId(value) {
-  return String(value || "PLAYER").slice(0, 14).replace(/\s+/g, "_");
+  return String(value || "PLAYER").trim().replace(/\s+/g, "_").replace(/[^\w가-힣-]/g, "").slice(0, 14) || "PLAYER";
 }
 
 function cleanCountry(value) {
-  return String(value || "KR").slice(0, 3).toUpperCase();
+  return String(value || "KR").replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "KR";
 }
 
 function cleanTitle(value) {
@@ -66,6 +91,63 @@ function cleanTitle(value) {
 
 function cleanPlayerKey(value) {
   return String(value || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80);
+}
+
+function clientIp(req) {
+  return String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "")
+    .split(",")[0]
+    .trim() || "unknown";
+}
+
+function isLocalOrigin(origin) {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin || "");
+}
+
+function isAllowedOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  if (!process.env.ALLOWED_ORIGINS && isLocalOrigin(origin)) return true;
+  return false;
+}
+
+function securityHeaders(req, extra = {}) {
+  const headers = {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    ...extra
+  };
+  const origin = req.headers.origin;
+  if (origin && isAllowedOrigin(req)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+    headers["Vary"] = "Origin";
+  }
+  return headers;
+}
+
+function checkRateLimit(req, bucket = "api") {
+  const config = RATE_LIMITS[bucket] || RATE_LIMITS.api;
+  const now = Date.now();
+  const key = `${clientIp(req)}:${bucket}`;
+  const current = rateBuckets.get(key);
+  if (!current || now > current.resetAt) {
+    rateBuckets.set(key, { count: 1, resetAt: now + config.windowMs });
+    return true;
+  }
+  current.count += 1;
+  return current.count <= config.limit;
+}
+
+function rejectRateLimited(req, res) {
+  sendJson(req, res, 429, { error: "too many requests" });
+}
+
+function clampPlayerNumber(value, previous, maxIncrease, maxValue) {
+  if (!Number.isFinite(Number(value))) return previous;
+  const next = clampNumber(value, 0, maxValue);
+  if (!Number.isFinite(Number(previous))) return next;
+  return Math.min(next, clampNumber(previous, 0, maxValue) + maxIncrease);
 }
 
 function publicRecord(record) {
@@ -147,13 +229,12 @@ async function saveRecord(player, force = false) {
   await refreshLeaderboard();
 }
 
-function sendJson(res, status, data) {
+function sendJson(req, res, status, data) {
   const body = JSON.stringify(data);
-  res.writeHead(status, {
+  res.writeHead(status, securityHeaders(req, {
     "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-    "Access-Control-Allow-Origin": "*"
-  });
+    "Cache-Control": "no-store"
+  }));
   res.end(body);
 }
 
@@ -162,7 +243,10 @@ function readBody(req) {
     let body = "";
     req.on("data", (chunk) => {
       body += chunk;
-      if (body.length > 1024 * 1024) req.destroy();
+      if (body.length > BODY_LIMIT) {
+        reject(new Error("request body too large"));
+        req.destroy();
+      }
     });
     req.on("end", () => {
       try {
@@ -226,14 +310,14 @@ function serveStatic(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const pathname = decodeURIComponent(url.pathname === "/" ? "/outputs/index.html" : url.pathname);
   const filePath = path.resolve(ROOT, `.${pathname}`);
-  if (!filePath.startsWith(ROOT)) {
-    res.writeHead(403);
+  if (filePath !== ROOT && !filePath.startsWith(`${ROOT}${path.sep}`)) {
+    res.writeHead(403, securityHeaders(req));
     res.end("Forbidden");
     return;
   }
   fs.readFile(filePath, (error, data) => {
     if (error) {
-      res.writeHead(404);
+      res.writeHead(404, securityHeaders(req));
       res.end("Not found");
       return;
     }
@@ -242,7 +326,7 @@ function serveStatic(req, res) {
       : ext === ".js" ? "text/javascript; charset=utf-8"
       : ext === ".css" ? "text/css; charset=utf-8"
       : "application/octet-stream";
-    res.writeHead(200, { "Content-Type": type, "Cache-Control": "no-store" });
+    res.writeHead(200, securityHeaders(req, { "Content-Type": type, "Cache-Control": "no-store" }));
     res.end(data);
   });
 }
@@ -257,7 +341,7 @@ function siteOrigin(req) {
 
 function serveRobots(req, res) {
   const origin = siteOrigin(req);
-  res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" });
+  res.writeHead(200, securityHeaders(req, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "public, max-age=3600" }));
   res.end([
     "User-agent: *",
     "Allow: /",
@@ -269,7 +353,7 @@ function serveRobots(req, res) {
 function serveSitemap(req, res) {
   const origin = siteOrigin(req);
   const today = new Date().toISOString().slice(0, 10);
-  res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" });
+  res.writeHead(200, securityHeaders(req, { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" }));
   res.end(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -296,11 +380,15 @@ function serveSitemap(req, res) {
 
 const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") {
-    res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
+    if (!isAllowedOrigin(req)) {
+      res.writeHead(403, securityHeaders(req));
+      res.end();
+      return;
+    }
+    res.writeHead(204, securityHeaders(req, {
       "Access-Control-Allow-Headers": "Content-Type",
       "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
-    });
+    }));
     res.end();
     return;
   }
@@ -308,6 +396,16 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   try {
+    if (!isAllowedOrigin(req)) {
+      sendJson(req, res, 403, { error: "origin not allowed" });
+      return;
+    }
+
+    if (url.pathname.startsWith("/api/") && !checkRateLimit(req, "api")) {
+      rejectRateLimited(req, res);
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/robots.txt") {
       serveRobots(req, res);
       return;
@@ -319,6 +417,10 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "POST" && url.pathname === "/api/join") {
+      if (!checkRateLimit(req, "join")) {
+        rejectRateLimited(req, res);
+        return;
+      }
       const body = await readBody(req);
       const requestedId = String(body.onlineId || "");
       const onlineId = requestedId && players.has(requestedId) ? requestedId : crypto.randomUUID();
@@ -326,37 +428,41 @@ const server = http.createServer(async (req, res) => {
       const country = cleanCountry(body.country);
       const playerKey = cleanPlayerKey(body.playerKey || onlineId);
       const saved = await loadRecord(playerKey);
-      const startFloor = saved && cleanId(saved.id) === id ? clampNumber(saved.currentFloor || 0) : clampNumber(body.floor || 0);
+      const startFloor = saved && cleanId(saved.id) === id ? clampNumber(saved.currentFloor || 0, 0, MAX_FLOOR) : 0;
       const player = {
         onlineId,
         playerKey,
         id,
         country,
         floor: startFloor,
-        bestFloor: Math.max(clampNumber(body.bestFloor || 0), startFloor, clampNumber(saved && saved.bestFloor)),
+        bestFloor: Math.max(saved ? 0 : clampNumber(body.bestFloor || 0, 0, 500), startFloor, clampNumber(saved && saved.bestFloor, 0, MAX_FLOOR)),
         selectedTitle: saved ? cleanTitle(saved.selectedTitle) : cleanTitle(body.selectedTitle),
         bestTimeMs: saved ? clampNumber(saved.bestTimeMs || 0) : clampNumber(body.bestTimeMs || 0),
         hidden: Boolean(body.hidden),
         shield: Boolean(body.shield),
         shieldUntil: clampNumber(body.shieldUntil || 0),
         stunnedUntil: clampNumber(body.stunnedUntil || 0),
-        kills: Math.max(clampNumber(body.kills || 0), clampNumber(saved && saved.kills)),
-        gold: saved ? clampNumber(saved.gold) : clampNumber(body.gold || 0),
-        lives: saved ? clampNumber(saved.lives) : clampNumber(body.lives || 0),
+        kills: Math.max(saved ? 0 : clampNumber(body.kills || 0, 0, 20), clampNumber(saved && saved.kills, 0, MAX_KILLS)),
+        gold: saved ? clampNumber(saved.gold, 0, MAX_GOLD) : clampNumber(body.gold || 0, 0, 500),
+        lives: saved ? clampNumber(saved.lives, 0, MAX_LIVES) : clampNumber(body.lives || 0, 0, 10),
         lastSeen: Date.now()
       };
       players.set(onlineId, player);
       await saveRecord(player, true);
       broadcast("state");
-      sendJson(res, 200, { onlineId, players: publicPlayers(), leaderboard, chat });
+      sendJson(req, res, 200, { onlineId, players: publicPlayers(), leaderboard, chat });
       return;
     }
 
     if (req.method === "POST" && url.pathname === "/api/state") {
+      if (!checkRateLimit(req, "state")) {
+        rejectRateLimited(req, res);
+        return;
+      }
       const body = await readBody(req);
       const player = players.get(String(body.onlineId || ""));
       if (!player) {
-        sendJson(res, 404, { error: "unknown player" });
+        sendJson(req, res, 404, { error: "unknown player" });
         return;
       }
       const previousGold = player.gold;
@@ -366,9 +472,12 @@ const server = http.createServer(async (req, res) => {
       const previousBestTimeMs = player.bestTimeMs || 0;
       const previousSelectedTitle = player.selectedTitle || "";
       const incomingBestFloor = Number.isFinite(Number(body.bestFloor)) ? clampNumber(body.bestFloor) : 0;
-      for (const key of ["floor", "stunnedUntil", "shieldUntil", "kills", "gold", "lives"]) {
-        if (Number.isFinite(Number(body[key]))) player[key] = Number(body[key]);
-      }
+      if (Number.isFinite(Number(body.floor))) player.floor = clampPlayerNumber(body.floor, player.floor, MAX_STATE_FLOOR_JUMP, MAX_FLOOR);
+      if (Number.isFinite(Number(body.kills))) player.kills = clampPlayerNumber(body.kills, player.kills, MAX_STATE_KILL_GAIN, MAX_KILLS);
+      if (Number.isFinite(Number(body.gold))) player.gold = clampPlayerNumber(body.gold, player.gold, MAX_STATE_GOLD_GAIN, MAX_GOLD);
+      if (Number.isFinite(Number(body.lives))) player.lives = clampPlayerNumber(body.lives, player.lives, MAX_STATE_LIFE_GAIN, MAX_LIVES);
+      if (Number.isFinite(Number(body.stunnedUntil))) player.stunnedUntil = clampNumber(body.stunnedUntil, 0, Date.now() + 30000);
+      if (Number.isFinite(Number(body.shieldUntil))) player.shieldUntil = clampNumber(body.shieldUntil, 0, Date.now() + 30000);
       if (Number.isFinite(Number(body.bestTimeMs))) {
         const incomingBestTime = clampNumber(body.bestTimeMs || 0);
         if (incomingBestTime > 0 && (incomingBestFloor > (player.bestFloor || 0) || !player.bestTimeMs || (incomingBestFloor === (player.bestFloor || 0) && incomingBestTime < player.bestTimeMs))) {
@@ -376,7 +485,7 @@ const server = http.createServer(async (req, res) => {
         }
       }
       if (incomingBestFloor > 0) {
-        player.bestFloor = Math.max(player.bestFloor || 0, incomingBestFloor);
+        player.bestFloor = Math.max(player.bestFloor || 0, Math.min(incomingBestFloor, player.floor + MAX_STATE_FLOOR_JUMP));
       }
       if (Number.isFinite(Number(body.runElapsedMs))) player.runElapsedMs = clampNumber(body.runElapsedMs || 0);
       if (typeof body.selectedTitle === "string") player.selectedTitle = cleanTitle(body.selectedTitle);
@@ -387,15 +496,19 @@ const server = http.createServer(async (req, res) => {
       player.lastSeen = Date.now();
       await saveRecord(player, player.gold !== previousGold || player.lives !== previousLives || player.kills !== previousKills || player.bestFloor !== previousBestFloor || (player.bestTimeMs || 0) !== previousBestTimeMs || (player.selectedTitle || "") !== previousSelectedTitle);
       broadcast("state");
-      sendJson(res, 200, { ok: true });
+      sendJson(req, res, 200, { ok: true });
       return;
     }
 
     if (req.method === "POST" && url.pathname === "/api/chat") {
+      if (!checkRateLimit(req, "chat")) {
+        rejectRateLimited(req, res);
+        return;
+      }
       const body = await readBody(req);
       const player = players.get(String(body.onlineId || ""));
       if (!player) {
-        sendJson(res, 404, { error: "unknown player" });
+        sendJson(req, res, 404, { error: "unknown player" });
         return;
       }
       const text = String(body.text || "").trim().slice(0, 70);
@@ -405,17 +518,21 @@ const server = http.createServer(async (req, res) => {
         player.lastSeen = Date.now();
         broadcast("chat");
       }
-      sendJson(res, 200, { ok: true });
+      sendJson(req, res, 200, { ok: true });
       return;
     }
 
     if (req.method === "POST" && url.pathname === "/api/attack") {
+      if (!checkRateLimit(req, "action")) {
+        rejectRateLimited(req, res);
+        return;
+      }
       const body = await readBody(req);
       const attacker = players.get(String(body.onlineId || ""));
       const targetId = String(body.targetId || "");
       const target = players.get(targetId);
       if (!attacker || !target) {
-        sendJson(res, 404, { error: "unknown player" });
+        sendJson(req, res, 404, { error: "unknown player" });
         return;
       }
       const reason = String(body.reason || `${attacker.id}이 ${target.id}을 공격했습니다.`).slice(0, 120);
@@ -440,16 +557,20 @@ const server = http.createServer(async (req, res) => {
         targetClient.write(`data: ${JSON.stringify(payload)}\n\n`);
       }
       broadcast("state");
-      sendJson(res, 200, { ok: true, kills: attacker.kills, gold: attacker.gold, target: { id: target.id, lives: target.lives || 0, fell } });
+      sendJson(req, res, 200, { ok: true, kills: attacker.kills, gold: attacker.gold, target: { id: target.id, lives: target.lives || 0, fell } });
       return;
     }
     if (req.method === "POST" && url.pathname === "/api/stun") {
+      if (!checkRateLimit(req, "action")) {
+        rejectRateLimited(req, res);
+        return;
+      }
       const body = await readBody(req);
       const source = players.get(String(body.onlineId || ""));
       const targetId = String(body.targetId || "");
       const target = players.get(targetId);
       if (!source || !target) {
-        sendJson(res, 404, { error: "unknown player" });
+        sendJson(req, res, 404, { error: "unknown player" });
         return;
       }
       const ms = Math.max(500, Math.min(5000, Number(body.ms || 3000)));
@@ -460,7 +581,7 @@ const server = http.createServer(async (req, res) => {
         targetClient.write(`data: ${JSON.stringify({ type: "stunned", reason, ms, sourceId: source.onlineId, players: publicPlayers(), leaderboard, chat })}\n\n`);
       }
       broadcast("state");
-      sendJson(res, 200, { ok: true });
+      sendJson(req, res, 200, { ok: true });
       return;
     }
 
@@ -475,23 +596,27 @@ const server = http.createServer(async (req, res) => {
         await refreshLeaderboard();
         broadcast("state");
       }
-      sendJson(res, 200, { ok: true });
+      sendJson(req, res, 200, { ok: true });
       return;
     }
 
     if (req.method === "GET" && url.pathname === "/events") {
+      if (!checkRateLimit(req, "events")) {
+        res.writeHead(429, securityHeaders(req));
+        res.end("too many requests");
+        return;
+      }
       const onlineId = String(url.searchParams.get("id") || "");
       if (!players.has(onlineId)) {
-        res.writeHead(404);
+        res.writeHead(404, securityHeaders(req));
         res.end("unknown player");
         return;
       }
-      res.writeHead(200, {
+      res.writeHead(200, securityHeaders(req, {
         "Content-Type": "text/event-stream; charset=utf-8",
         "Cache-Control": "no-store",
-        Connection: "keep-alive",
-        "Access-Control-Allow-Origin": "*"
-      });
+        Connection: "keep-alive"
+      }));
       clients.set(onlineId, res);
       res.write(`data: ${JSON.stringify({ type: "state", players: publicPlayers(), leaderboard, chat })}\n\n`);
       req.on("close", () => {
@@ -516,11 +641,16 @@ const server = http.createServer(async (req, res) => {
 
     serveStatic(req, res);
   } catch (error) {
-    sendJson(res, 500, { error: "server error", detail: error.message });
+    console.error(error);
+    sendJson(req, res, 500, { error: "server error" });
   }
 });
 
 setInterval(() => {
+  const now = Date.now();
+  for (const [key, bucket] of rateBuckets) {
+    if (now > bucket.resetAt + RATE_LIMIT_WINDOW_MS) rateBuckets.delete(key);
+  }
   cleanup();
   refreshLeaderboard().catch(() => {});
   broadcast("state");
