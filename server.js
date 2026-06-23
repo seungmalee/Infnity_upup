@@ -80,7 +80,7 @@ function clampNumber(value, min = 0, max = Number.MAX_SAFE_INTEGER) {
 }
 
 function cleanId(value) {
-  return String(value || "PLAYER").trim().replace(/\s+/g, "_").replace(/[^\w가-힣-]/g, "").slice(0, 14) || "PLAYER";
+  return String(value || "PLAYER").trim().replace(/\s+/g, "_").replace(/[^\w-]/g, "").slice(0, 14) || "PLAYER";
 }
 
 function cleanCountry(value) {
@@ -89,6 +89,11 @@ function cleanCountry(value) {
 
 function cleanTitle(value) {
   return String(value || "").trim().slice(0, 16);
+}
+
+function cleanCosmetic(value) {
+  const next = String(value || "").trim();
+  return next === "crown" || next === "wings" ? next : "";
 }
 
 function cleanPlayerKey(value) {
@@ -159,6 +164,7 @@ function publicRecord(record) {
     floor: clampNumber(record.currentFloor || 0),
     bestFloor: clampNumber(record.bestFloor || 0),
     selectedTitle: cleanTitle(record.selectedTitle),
+    selectedCosmetic: cleanCosmetic(record.selectedCosmetic),
     hidden: false,
     shield: false,
     shieldUntil: 0,
@@ -208,6 +214,7 @@ async function saveRecord(player, force = false) {
     id: cleanId(player.id),
     country: cleanCountry(player.country),
     selectedTitle: cleanTitle(player.selectedTitle),
+    selectedCosmetic: cleanCosmetic(player.selectedCosmetic),
     currentFloor: clampNumber(player.floor),
     gold: clampNumber(player.gold),
     lives: clampNumber(player.lives),
@@ -271,6 +278,7 @@ function publicPlayers() {
     floor: player.floor,
     bestFloor: player.bestFloor || player.floor || 0,
     selectedTitle: cleanTitle(player.selectedTitle),
+    selectedCosmetic: cleanCosmetic(player.selectedCosmetic),
     hidden: player.hidden,
     shield: player.shield,
     shieldUntil: player.shieldUntil,
@@ -442,6 +450,7 @@ const server = http.createServer(async (req, res) => {
         floor: startFloor,
         bestFloor: Math.max(saved ? 0 : clampNumber(body.bestFloor || 0, 0, 500), startFloor, clampNumber(saved && saved.bestFloor, 0, MAX_FLOOR)),
         selectedTitle: saved ? cleanTitle(saved.selectedTitle) : cleanTitle(body.selectedTitle),
+        selectedCosmetic: saved ? cleanCosmetic(saved.selectedCosmetic) : cleanCosmetic(body.selectedCosmetic),
         bestTimeMs: saved ? clampNumber(saved.bestTimeMs || 0) : clampNumber(body.bestTimeMs || 0),
         hidden: Boolean(body.hidden),
         shield: Boolean(body.shield),
@@ -478,6 +487,7 @@ const server = http.createServer(async (req, res) => {
       const previousBestFloor = player.bestFloor;
       const previousBestTimeMs = player.bestTimeMs || 0;
       const previousSelectedTitle = player.selectedTitle || "";
+      const previousSelectedCosmetic = player.selectedCosmetic || "";
       const incomingBestFloor = Number.isFinite(Number(body.bestFloor)) ? clampNumber(body.bestFloor) : 0;
       if (Number.isFinite(Number(body.floor))) player.floor = clampPlayerNumber(body.floor, player.floor, MAX_STATE_FLOOR_JUMP, MAX_FLOOR);
       if (Number.isFinite(Number(body.kills))) player.kills = clampPlayerNumber(body.kills, player.kills, MAX_STATE_KILL_GAIN, MAX_KILLS);
@@ -497,12 +507,13 @@ const server = http.createServer(async (req, res) => {
       }
       if (Number.isFinite(Number(body.runElapsedMs))) player.runElapsedMs = clampNumber(body.runElapsedMs || 0);
       if (typeof body.selectedTitle === "string") player.selectedTitle = cleanTitle(body.selectedTitle);
+      if (typeof body.selectedCosmetic === "string") player.selectedCosmetic = cleanCosmetic(body.selectedCosmetic);
       player.bestFloor = Math.max(player.bestFloor || 0, player.floor || 0);
       for (const key of ["hidden", "shield"]) {
         if (typeof body[key] === "boolean") player[key] = body[key];
       }
       player.lastSeen = Date.now();
-      await saveRecord(player, player.gold !== previousGold || player.lives !== previousLives || player.kills !== previousKills || (player.deaths || 0) !== previousDeaths || player.bestFloor !== previousBestFloor || (player.bestTimeMs || 0) !== previousBestTimeMs || (player.selectedTitle || "") !== previousSelectedTitle);
+      await saveRecord(player, player.gold !== previousGold || player.lives !== previousLives || player.kills !== previousKills || (player.deaths || 0) !== previousDeaths || player.bestFloor !== previousBestFloor || (player.bestTimeMs || 0) !== previousBestTimeMs || (player.selectedTitle || "") !== previousSelectedTitle || (player.selectedCosmetic || "") !== previousSelectedCosmetic);
       broadcast("state");
       sendJson(req, res, 200, { ok: true });
       return;
@@ -543,7 +554,7 @@ const server = http.createServer(async (req, res) => {
         sendJson(req, res, 404, { error: "unknown player" });
         return;
       }
-      const reason = String(body.reason || `${attacker.id}이 ${target.id}을 공격했습니다.`).slice(0, 120);
+      const reason = String(body.reason || `${attacker.id} attacked ${target.id}.`).slice(0, 120);
       const targetLives = Math.max(0, Number(target.lives || 0));
       const fell = targetLives <= 0;
       if (fell) {
@@ -582,7 +593,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const ms = Math.max(500, Math.min(5000, Number(body.ms || 3000)));
-      const reason = String(body.reason || "스턴").slice(0, 80);
+      const reason = String(body.reason || "Stun").slice(0, 80);
       source.lastSeen = Date.now();
       const targetClient = clients.get(targetId);
       if (targetClient) {
@@ -667,6 +678,6 @@ setInterval(() => {
 server.listen(PORT, "0.0.0.0", () => {
   getRecords().catch(() => {});
   console.log(`Stair game online server: http://localhost:${PORT}`);
-  console.log("같은 네트워크 밖 친구에게 공유하려면 Render/Railway/Fly.io 같은 Node 서버 배포 서비스를 사용하세요.");
-  if (!fs.existsSync(INDEX)) console.warn("outputs/index.html 파일을 찾지 못했습니다.");
+  console.log("To share outside your local network, deploy this Node server on Render, Railway, Fly.io, or a similar hosting service.");
+  if (!fs.existsSync(INDEX)) console.warn("outputs/index.html was not found.");
 });

@@ -1,21 +1,21 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Endless Up Up - 실시간 무한 계단 온라인 게임</title>
-  <meta name="description" content="Endless Up Up은 계단을 끝없이 오르며 아이템, 채팅, 랭킹으로 다른 플레이어와 경쟁하는 실시간 온라인 게임입니다.">
+  <title>No End Up - Real-Time Endless Stair Climbing Game</title>
+  <meta name="description" content="No End Up is a real-time online stair climbing game where players climb endlessly, use items, chat, and compete on the leaderboard.">
   <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Endless Up Up - 실시간 무한 계단 온라인 게임">
-  <meta property="og:description" content="끝없이 이어지는 계단을 오르고, 아이템과 랭킹으로 전 세계 플레이어와 경쟁하세요.">
-  <meta property="og:site_name" content="Endless Up Up">
+  <meta property="og:title" content="No End Up - Real-Time Endless Stair Climbing Game">
+  <meta property="og:description" content="Climb endless stairs, use items, and compete with players around the world on the leaderboard.">
+  <meta property="og:site_name" content="No End Up">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Endless Up Up - 실시간 무한 계단 온라인 게임">
-  <meta name="twitter:description" content="끝없이 이어지는 계단을 오르고, 아이템과 랭킹으로 전 세계 플레이어와 경쟁하세요.">
+  <meta name="twitter:title" content="No End Up - Real-Time Endless Stair Climbing Game">
+  <meta name="twitter:description" content="Climb endless stairs, use items, and compete with players around the world on the leaderboard.">
   <!--
-    Google AdSense 준비 위치:
-    승인 신청 후 발급받은 ca-pub ID로 아래 스크립트의 주석을 해제하세요.
+    Google AdSense placeholder:
+    After approval, replace the ca-pub ID below and uncomment the script.
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0000000000000000" crossorigin="anonymous"></script>
   -->
   <style>
@@ -267,6 +267,15 @@
       gap: 7px;
       overflow: auto;
       padding-right: 2px;
+    }
+
+    .title-section {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0;
     }
 
     .title-choice {
@@ -547,6 +556,7 @@
       min-width: 0;
       overflow: hidden;
       padding: 12px;
+      pointer-events: auto;
     }
 
     .ranking.collapsed {
@@ -607,6 +617,33 @@
     .panel-toggle:hover {
       border-color: rgba(240, 189, 91, 0.48);
       color: var(--bar-active);
+    }
+
+    .rank-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 8px;
+      pointer-events: auto;
+    }
+
+    .rank-tab {
+      pointer-events: auto;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: rgba(17, 20, 26, 0.74);
+      color: var(--muted);
+      height: 28px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+      cursor: pointer;
+    }
+
+    .rank-tab.active {
+      color: var(--text);
+      border-color: rgba(240, 189, 91, 0.58);
+      background: rgba(240, 189, 91, 0.16);
     }
 
     .rank-head,
@@ -1705,33 +1742,33 @@
 
   <section class="screen" id="joinScreen">
     <form class="join-card" id="joinForm">
-      <h1>Endless Up Up</h1>
-      <p class="sub">ID와 국가를 정하고 최대한 높은 층까지 올라가세요.</p>
+      <h1>No End Up</h1>
+      <p class="sub">Choose your ID and country, then climb as high as you can.</p>
 
       <label for="playerId">ID</label>
       <input id="playerId" maxlength="14" autocomplete="off" placeholder="stairking" required>
 
-      <label for="country">국가</label>
+      <label for="country">Country</label>
       <select id="country" required>
-        <option value="KR">KR - 대한민국</option>
-        <option value="US">US - 미국</option>
-        <option value="JP">JP - 일본</option>
-        <option value="CN">CN - 중국</option>
-        <option value="GB">GB - 영국</option>
-        <option value="FR">FR - 프랑스</option>
-        <option value="DE">DE - 독일</option>
-        <option value="BR">BR - 브라질</option>
-        <option value="CA">CA - 캐나다</option>
-        <option value="AU">AU - 호주</option>
+        <option value="KR">KR - South Korea</option>
+        <option value="US">US - United States</option>
+        <option value="JP">JP - Japan</option>
+        <option value="CN">CN - China</option>
+        <option value="GB">GB - United Kingdom</option>
+        <option value="FR">FR - France</option>
+        <option value="DE">DE - Germany</option>
+        <option value="BR">BR - Brazil</option>
+        <option value="CA">CA - Canada</option>
+        <option value="AU">AU - Australia</option>
       </select>
 
-      <button class="start-btn" type="submit">게임 시작</button>
+      <button class="start-btn" type="submit">Start Game</button>
       <div class="ad-slot" aria-label="advertisement">
-        AdSense 승인 후 광고가 표시될 영역입니다.
+        Ads will appear here after AdSense approval.
       </div>
       <div class="site-links" aria-label="site links">
-        <a href="/privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>
-        <a href="/contact.html" target="_blank" rel="noopener">문의</a>
+        <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>
+        <a href="/contact.html" target="_blank" rel="noopener">Contact</a>
       </div>
     </form>
   </section>
@@ -1746,10 +1783,10 @@
         <span id="kills">K 0</span>
         <span id="gold">G 0</span>
         <span id="lives">L 0</span>
-        <span id="onlineStatus">오프라인</span>
+        <span id="onlineStatus">Offline</span>
       </div>
       <div class="next-goal" id="nextGoal">NEXT<span>100F ITEM</span></div>
-      <button class="title-btn" id="titleBtn" type="button">칭호: 자동</button>
+      <button class="title-btn" id="titleBtn" type="button">Title: Auto</button>
       <button class="boost-btn" id="boostBtn" type="button" disabled>100F UP! <span class="boost-cost">(0/500G)</span></button>
     </div>
 
@@ -1761,68 +1798,72 @@
     </div>
 
     <div class="item-bar">
-      <h2 class="panel-title">아이템</h2>
+      <h2 class="panel-title">Items</h2>
       <div class="inventory">
-        <div class="item-slot" id="item0"><span class="item-key">1</span> 비어있음</div>
-        <div class="item-slot" id="item1"><span class="item-key">2</span> 비어있음</div>
-        <div class="item-slot" id="item2"><span class="item-key">3</span> 비어있음</div>
+        <div class="item-slot" id="item0"><span class="item-key">1</span> Empty</div>
+        <div class="item-slot" id="item1"><span class="item-key">2</span> Empty</div>
+        <div class="item-slot" id="item2"><span class="item-key">3</span> Empty</div>
       </div>
     </div>
 
     <section class="ranking" id="rankingPanel">
       <div class="panel-header">
-        <h2 class="panel-title" id="rankingTitle">랭킹</h2>
-        <button class="panel-toggle" id="rankToggle" type="button" aria-label="랭킹 숨김" title="랭킹 숨김">-</button>
+        <h2 class="panel-title" id="rankingTitle">Ranking</h2>
+        <button class="panel-toggle" id="rankToggle" type="button" aria-label="Hide ranking" title="Hide ranking">-</button>
       </div>
       <div class="rank-content">
+        <div class="rank-tabs" role="tablist" aria-label="Ranking type">
+          <button class="rank-tab active" id="playerRankTab" type="button" data-rank-tab="players" role="tab" aria-selected="true">Players</button>
+          <button class="rank-tab" id="countryRankTab" type="button" data-rank-tab="countries" role="tab" aria-selected="false">Countries</button>
+        </div>
         <div class="live-leader" id="liveLeader">LIVE #1 -</div>
-        <div class="rank-head">
+        <div class="rank-head" id="rankHead">
           <span>Rank</span>
           <span>ID</span>
-          <span>국가</span>
-          <span>층수</span>
-          <span>시간</span>
+          <span>Country</span>
+          <span>Floor</span>
+          <span>Time</span>
         </div>
         <div id="rankRows"></div>
-        <div class="ad-slot" aria-label="advertisement">광고 영역</div>
+        <div class="ad-slot" aria-label="advertisement">Ad Slot</div>
       </div>
     </section>
 
     <section class="chat" id="chatPanel">
-      <h2 class="panel-title">채팅</h2>
+      <h2 class="panel-title">Chat</h2>
       <div class="chat-log" id="chatLog"></div>
       <form id="chatForm">
-        <input id="chatInput" maxlength="70" autocomplete="off" placeholder="메시지 입력">
-        <button type="submit">전송</button>
+        <input id="chatInput" maxlength="70" autocomplete="off" placeholder="Type a message">
+        <button type="submit">Send</button>
       </form>
     </section>
 
     <div class="notice" id="notice">
-      <strong>조작</strong><br>
-      ← / ↑ / →: 이동, ↓: 숨기, 1/2/3: 아이템
+      <strong>Controls</strong><br>
+      ← / ↑ / →: Move, ↓: Hide, 1/2/3: Items
     </div>
   </div>
 
   <div class="help-modal" id="helpModal" hidden>
     <div class="help-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
       <div class="help-head">
-        <h2 id="helpTitle">도움말</h2>
-        <button class="help-close" id="helpClose" type="button" aria-label="닫기">x</button>
+        <h2 id="helpTitle">Help</h2>
+        <button class="help-close" id="helpClose" type="button" aria-label="Close">x</button>
       </div>
       <div class="help-body">
-        <p>방향키로 이동하고, 아래키로 숨을 수 있습니다.</p>
-        <p>아이템은 1, 2, 3번 키로 사용합니다.</p>
-        <p>F1을 누르면 도움말을 다시 볼 수 있습니다.</p>
+        <p>Use the arrow keys to move. Press Down to hide.</p>
+        <p>Use items with the 1, 2, and 3 keys.</p>
+        <p>Press F1 to open this help again.</p>
       </div>
-      <button class="help-confirm" id="helpConfirm" type="button">확인</button>
+      <button class="help-confirm" id="helpConfirm" type="button">OK</button>
     </div>
   </div>
 
   <div class="title-modal" id="titleModal" hidden>
     <div class="title-card" role="dialog" aria-modal="true" aria-labelledby="titleModalTitle">
       <div class="help-head">
-        <h2 id="titleModalTitle">칭호 선택</h2>
-        <button class="help-close" id="titleClose" type="button" aria-label="닫기">x</button>
+        <h2 id="titleModalTitle">Choose Title</h2>
+        <button class="help-close" id="titleClose" type="button" aria-label="Close">x</button>
       </div>
       <div class="title-list" id="titleList"></div>
     </div>
@@ -1876,7 +1917,10 @@
       rankingPanel: document.getElementById("rankingPanel"),
       rankToggle: document.getElementById("rankToggle"),
       rankingTitle: document.getElementById("rankingTitle"),
+      playerRankTab: document.getElementById("playerRankTab"),
+      countryRankTab: document.getElementById("countryRankTab"),
       liveLeader: document.getElementById("liveLeader"),
+      rankHead: document.getElementById("rankHead"),
       rankRows: document.getElementById("rankRows"),
       chatPanel: document.getElementById("chatPanel"),
       chatLog: document.getElementById("chatLog"),
@@ -1907,30 +1951,35 @@
     const COMBO_GOLD_REWARD = 10;
     const COMBO_ITEM_STEP = 50;
     const JUMP_DURATION = 240;
-    const BOT_FILLER_COUNT = 5;
+    const BOT_MIN_COUNT = 3;
+    const BOT_MAX_COUNT = 7;
+    const BOT_POPULATION_MIN_INTERVAL = 45000;
+    const BOT_POPULATION_RANDOM_INTERVAL = 75000;
     const BOT_REMOVE_POPULATION = 10;
+    const BOT_RENAME_MIN_INTERVAL = 120000;
+    const BOT_RENAME_RANDOM_INTERVAL = 120000;
     const PROFILE_KEY = "stairProfile";
     const PLAYER_KEY = "stairPlayerKey";
     const HELP_SEEN_KEY = "stairHelpSeen";
     const BOT_DATA = [
-      ["NOVA", "US"],
-      ["MIN", "KR"],
-      ["JIN", "JP"],
-      ["SOL", "BR"],
-      ["KAI", "DE"],
-      ["LUNA", "FR"],
-      ["AXEL", "GB"],
-      ["MIA", "CA"],
-      ["RIO", "AU"],
-      ["TAN", "CN"],
-      ["YUI", "JP"]
+      ["Alex", "US"],
+      ["Minji", "KR"],
+      ["Haruto", "JP"],
+      ["Sofia", "BR"],
+      ["Leon", "DE"],
+      ["Camille", "FR"],
+      ["Oliver", "GB"],
+      ["Mia", "CA"],
+      ["Lucas", "AU"],
+      ["Yuna", "KR"],
+      ["Rin", "JP"]
     ];
     const ITEMS = [
-      { type: "boulder", name: "낙석", short: "ROCK" },
-      { type: "warp", name: "워프", short: "WARP" },
-      { type: "shield", name: "보호막", short: "SHLD" },
-      { type: "hideReset", name: "숨기 초기화", short: "HIDE" },
-      { type: "missile", name: "미사일", short: "MSL" }
+      { type: "boulder", name: "Boulder", short: "ROCK" },
+      { type: "warp", name: "Warp", short: "WARP" },
+      { type: "shield", name: "Shield", short: "SHLD" },
+      { type: "hideReset", name: "Hide Reset", short: "HIDE" },
+      { type: "missile", name: "Missile", short: "MSL" }
     ];
     const FOOTSTEP_SOUND_URL = "";
     const footstepPool = FOOTSTEP_SOUND_URL ? Array.from({ length: 4 }, () => {
@@ -1945,7 +1994,7 @@
 
     const state = {
       mode: "join",
-      player: { id: "", country: "KR", floor: 0, bestFloor: 0, selectedTitle: "", hidden: false, shield: false, shieldUntil: 0, stunnedUntil: 0 },
+      player: { id: "", country: "KR", floor: 0, bestFloor: 0, selectedTitle: "", selectedCosmetic: "", hidden: false, shield: false, shieldUntil: 0, stunnedUntil: 0 },
       bots: [],
       generated: new Map(),
       positions: [{ x: 0, y: 0 }],
@@ -1955,7 +2004,7 @@
       rankingCollapsed: sessionStorage.getItem("rankingCollapsed") === "true",
       lastHideAt: -HIDE_COOLDOWN,
       noticeUntil: 0,
-      noticeText: "ID와 국가를 설정하고 게임을 시작하세요.",
+      noticeText: "Choose your ID and country to start.",
       combo: 0,
       comboLastInputAt: 0,
       floorHold: { floor: 0, since: 0, punished: false },
@@ -1968,7 +2017,14 @@
       rewardedLifeMilestones: new Set(),
       remotePlayers: [],
       leaderboard: [],
+      rankingTab: "players",
+      nextRankingAnnouncementAt: 0,
+      lastPlayerLeaderKey: "",
+      lastCountryLeaderKey: "",
       serverPopulation: 1,
+      botTargetCount: 0,
+      nextBotPopulationAt: 0,
+      nextBotRenameAt: 0,
       online: {
         enabled: location.protocol === "http:" || location.protocol === "https:",
         connected: false,
@@ -1978,7 +2034,7 @@
         syncTimer: 0
       },
       chat: [
-        { id: "SYSTEM", country: "--", text: "같은 맵에서 계단을 오르고 아이템으로 경쟁하세요." }
+        { id: "SYSTEM", country: "--", text: "Climb the same map and compete with items." }
       ],
       flash: 0,
       shake: 0,
@@ -2123,6 +2179,7 @@
         floor: state.player.floor,
         bestFloor: state.player.bestFloor,
         selectedTitle: state.player.selectedTitle,
+        selectedCosmetic: state.player.selectedCosmetic,
         hidden: state.player.hidden,
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
@@ -2230,56 +2287,116 @@
       return state.positions[floor];
     }
 
-    function resetBots(count = BOT_FILLER_COUNT) {
-      const now = performance.now();
-      state.bots = BOT_DATA.slice(0, count).map(([id, country], i) => ({
-        id: `EASY ${id}`,
-        country,
-        floor: 4 + i * 4,
-        bestFloor: 4 + i * 4,
-        easy: true,
+    function randomBotInventory() {
+      const shuffled = ITEMS
+        .map((item) => ({ item, roll: Math.random() }))
+        .sort((a, b) => a.roll - b.roll)
+        .map((entry) => entry.item);
+      return shuffled.slice(0, 3);
+    }
+
+    function nextBotRenameTime(now = performance.now()) {
+      return now + BOT_RENAME_MIN_INTERVAL + Math.random() * BOT_RENAME_RANDOM_INTERVAL;
+    }
+
+    function randomBotCount(except = 0) {
+      const range = BOT_MAX_COUNT - BOT_MIN_COUNT + 1;
+      let count = BOT_MIN_COUNT + Math.floor(Math.random() * range);
+      if (range > 1 && count === except) {
+        count = BOT_MIN_COUNT + ((count - BOT_MIN_COUNT + 1) % range);
+      }
+      return count;
+    }
+
+    function nextBotPopulationTime(now = performance.now()) {
+      return now + BOT_POPULATION_MIN_INTERVAL + Math.random() * BOT_POPULATION_RANDOM_INTERVAL;
+    }
+
+    function pickBotIdentity(index, usedNames = new Set()) {
+      const candidates = BOT_DATA.filter(([name]) => !usedNames.has(name));
+      const pool = candidates.length ? candidates : BOT_DATA;
+      const [name, country] = pool[Math.floor(Math.random() * pool.length)];
+      usedNames.add(name);
+      return {
+        id: index < BOT_DATA.length ? name : `${name}${index + 1}`,
+        country
+      };
+    }
+
+    function createBot(index, now = performance.now(), usedNames = new Set()) {
+      const identity = pickBotIdentity(index, usedNames);
+      const skill = 0.25 + Math.random() * 0.75;
+      const floor = 4 + index * 4;
+      return {
+        key: `bot-${index}`,
+        id: identity.id,
+        country: identity.country,
+        floor,
+        bestFloor: floor,
+        skill,
         hidden: false,
         shield: false,
         shieldUntil: 0,
-        nextMoveAt: now + 900 + Math.random() * 1300,
-        baseSpeed: 860 + Math.random() * 740,
-        rhythm: 0.92 + Math.random() * 0.82,
-        hesitation: 0.12 + Math.random() * 0.16,
-        mistake: 0.04 + Math.random() * 0.055,
-        inventory: [],
-        nextItemAt: Number.POSITIVE_INFINITY,
+        nextMoveAt: now + 450 + Math.random() * 1500,
+        baseSpeed: 980 - skill * 420 + Math.random() * 260,
+        rhythm: 0.78 + Math.random() * 0.55,
+        hesitation: 0.2 - skill * 0.14 + Math.random() * 0.06,
+        mistake: 0.07 - skill * 0.045 + Math.random() * 0.018,
+        hideChance: 0.018 + Math.random() * 0.034,
+        itemAggression: 0.35 + skill * 0.55,
+        itemCadence: 18000 + Math.random() * 26000 - skill * 7000,
+        inventory: randomBotInventory(),
+        nextItemAt: now + 8000 + Math.random() * 18000,
         jump: { start: 0, duration: 0 },
         stunnedUntil: 0
-      }));
+      };
     }
 
-    function ensureBotCount(count) {
+    function resetBots(count = randomBotCount()) {
+      const now = performance.now();
+      const usedNames = new Set();
+      state.botTargetCount = count;
+      state.nextBotPopulationAt = nextBotPopulationTime(now);
+      state.bots = Array.from({ length: count }, (_, index) => createBot(index, now, usedNames));
+      state.nextBotRenameAt = nextBotRenameTime(now);
+    }
+
+    function syncBotCount(count) {
+      const now = performance.now();
+      if (state.bots.length > count) {
+        state.bots.splice(count);
+        return;
+      }
       if (state.bots.length >= count) return;
       const existing = state.bots.length;
-      const now = performance.now();
+      const usedNames = new Set(state.bots.map((bot) => bot.id));
       for (let i = existing; i < count; i++) {
-        const [id, country] = BOT_DATA[i % BOT_DATA.length];
-        const floor = 4 + i * 4;
-        state.bots.push({
-          id: i < BOT_DATA.length ? `EASY ${id}` : `EASY ${id}${i + 1}`,
-          country,
-          floor,
-          bestFloor: floor,
-          easy: true,
-          hidden: false,
-          shield: false,
-          shieldUntil: 0,
-          nextMoveAt: now + 900 + Math.random() * 1300,
-          baseSpeed: 860 + Math.random() * 740,
-          rhythm: 0.92 + Math.random() * 0.82,
-          hesitation: 0.12 + Math.random() * 0.16,
-          mistake: 0.04 + Math.random() * 0.055,
-          inventory: [],
-          nextItemAt: Number.POSITIVE_INFINITY,
-          jump: { start: 0, duration: 0 },
-          stunnedUntil: 0
-        });
+        state.bots.push(createBot(i, now, usedNames));
       }
+      if (!state.nextBotRenameAt) state.nextBotRenameAt = nextBotRenameTime(now);
+    }
+
+    function updateBotPopulation(now) {
+      if (!state.botTargetCount) {
+        state.botTargetCount = randomBotCount();
+        state.nextBotPopulationAt = nextBotPopulationTime(now);
+      }
+      if (now >= state.nextBotPopulationAt) {
+        state.botTargetCount = randomBotCount(state.botTargetCount);
+        state.nextBotPopulationAt = nextBotPopulationTime(now);
+      }
+      syncBotCount(state.botTargetCount);
+    }
+
+    function rotateBotNames(now) {
+      if (!state.bots.length || now < state.nextBotRenameAt) return;
+      const usedNames = new Set();
+      state.bots.forEach((bot, index) => {
+        const identity = pickBotIdentity(index, usedNames);
+        bot.id = identity.id;
+        bot.country = identity.country;
+      });
+      state.nextBotRenameAt = nextBotRenameTime(now);
     }
 
     function resize() {
@@ -2293,7 +2410,7 @@
     function showNotice(text) {
       state.noticeText = text;
       state.noticeUntil = performance.now() + 2600;
-        ui.notice.innerHTML = "<strong>조작</strong><br>← / ↑ / →: 이동, ↓: 숨기, 1/2/3: 아이템";
+        ui.notice.innerHTML = "<strong>Controls</strong><br>← / ↑ / →: Move, ↓: Hide, 1/2/3: Items";
     }
 
     function playFootstep() {
@@ -2369,8 +2486,8 @@
     function opponents() {
       if (!state.online.enabled) return state.bots;
       if (state.serverPopulation < BOT_REMOVE_POPULATION) {
-        ensureBotCount(BOT_FILLER_COUNT);
-        return [...state.remotePlayers, ...state.bots.slice(0, BOT_FILLER_COUNT)];
+        if (!state.botTargetCount) updateBotPopulation(performance.now());
+        return [...state.remotePlayers, ...state.bots.slice(0, state.botTargetCount)];
       }
       state.bots = [];
       return state.remotePlayers;
@@ -2389,6 +2506,7 @@
             floor: Number(player.floor || 0),
             bestFloor: Number(player.bestFloor || player.floor || 0),
             selectedTitle: String(player.selectedTitle || ""),
+            selectedCosmetic: String(player.selectedCosmetic || ""),
             hidden: Boolean(player.hidden),
             shield: Boolean(player.shield),
             shieldUntil: Number(player.shieldUntil || 0),
@@ -2406,6 +2524,7 @@
         if (own && Number.isFinite(Number(own.gold))) state.gold = Number(own.gold || 0);
         if (own && Number.isFinite(Number(own.lives))) state.lives = Number(own.lives || 0);
         if (own && typeof own.selectedTitle === "string") state.player.selectedTitle = own.selectedTitle;
+        if (own && typeof own.selectedCosmetic === "string") state.player.selectedCosmetic = own.selectedCosmetic;
         if (own && Number.isFinite(Number(own.bestTimeMs)) && Number(own.bestTimeMs) > 0) state.bestTimeMs = Number(own.bestTimeMs);
         if (own && Number.isFinite(Number(own.floor))) {
           const serverFloor = Math.max(0, Number(own.floor || 0));
@@ -2424,6 +2543,7 @@
           floor: Number(player.floor || 0),
           bestFloor: Number(player.bestFloor || player.floor || 0),
           selectedTitle: String(player.selectedTitle || ""),
+          selectedCosmetic: String(player.selectedCosmetic || ""),
           kills: Number(player.kills || 0),
           deaths: Number(player.deaths || 0),
           gold: Number(player.gold || 0),
@@ -2450,7 +2570,7 @@
         return await response.json();
       } catch (error) {
         state.online.connected = false;
-        ui.onlineStatus.textContent = "오프라인";
+        ui.onlineStatus.textContent = "Offline";
         return null;
       }
     }
@@ -2463,6 +2583,7 @@
         floor: state.player.floor,
         bestFloor: state.player.bestFloor,
         selectedTitle: state.player.selectedTitle,
+        selectedCosmetic: state.player.selectedCosmetic,
         hidden: state.player.hidden,
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
@@ -2504,6 +2625,7 @@
         floor: state.player.floor,
         bestFloor: state.player.bestFloor,
         selectedTitle: state.player.selectedTitle,
+        selectedCosmetic: state.player.selectedCosmetic,
         hidden: state.player.hidden,
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
@@ -2532,18 +2654,18 @@
           state.player.hidden = false;
           resetCombo();
           resetFloorHold();
-          showNotice(`${data.reason || "공격"}: 목숨 -1 / ${state.lives}`);
-          addChat("SYSTEM", "--", `${data.reason || "공격"}: 목숨 -1 / ${state.lives}`);
+          showNotice(`${data.reason || "Attack"}: Life -1 / ${state.lives}`);
+          addChat("SYSTEM", "--", `${data.reason || "Attack"}: Life -1 / ${state.lives}`);
           syncOnlineState();
           data.type = "state";
         }
         if (data.type === "attacked") {
-          respawnAtZero(data.reason || "공격받았습니다.");
+          respawnAtZero(data.reason || "You were attacked.");
           syncOnlineState();
         }
         if (data.type === "stunned") {
-          if (applyStun(state.player, Number(data.ms || 3000), data.reason || "스턴")) {
-            showNotice(`${data.reason || "스턴"}: 스턴`);
+          if (applyStun(state.player, Number(data.ms || 3000), data.reason || "Stun")) {
+            showNotice(`${data.reason || "Stun"}: Stun`);
           }
           syncOnlineState();
         }
@@ -2551,12 +2673,12 @@
       };
       state.online.events.onerror = () => {
         state.online.connected = false;
-        ui.onlineStatus.textContent = "온라인";
+        ui.onlineStatus.textContent = "Online";
       };
       clearInterval(state.online.syncTimer);
       state.online.syncTimer = setInterval(syncOnlineState, 900);
-      showNotice("온라인에 연결되었습니다.");
-      addChat("SYSTEM", "--", "온라인에 연결되었습니다.");
+      showNotice("Connected online.");
+      addChat("SYSTEM", "--", "Connected online.");
       syncOnlineState();
     }
 
@@ -2570,17 +2692,17 @@
       if (result && Number.isFinite(Number(result.kills))) state.kills = Number(result.kills);
       if (result && Number.isFinite(Number(result.gold))) {
         const nextGold = Number(result.gold);
-        if (nextGold > state.gold) showNotice(`처치 보상 +${KILL_GOLD_REWARD}g (보유 ${nextGold}g)`);
+        if (nextGold > state.gold) showNotice(`Kill reward +${KILL_GOLD_REWARD}g (Owned ${nextGold}g)`);
         state.gold = nextGold;
       }
       if (result && result.target) {
         const targetName = result.target.id || target.id || "TARGET";
         if (result.target.fell) {
-          showNotice(`${targetName} 0층으로 추락`);
-          addChat("SYSTEM", "--", `${targetName} 0층으로 추락`);
+          showNotice(`${targetName} fell to 0F`);
+          addChat("SYSTEM", "--", `${targetName} fell to 0F`);
         } else {
-          showNotice(`${targetName}: 목숨 -1 / ${result.target.lives}`);
-          addChat("SYSTEM", "--", `${targetName}: 목숨 -1 / ${result.target.lives}`);
+          showNotice(`${targetName}: Life -1 / ${result.target.lives}`);
+          addChat("SYSTEM", "--", `${targetName}: Life -1 / ${result.target.lives}`);
         }
       }
       saveSessionProfile();
@@ -2601,9 +2723,9 @@
       sessionStorage.setItem("rankingCollapsed", String(collapsed));
       ui.rankingPanel.classList.toggle("collapsed", collapsed);
       ui.rankToggle.textContent = collapsed ? "+" : "-";
-      ui.rankToggle.setAttribute("aria-label", collapsed ? "랭킹 열기" : "랭킹 숨김");
-      ui.rankToggle.title = collapsed ? "랭킹 열기" : "랭킹 숨김";
-      ui.rankingTitle.textContent = "랭킹";
+      ui.rankToggle.setAttribute("aria-label", collapsed ? "Show ranking" : "Hide ranking");
+      ui.rankToggle.title = collapsed ? "Show ranking" : "Hide ranking";
+      ui.rankingTitle.textContent = "Ranking";
     }
 
     function formatDuration(ms) {
@@ -2625,6 +2747,79 @@
       if (liveTime > 0 && Number(player.floor || 0) >= Number(player.bestFloor || 0)) return liveTime;
       if (player === state.player && state.player.floor >= state.player.bestFloor) return runElapsedMs();
       return 0;
+    }
+
+    function playerRankKey(player) {
+      return String(player.onlineId || player.key || `${player.country || "--"}:${player.id || "PLAYER"}`);
+    }
+
+    function buildPlayerRankings() {
+      const rankMap = new Map();
+      for (const player of [...state.leaderboard, state.player, ...opponents()]) {
+        if (!player.id) continue;
+        const key = playerRankKey(player);
+        const row = {
+          ...player,
+          rankKey: key,
+          bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)),
+          bestTimeMs: Number(player.bestTimeMs || 0),
+          runElapsedMs: Number(player.runElapsedMs || 0)
+        };
+        if (player === state.player) {
+          row.kills = state.kills;
+          row.deaths = state.deaths;
+        }
+        const previous = rankMap.get(key);
+        if (!previous || row.bestFloor > previous.bestFloor || (row.bestFloor === previous.bestFloor && rankingTimeMs(row) > 0 && (!rankingTimeMs(previous) || rankingTimeMs(row) < rankingTimeMs(previous)))) {
+          rankMap.set(key, row);
+        }
+      }
+      return [...rankMap.values()].sort((a, b) => b.bestFloor - a.bestFloor || rankingTimeMs(a) - rankingTimeMs(b));
+    }
+
+    function buildCountryRankings(players) {
+      const countryMap = new Map();
+      for (const player of players) {
+        const country = String(player.country || "--").toUpperCase();
+        const previous = countryMap.get(country);
+        const bestFloor = Number(player.bestFloor || 0);
+        const row = previous || { country, bestFloor: 0, bestTimeMs: 0, leader: player, players: 0 };
+        row.players += 1;
+        if (!previous || bestFloor > row.bestFloor || (bestFloor === row.bestFloor && rankingTimeMs(player) > 0 && (!row.bestTimeMs || rankingTimeMs(player) < row.bestTimeMs))) {
+          row.bestFloor = bestFloor;
+          row.bestTimeMs = rankingTimeMs(player);
+          row.leader = player;
+        }
+        countryMap.set(country, row);
+      }
+      return [...countryMap.values()].sort((a, b) => b.bestFloor - a.bestFloor || a.bestTimeMs - b.bestTimeMs);
+    }
+
+    function playerIsRankOne(player, players = buildPlayerRankings()) {
+      if (!player || !player.id || !players.length) return false;
+      return playerRankKey(players[0]) === playerRankKey(player);
+    }
+
+    function countryIsRankOne(player, countries = buildCountryRankings(buildPlayerRankings())) {
+      if (!player || !player.country || !countries.length) return false;
+      return String(countries[0].country).toUpperCase() === String(player.country).toUpperCase();
+    }
+
+    function unlockedCosmeticsForPlayer(player = state.player) {
+      const players = buildPlayerRankings();
+      const countries = buildCountryRankings(players);
+      return [
+        { type: "", name: "None", requirement: "No decoration", unlocked: true },
+        { type: "crown", name: "Crown", requirement: "Player #1", unlocked: playerIsRankOne(player, players) },
+        { type: "wings", name: "Wings", requirement: "Country #1", unlocked: countryIsRankOne(player, countries) }
+      ];
+    }
+
+    function activeCosmeticForEntity(entity) {
+      const selected = String(entity && entity.selectedCosmetic || "");
+      if (selected === "crown" && playerIsRankOne(entity)) return "crown";
+      if (selected === "wings" && countryIsRankOne(entity)) return "wings";
+      return "";
     }
 
     function nextGoalInfo() {
@@ -2653,10 +2848,10 @@
 
     function cooldownText() {
       const left = hideCooldownLeft();
-      if (left <= 0) return "숨기 OK";
+      if (left <= 0) return "HIDE OK";
       const min = Math.floor(left / 60000);
       const sec = Math.ceil((left % 60000) / 1000);
-      return `숨기 ${min}:${String(sec).padStart(2, "0")}`;
+      return `Hide ${min}:${String(sec).padStart(2, "0")}`;
     }
 
     function hideCooldownLeft() {
@@ -2780,8 +2975,8 @@
       const emptyIndex = state.inventory.findIndex((slot) => !slot);
       const index = emptyIndex >= 0 ? emptyIndex : 0;
       state.inventory[index] = item;
-      showNotice(`${item.name} 획득!`);
-      addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 ${item.name} 아이템을 획득했습니다.`);
+      showNotice(`${item.name} acquired!`);
+      addChat("SYSTEM", "--", `${state.player.id || "Player"} ${item.name} acquired an item.`);
       saveSessionProfile();
     }
 
@@ -2804,8 +2999,8 @@
         if (milestone > 0 && !state.rewardedLifeMilestones.has(rewardKey)) {
           state.rewardedLifeMilestones.add(rewardKey);
           state.lives += 1;
-          showNotice(`${milestone * LIFE_REWARD_INTERVAL}층 보너스: 목숨 +1`);
-          addChat("SYSTEM", "--", `${state.player.id || "플레이어"}님이 목숨 +1을 획득했습니다.`);
+          showNotice(`${milestone * LIFE_REWARD_INTERVAL}F bonus: Life +1`);
+          addChat("SYSTEM", "--", `${state.player.id || "Player"}  gained Life +1.`);
         }
       }
     }
@@ -2813,8 +3008,8 @@
     function applyStun(target, ms, source) {
       if (hasShield(target)) {
         clearShield(target);
-        showNotice(`${target.id} 蹂댄샇留됱씠 ${source}??瑜? 留됱븯?듬땲??`);
-        addChat("SYSTEM", "--", `${target.id} 蹂댄샇留됱씠 ${source}??瑜? 留됱븯?듬땲??`);
+        showNotice(`${target.id} blocked ${source} with Shield.`);
+        addChat("SYSTEM", "--", `${target.id} blocked ${source} with Shield.`);
         return false;
       }
       target.stunnedUntil = performance.now() + ms;
@@ -2837,43 +3032,43 @@
         ? state.player
         : effect.targetKind === "remote"
           ? state.remotePlayers.find((player) => player.onlineId === effect.targetId)
-          : state.bots.find((bot) => bot.id === effect.targetId);
+          : state.bots.find((bot) => (bot.key || bot.id) === effect.targetId);
       if (!target) {
-        addChat("SYSTEM", "--", `미사일 실패: ${effect.targetName}`);
+        addChat("SYSTEM", "--", `Missile failed: ${effect.targetName}`);
         return;
       }
       const targetFloor = target.floor;
       const landedFloor = nearestLowerSamePositionFloor(targetFloor);
       if (effect.targetKind === "remote") {
-        attackRemote(target, `${effect.sourceId} 미사일 명중`);
+        attackRemote(target, `${effect.sourceId} Missile hit`);
         effect.hit = true;
         effect.landedFloor = landedFloor;
         effect.targetFloor = targetFloor;
-        showNotice(`${effect.sourceId} 미사일이 ${target.id}에게 명중!`);
-        addChat("SYSTEM", "--", `미사일 명중: ${effect.sourceId} -> ${target.id}`);
+        showNotice(`${effect.sourceId} missile hit ${target.id}!`);
+        addChat("SYSTEM", "--", `Missile hit: ${effect.sourceId} -> ${target.id}`);
         return;
       }
-      if (applyStun(target, MISSILE_STUN, "미사일")) {
+      if (applyStun(target, MISSILE_STUN, "Missile")) {
         target.floor = landedFloor;
         target.hidden = false;
         if (target === state.player) pulseDanger(1);
         effect.hit = true;
         effect.landedFloor = landedFloor;
         effect.targetFloor = targetFloor;
-        showNotice(`${effect.sourceId} 미사일이 ${target.id || "플레이어"}에게 명중!`);
-        addChat("SYSTEM", "--", `미사일 명중: ${effect.sourceId} -> ${target.id || "플레이어"}, ${targetFloor}F에서 ${landedFloor}F로 추락`);
+        showNotice(`${effect.sourceId} missile hit ${target.id || "Player"}!`);
+        addChat("SYSTEM", "--", `Missile hit: ${effect.sourceId} -> ${target.id || "Player"}, fell from ${targetFloor}F to ${landedFloor}F`);
       } else {
         effect.hit = false;
         effect.landedFloor = targetFloor;
         effect.targetFloor = targetFloor;
-        addChat("SYSTEM", "--", `미사일 방어: ${target.id || "플레이어"}`);
+        addChat("SYSTEM", "--", `Missile blocked: ${target.id || "Player"}`);
       }
     }
 
     function useItem(index) {
       if (state.mode !== "play") return;
       if (performance.now() < state.player.stunnedUntil) {
-        showNotice("스턴 중에는 사용할 수 없습니다.");
+        showNotice("Cannot use this while stunned.");
         return;
       }
       const item = state.inventory[index];
@@ -2942,23 +3137,34 @@
       saveSessionProfile();
     }
 
+    function chooseBotItem(bot) {
+      const playerDelta = state.player.floor - bot.floor;
+      const has = (type) => bot.inventory.find((item) => item.type === type);
+      if (!hasShield(bot) && Math.abs(playerDelta) <= 8 && has("shield")) return has("shield");
+      if (playerDelta > 18 && has("missile")) return has("missile");
+      if (playerDelta > 35 && has("warp")) return has("warp");
+      if (playerDelta <= 0 && playerDelta >= -100 && has("boulder")) return has("boulder");
+      if (Math.abs(playerDelta) <= 14 && !bot.hidden && has("hideReset")) return has("hideReset");
+      return bot.inventory[Math.floor(Math.random() * bot.inventory.length)];
+    }
+
     function botUseItem(bot, now) {
-      if (bot.easy) return;
       if (!bot.inventory.length || now < bot.nextItemAt || now < bot.stunnedUntil || state.mode !== "play") return;
-      const item = bot.inventory.shift();
-      bot.nextItemAt = now + 45000 + Math.random() * 65000;
+      const item = chooseBotItem(bot);
+      const itemIndex = bot.inventory.indexOf(item);
+      if (itemIndex >= 0) bot.inventory.splice(itemIndex, 1);
+      bot.nextItemAt = now + bot.itemCadence + Math.random() * 26000;
       bot.inventory.push(ITEMS[Math.floor(Math.random() * ITEMS.length)]);
 
       if (item.type === "boulder") {
         const minFloor = Math.max(0, bot.floor - 100);
         const hit = state.player.floor >= minFloor && state.player.floor <= bot.floor;
         addBoulderEffect(bot.floor, minFloor, hit ? 1 : 0);
-        if (hit && applyStun(state.player, BOULDER_STUN, "낙석")) {
-          showNotice(`${bot.id} 낙석 적중`);
-          addChat("SYSTEM", "--", `${bot.id} 낙석: 플레이어 스턴`);
-          addKillReward();
+        if (hit && applyStun(state.player, BOULDER_STUN, "Boulder")) {
+          showNotice(`${bot.id} Boulder hit`);
+          addChat("SYSTEM", "--", `${bot.id} Boulder: player stunned`);
         } else {
-          addChat("SYSTEM", "--", `${bot.id} 낙석: 명중 없음`);
+          addChat("SYSTEM", "--", `${bot.id} Boulder: no hit`);
         }
       }
 
@@ -2969,7 +3175,7 @@
 
       if (item.type === "shield") {
         setShield(bot);
-        addChat("SYSTEM", "--", `${bot.id} 蹂댄샇留?5珥??ъ슜`);
+        addChat("SYSTEM", "--", `${bot.id} used Shield for 5s`);
       }
 
       if (item.type === "warp") {
@@ -2978,13 +3184,13 @@
         bot.bestFloor = Math.max(bot.bestFloor || 0, bot.floor);
         bot.hidden = false;
         addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
-        addChat("SYSTEM", "--", `${bot.id} 100층 워프`);
+        addChat("SYSTEM", "--", `${bot.id} warped +100F`);
       }
 
       if (item.type === "hideReset") {
         bot.hidden = true;
         bot.nextMoveAt = now + 900 + Math.random() * 1200;
-        addChat("SYSTEM", "--", `${bot.id} 은신 상태`);
+        addChat("SYSTEM", "--", `${bot.id} is hidden`);
       }
     }
 
@@ -2992,8 +3198,8 @@
       if (!hasShield(state.player)) return false;
       clearShield(state.player);
       state.player.hidden = false;
-      showNotice(`보호막 방어: ${reason}`);
-      addChat("SYSTEM", "--", `${state.player.id || "플레이어"}의 보호막이 공격을 막았습니다.`);
+      showNotice(`Shield blocked: ${reason}`);
+      addChat("SYSTEM", "--", `${state.player.id || "Player"} blocked the attack with Shield.`);
       return true;
     }
 
@@ -3009,8 +3215,8 @@
         resetCombo();
         state.player.hidden = false;
         pulseDanger(0.45);
-        showNotice(`목숨 -1 / ${state.lives}`);
-        addChat("SYSTEM", "--", `${state.player.id || "플레이어"}: 목숨 -1`);
+        showNotice(`Life -1 / ${state.lives}`);
+        addChat("SYSTEM", "--", `${state.player.id || "Player"}: Life -1`);
         syncOnlineState();
         return;
       }
@@ -3023,7 +3229,7 @@
       state.climbFlash = { floor: -1, start: 0, duration: 0 };
       joinScreen.classList.add("hidden");
       showNotice(reason);
-      addChat("SYSTEM", "--", `${state.player.id || "플레이어"} 0층으로 추락`);
+      addChat("SYSTEM", "--", `${state.player.id || "Player"} fell to 0F`);
       syncOnlineState();
     }
 
@@ -3035,12 +3241,12 @@
         resetCombo();
         state.player.hidden = false;
         pulseDanger(0.5);
-        showNotice(`${reason}: 목숨 -1 / ${state.lives}`);
-        addChat("SYSTEM", "--", `${state.player.id || "플레이어"}: ${reason} 목숨 -1`);
+        showNotice(`${reason}: Life -1 / ${state.lives}`);
+        addChat("SYSTEM", "--", `${state.player.id || "Player"}: ${reason} Life -1`);
         syncOnlineState();
         return true;
       }
-      respawnAtZero(`${reason}: 0층으로 추락`);
+      respawnAtZero(`${reason}: fell to 0F`);
       return false;
     }
 
@@ -3058,24 +3264,26 @@
     }
 
     function fireMissile(fromEntity, target) {
-      addMissileEffect(fromEntity.floor, target.floor, target.onlineId || target.id, target.floor, false, target.onlineId ? "remote" : target === state.player ? "player" : "bot", fromEntity.id || "YOU", target.id);
-      showNotice(`${target.id}을(를) 미사일로 저격!`);
-      addChat("SYSTEM", "--", `${fromEntity.id || "YOU"} 미사일 발사 -> ${target.id}`);
+      const targetKind = target.onlineId ? "remote" : target === state.player ? "player" : "bot";
+      const targetId = target.onlineId || (targetKind === "bot" ? target.key : target.id);
+      addMissileEffect(fromEntity.floor, target.floor, targetId, target.floor, false, targetKind, fromEntity.id || "YOU", target.id);
+      showNotice(`${target.id} targeted with Missile!`);
+      addChat("SYSTEM", "--", `${fromEntity.id || "YOU"} Missile fired -> ${target.id}`);
     }
     function addKillReward() {
       state.gold += KILL_GOLD_REWARD;
       saveSessionProfile();
-      showNotice(`泥섏튂 蹂댁긽 +${KILL_GOLD_REWARD}g`);
+      showNotice(`Kill reward +${KILL_GOLD_REWARD}G`);
     }
 
     function useGoldBoost() {
       if (state.mode !== "play") return;
       if (state.gold < 500) {
-      showNotice("500g 사용: 100층 위로 이동했습니다.");
+      showNotice("Spent 500G: moved up 100F.");
         return;
       }
       if (performance.now() < state.player.stunnedUntil) {
-        showNotice("스턴 중에는 사용할 수 없습니다.");
+        showNotice("Cannot use this while stunned.");
         return;
       }
       const previousFloor = state.player.floor;
@@ -3088,7 +3296,7 @@
       state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 640 };
       checkItemReward(previousFloor, state.player.floor);
       checkLifeReward(previousFloor, state.player.floor);
-      showNotice("500g 사용: 100층 위로 이동했습니다.");
+      showNotice("Spent 500G: moved up 100F.");
       syncOnlineState();
     }
 
@@ -3099,12 +3307,16 @@
       state.player.floor = 0;
       state.player.bestFloor = 0;
       state.player.selectedTitle = "";
+      state.player.selectedCosmetic = "";
       state.runStartedAt = Date.now();
       state.bestTimeMs = 0;
       state.kills = 0;
       state.deaths = 0;
       state.gold = 0;
       state.lives = 0;
+      state.nextRankingAnnouncementAt = 0;
+      state.lastPlayerLeaderKey = "";
+      state.lastCountryLeaderKey = "";
       state.online.playerKey = getPlayerKey();
       resetRunState();
       state.inventory = [null, null, null];
@@ -3114,8 +3326,8 @@
     resetBots();
       joinScreen.classList.add("hidden");
       saveSessionProfile();
-      showNotice("게임 시작!");
-      addChat("SYSTEM", "--", `${id}님이 게임을 시작했습니다.`);
+      showNotice("Game started!");
+      addChat("SYSTEM", "--", `${id} started the game.`);
       if (!sessionStorage.getItem(HELP_SEEN_KEY)) {
         openHelp();
         sessionStorage.setItem(HELP_SEEN_KEY, "1");
@@ -3135,6 +3347,7 @@
         state.player.floor = Math.max(0, Number(profile.floor || 0));
         state.player.bestFloor = Math.max(state.player.floor, Number(profile.bestFloor || 0));
         state.player.selectedTitle = String(profile.selectedTitle || "");
+        state.player.selectedCosmetic = String(profile.selectedCosmetic || "");
         state.runStartedAt = Number.isFinite(Number(profile.runStartedAt)) ? Number(profile.runStartedAt) : Date.now();
         state.bestTimeMs = Number(profile.bestTimeMs || 0);
         state.player.hidden = false;
@@ -3149,6 +3362,9 @@
         state.deaths = Number(profile.deaths || 0);
         state.gold = Number(profile.gold || 0);
         state.lives = Number(profile.lives || 0);
+        state.nextRankingAnnouncementAt = 0;
+        state.lastPlayerLeaderKey = "";
+        state.lastCountryLeaderKey = "";
         state.rewardedMilestones = new Set(Array.isArray(profile.rewardedMilestones) ? profile.rewardedMilestones : []);
         state.rewardedLifeMilestones = new Set(Array.isArray(profile.rewardedLifeMilestones) ? profile.rewardedLifeMilestones : []);
         state.online.playerKey = String(profile.playerKey || "") || getPlayerKey();
@@ -3161,12 +3377,12 @@
         if (canHide()) {
           state.lastHideAt = Date.now();
           state.player.hidden = true;
-          showNotice(`${state.player.floor}층에서 다시 시작합니다.`);
+          showNotice(`${state.player.floor}F restart point restored.`);
         } else {
-          showNotice(`${state.player.floor}층 기록을 복구했습니다.`);
+          showNotice(`${state.player.floor}F record restored.`);
         }
         joinScreen.classList.add("hidden");
-        addChat("SYSTEM", "--", `${state.player.id}님이 세션을 복구했습니다.`);
+        addChat("SYSTEM", "--", `${state.player.id} restored the session.`);
         saveSessionProfile();
         connectOnline();
         return true;
@@ -3190,21 +3406,21 @@
     function tryHide() {
       if (state.mode !== "play") return;
       if (performance.now() < state.player.stunnedUntil) {
-        showNotice("스턴 중에는 사용할 수 없습니다.");
+        showNotice("Cannot use this while stunned.");
         return;
       }
       if (state.player.hidden) {
-        showNotice("이미 숨어 있습니다.");
+        showNotice("You are already hidden.");
         return;
       }
       if (!canHide()) {
-        showNotice(`${cooldownText()} 후 숨을 수 있습니다.`);
+        showNotice(`${cooldownText()}  before you can hide again.`);
         return;
       }
       state.lastHideAt = Date.now();
       state.player.hidden = true;
       resetFloorHold();
-      showNotice(`${state.player.floor}층에 숨었습니다.`);
+      showNotice(`${state.player.floor}F: hidden.`);
       syncOnlineState();
     }
 
@@ -3222,7 +3438,7 @@
     function climb(inputDir) {
       if (state.mode !== "play") return;
       if (performance.now() < state.player.stunnedUntil) {
-        showNotice("스턴 중입니다.");
+        showNotice("You are stunned.");
         return;
       }
       const expected = directionForNextFloor(state.player.floor);
@@ -3230,7 +3446,7 @@
       const previousFloor = state.player.floor;
 
       if (expected !== inputDir) {
-        respawnAtZero("계단 방향을 틀려 0층으로 떨어졌습니다.");
+        respawnAtZero("Wrong stair direction: fell to 0F.");
         return;
       }
 
@@ -3319,12 +3535,13 @@
         state.bots = [];
         return;
       }
-      if (state.online.enabled) ensureBotCount(BOT_FILLER_COUNT);
+      updateBotPopulation(now);
+      rotateBotNames(now);
       for (const bot of state.bots) {
         const nearPlayer = Math.abs(bot.floor - state.player.floor) <= 45;
-        if (!bot.easy && (nearPlayer || Math.random() < 0.01)) botUseItem(bot, now);
+        if (nearPlayer || Math.random() < 0.004 + bot.itemAggression * 0.012) botUseItem(bot, now);
         if (now < bot.nextMoveAt || now < bot.stunnedUntil) continue;
-        const delay = bot.baseSpeed * bot.rhythm + Math.random() * 720;
+        const delay = bot.baseSpeed * bot.rhythm + Math.random() * (820 - bot.skill * 360);
         bot.nextMoveAt = now + delay;
 
         if (Math.random() < bot.hesitation) {
@@ -3332,7 +3549,7 @@
           continue;
         }
 
-        if (Math.random() < 0.045 && !bot.hidden) {
+        if (Math.random() < bot.hideChance && !bot.hidden) {
           bot.hidden = true;
           bot.nextMoveAt += 900 + Math.random() * 1300;
           continue;
@@ -3446,14 +3663,50 @@
     function drawRunner(entity, x, y, color, alpha = 1, selfView = false) {
       if (entity.hidden && !selfView) return;
       const label = `${displayName(entity)} ${entity.floor}F`;
+      const cosmetic = activeCosmeticForEntity(entity);
       ctx.save();
       ctx.translate(x, y - 22);
       const visibleAlpha = entity.hidden && selfView ? Math.min(alpha, 0.42) : alpha;
       ctx.globalAlpha = visibleAlpha;
+      if (cosmetic === "wings") {
+        ctx.fillStyle = "rgba(215, 238, 255, 0.92)";
+        ctx.strokeStyle = "rgba(86, 174, 247, 0.92)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-15, -7);
+        ctx.quadraticCurveTo(-43, -28, -48, 4);
+        ctx.quadraticCurveTo(-31, -2, -21, 14);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(15, -7);
+        ctx.quadraticCurveTo(43, -28, 48, 4);
+        ctx.quadraticCurveTo(31, -2, 21, 14);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.roundRect(-16, -16, 32, 32, 7);
       ctx.fill();
+      if (cosmetic === "crown") {
+        ctx.fillStyle = "#f0bd5b";
+        ctx.strokeStyle = "#fff3b0";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-16, -22);
+        ctx.lineTo(-10, -35);
+        ctx.lineTo(-3, -24);
+        ctx.lineTo(4, -37);
+        ctx.lineTo(11, -24);
+        ctx.lineTo(17, -35);
+        ctx.lineTo(16, -22);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
       if (hasShield(entity)) {
         ctx.strokeStyle = "#fff3b0";
         ctx.lineWidth = 3;
@@ -3506,7 +3759,7 @@
             ? state.player
             : effect.targetKind === "remote"
               ? state.remotePlayers.find((player) => player.onlineId === effect.targetId)
-              : state.bots.find((bot) => bot.id === effect.targetId);
+              : state.bots.find((bot) => (bot.key || bot.id) === effect.targetId);
           const liveTargetFloor = liveTarget ? liveTarget.floor : effect.targetFloor;
           const targetP = screenPosition(liveTargetFloor, focus, width, height);
           const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
@@ -3647,7 +3900,7 @@
       const stunned = Math.max(0, state.player.stunnedUntil - performance.now());
       const shieldLeft = shieldSecondsLeft(state.player);
       ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">(${state.gold}/500G)</span>`;
-      ui.titleBtn.textContent = `칭호: ${state.player.selectedTitle || "자동"}`;
+      ui.titleBtn.textContent = `Title: ${state.player.selectedTitle || "Auto"}`;
       ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(hideCooldownLeft() / 1000)}s`;
       const nextGoal = nextGoalInfo();
       ui.nextGoal.innerHTML = `NEXT<span>${nextGoal.floor}F ${nextGoal.label}</span>`;
@@ -3667,37 +3920,73 @@
         ui.itemSlots[index].innerHTML = `<span class="item-key">${index + 1}</span><span class="item-name">${escapeHtml(fullName)}</span><span class="item-short">${escapeHtml(shortName)}</span>`;
       });
 
-      const rankMap = new Map();
-      for (const player of [...state.leaderboard, state.player, ...opponents()]) {
-        if (!player.id) continue;
-        const key = `${player.country || "--"}:${player.id}`;
-        const row = { ...player, bestFloor: Math.max(Number(player.bestFloor || 0), Number(player.floor || 0)), bestTimeMs: Number(player.bestTimeMs || 0), runElapsedMs: Number(player.runElapsedMs || 0) };
-        if (player === state.player) {
-          row.kills = state.kills;
-          row.deaths = state.deaths;
-        }
-        const previous = rankMap.get(key);
-        if (!previous || row.bestFloor > previous.bestFloor || (row.bestFloor === previous.bestFloor && row.bestTimeMs > 0 && (!previous.bestTimeMs || row.bestTimeMs < previous.bestTimeMs))) rankMap.set(key, row);
-      }
-      const players = [...rankMap.values()].sort((a, b) => b.bestFloor - a.bestFloor);
+      const players = buildPlayerRankings();
+      const countries = buildCountryRankings(players);
       const liveLeader = [state.player, ...opponents()]
         .filter((player) => player.id)
         .sort((a, b) => Number(b.floor || 0) - Number(a.floor || 0))[0];
       ui.liveLeader.textContent = liveLeader ? `LIVE #1 ${displayName(liveLeader)} ${liveLeader.floor}F` : "LIVE #1 -";
+      ui.playerRankTab.classList.toggle("active", state.rankingTab === "players");
+      ui.countryRankTab.classList.toggle("active", state.rankingTab === "countries");
+      ui.playerRankTab.setAttribute("aria-selected", state.rankingTab === "players" ? "true" : "false");
+      ui.countryRankTab.setAttribute("aria-selected", state.rankingTab === "countries" ? "true" : "false");
 
-      ui.rankRows.innerHTML = players.map((player, index) => (
-        `<div class="rank-row">
-          <span>${index === 0 ? "#1" : index + 1}</span>
-          <span class="rank-id">${displayNameHtml(player)}</span>
-          <span>${escapeHtml(player.country)}</span>
-          <span class="rank-floor">${player.bestFloor}F</span>
-          <span class="rank-time">${formatDuration(rankingTimeMs(player))}</span>
-        </div>`
-      )).join("");
+      if (state.rankingTab === "countries") {
+        ui.rankHead.innerHTML = "<span>Rank</span><span>Country</span><span>Leader</span><span>Floor</span><span>Players</span>";
+        ui.rankRows.innerHTML = countries.map((country, index) => (
+          `<div class="rank-row">
+            <span>${index === 0 ? "#1" : index + 1}</span>
+            <span class="rank-id">${escapeHtml(country.country)}</span>
+            <span>${escapeHtml(country.leader.id)}</span>
+            <span class="rank-floor">${country.bestFloor}F</span>
+            <span class="rank-time">${country.players}</span>
+          </div>`
+        )).join("");
+      } else {
+        ui.rankHead.innerHTML = "<span>Rank</span><span>ID</span><span>Country</span><span>Floor</span><span>Time</span>";
+        ui.rankRows.innerHTML = players.map((player, index) => (
+          `<div class="rank-row">
+            <span>${index === 0 ? "#1" : index + 1}</span>
+            <span class="rank-id">${displayNameHtml(player)}</span>
+            <span>${escapeHtml(player.country)}</span>
+            <span class="rank-floor">${player.bestFloor}F</span>
+            <span class="rank-time">${formatDuration(rankingTimeMs(player))}</span>
+          </div>`
+        )).join("");
+      }
 
       if (performance.now() > state.noticeUntil) {
-        ui.notice.innerHTML = "<strong>조작</strong><br>← / ↑ / →: 이동, ↓: 숨기, 1/2/3: 아이템";
+        ui.notice.innerHTML = "<strong>Controls</strong><br>← / ↑ / →: Move, ↓: Hide, 1/2/3: Items";
       }
+    }
+
+    function updateRankingAnnouncements(now) {
+      if (state.mode !== "play") return;
+      const players = buildPlayerRankings();
+      const countries = buildCountryRankings(players);
+      const topPlayer = players[0] || null;
+      const topCountry = countries[0] || null;
+      const topPlayerKey = topPlayer ? playerRankKey(topPlayer) : "";
+      const topCountryKey = topCountry ? topCountry.country : "";
+
+      if (topPlayerKey && !state.lastPlayerLeaderKey) state.lastPlayerLeaderKey = topPlayerKey;
+      if (topCountryKey && !state.lastCountryLeaderKey) state.lastCountryLeaderKey = topCountryKey;
+
+      if (topPlayerKey && state.lastPlayerLeaderKey && topPlayerKey !== state.lastPlayerLeaderKey) {
+        addChat("SYSTEM", "--", `Player #1 retaken: ${displayName(topPlayer)} at ${topPlayer.bestFloor}F`);
+        state.lastPlayerLeaderKey = topPlayerKey;
+      }
+
+      if (topCountryKey && state.lastCountryLeaderKey && topCountryKey !== state.lastCountryLeaderKey) {
+        addChat("SYSTEM", "--", `Country #1 retaken: ${topCountry.country} at ${topCountry.bestFloor}F, led by ${topCountry.leader.id}`);
+        state.lastCountryLeaderKey = topCountryKey;
+      }
+
+      if (!state.nextRankingAnnouncementAt) state.nextRankingAnnouncementAt = now + 60000;
+      if (now < state.nextRankingAnnouncementAt) return;
+      state.nextRankingAnnouncementAt = now + 60000;
+      if (topPlayer) addChat("SYSTEM", "--", `Player #1: ${displayName(topPlayer)} at ${topPlayer.bestFloor}F`);
+      if (topCountry) addChat("SYSTEM", "--", `Country #1: ${topCountry.country} at ${topCountry.bestFloor}F, led by ${topCountry.leader.id}`);
     }
 
     function openHelp() {
@@ -3712,19 +4001,25 @@
 
     function renderTitleList() {
       const current = state.player.selectedTitle || "";
-      const rows = [
+      const currentCosmetic = state.player.selectedCosmetic || "";
+      const titleRows = [
         `<button class="title-choice ${current ? "" : "active"}" type="button" data-title="">
-          <span>자동</span><small>최고 칭호</small>
+          <span>Auto</span><small>Best title</small>
         </button>`,
         ...TITLE_TIERS.map((tier) => {
           const unlocked = titleUnlocked(tier, state.player);
           const active = current === tier.title;
           return `<button class="title-choice ${active ? "active" : ""} ${unlocked ? "" : "locked"}" type="button" data-title="${escapeHtml(tier.title)}" ${unlocked ? "" : "disabled"}>
-            <span class="title-name ${escapeHtml(tier.className || "")}">${escapeHtml(tier.title)}</span><small>${escapeHtml(titleRequirement(tier))}${unlocked ? "" : " 잠김"}</small>
+            <span class="title-name ${escapeHtml(tier.className || "")}">${escapeHtml(tier.title)}</span><small>${escapeHtml(titleRequirement(tier))}${unlocked ? "" : " Locked"}</small>
           </button>`;
         })
       ];
-      ui.titleList.innerHTML = rows.join("");
+      const cosmeticRows = unlockedCosmeticsForPlayer(state.player).map((cosmetic) => (
+        `<button class="title-choice ${currentCosmetic === cosmetic.type ? "active" : ""} ${cosmetic.unlocked ? "" : "locked"}" type="button" data-cosmetic="${escapeHtml(cosmetic.type)}" ${cosmetic.unlocked ? "" : "disabled"}>
+          <span>${escapeHtml(cosmetic.name)}</span><small>${escapeHtml(cosmetic.requirement)}${cosmetic.unlocked ? "" : " Locked"}</small>
+        </button>`
+      ));
+      ui.titleList.innerHTML = `<div class="title-section">Titles</div>${titleRows.join("")}<div class="title-section">Decorations</div>${cosmeticRows.join("")}`;
     }
 
     function openTitleModal() {
@@ -3753,11 +4048,23 @@
       closeTitleModal();
     }
 
+    function chooseCosmetic(cosmetic) {
+      const nextCosmetic = String(cosmetic || "");
+      const allowed = unlockedCosmeticsForPlayer(state.player).some((entry) => entry.type === nextCosmetic && entry.unlocked);
+      if (!allowed) return;
+      state.player.selectedCosmetic = nextCosmetic;
+      saveSessionProfile();
+      syncOnlineState();
+      renderHud();
+      closeTitleModal();
+    }
+
     function tick(now) {
       updateBots(now);
       updateFloorHold(now);
       renderGame();
       renderHud();
+      updateRankingAnnouncements(now);
       requestAnimationFrame(tick);
     }
 
@@ -3792,8 +4099,20 @@
       event.stopPropagation();
     });
 
-      ui.rankToggle.addEventListener("click", () => {
+    ui.rankToggle.addEventListener("click", () => {
       setRankingCollapsed(!state.rankingCollapsed);
+    });
+
+    [ui.playerRankTab, ui.countryRankTab].forEach((button) => {
+      const chooseRankTab = () => {
+        state.rankingTab = button.dataset.rankTab === "countries" ? "countries" : "players";
+        renderHud();
+      };
+      button.addEventListener("click", chooseRankTab);
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        chooseRankTab();
+      });
     });
 
     ui.boostBtn.addEventListener("click", useGoldBoost);
@@ -3804,8 +4123,9 @@
     });
     ui.titleList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-title]");
-      if (!button || button.disabled) return;
-      chooseTitle(button.dataset.title || "");
+      const cosmeticButton = event.target.closest("[data-cosmetic]");
+      if (button && !button.disabled) chooseTitle(button.dataset.title || "");
+      if (cosmeticButton && !cosmeticButton.disabled) chooseCosmetic(cosmeticButton.dataset.cosmetic || "");
     });
     ui.helpClose.addEventListener("click", closeHelp);
     ui.helpConfirm.addEventListener("click", closeHelp);

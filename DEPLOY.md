@@ -1,46 +1,46 @@
-# 온라인 배포 방법
+# Deployment Guide
 
-이 프로젝트는 Node 서버 하나가 `outputs/index.html`을 제공하고, 접속자 상태/채팅/공격 이벤트를 서버 메모리에서 동기화합니다.
+This project runs as a single Node server. The server serves `outputs/index.html` and synchronizes online players, chat, rankings, attacks, and connection events.
 
-## 로컬 실행
+## Local Run
 
 ```powershell
-node server.js
+npm start
 ```
 
-브라우저에서 엽니다.
+Open the game in your browser:
 
 ```text
 http://localhost:3000
 ```
 
-## Render 배포
+## Render Deployment
 
-1. 이 폴더를 GitHub 저장소로 올립니다.
-2. Render에서 `New` -> `Web Service`를 선택합니다.
-3. 저장소를 연결합니다.
-4. 설정값:
+1. Push this folder to a GitHub repository.
+2. In Render, choose `New` -> `Web Service`.
+3. Connect the GitHub repository.
+4. Use these settings:
 
 ```text
 Build Command: npm install
 Start Command: npm start
 ```
 
-5. 배포가 끝나면 Render가 제공하는 `https://...onrender.com` 주소를 친구들에게 공유합니다.
+5. After deployment, Render will provide a URL such as `https://...onrender.com`.
 
-## Railway 배포
+## Railway Deployment
 
-1. Railway에서 새 프로젝트를 만듭니다.
-2. GitHub 저장소를 연결합니다.
-3. Start Command가 필요하면 아래 값을 사용합니다.
+1. Create a new project in Railway.
+2. Connect the GitHub repository.
+3. If Railway asks for a start command, use:
 
 ```text
 npm start
 ```
 
-## 현재 서버 특징
+## Server Notes
 
-- 같은 서버 주소에 접속한 사람끼리 같은 맵에서 플레이합니다.
-- 채팅, 랭킹, 층수, 킬, 목숨이 동기화됩니다.
-- 서버가 재시작되면 접속자/채팅 상태는 초기화됩니다.
-- 장기 운영을 하려면 다음 단계에서 Redis 또는 DB 저장소를 붙이면 됩니다.
+- Players connected to the same server URL play on the same map.
+- Chat, ranking, floor, kills, lives, and game state are synchronized.
+- If the server restarts, live player and chat state may reset.
+- For long-term operation, connect a persistent database or cache such as MongoDB, Redis, or another managed storage service.
