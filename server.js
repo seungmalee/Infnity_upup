@@ -555,6 +555,18 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const reason = String(body.reason || `${attacker.id} attacked ${target.id}.`).slice(0, 120);
+      if (Number(target.floor || 0) <= 1) {
+        attacker.lastSeen = Date.now();
+        target.lastSeen = Date.now();
+        const targetClient = clients.get(targetId);
+        const payload = { type: "state", reason: "1F safety", attackerId: attacker.onlineId, fell: false, lives: target.lives || 0, players: publicPlayers(), leaderboard, chat };
+        if (targetClient) {
+          targetClient.write(`data: ${JSON.stringify(payload)}\n\n`);
+        }
+        broadcast("state");
+        sendJson(req, res, 200, { ok: true, blocked: true, kills: attacker.kills, gold: attacker.gold, target: { id: target.id, lives: target.lives || 0, fell: false } });
+        return;
+      }
       const targetLives = Math.max(0, Number(target.lives || 0));
       const fell = targetLives <= 0;
       if (fell) {

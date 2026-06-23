@@ -2056,6 +2056,22 @@
       return `${title ? `${title} ` : ""}${flagEmoji(player.country)} ${player.id}`;
     }
 
+    function titleAbbreviation(title) {
+      const value = String(title || "").trim();
+      if (!value) return "";
+      if (value === "Legend") return "LEG";
+      const parts = value.split(/\s+/).filter(Boolean);
+      if (parts.length === 1) return parts[0].slice(0, 3).toUpperCase();
+      return parts.map((part) => part[0]).join("").slice(0, 3).toUpperCase();
+    }
+
+    function runnerDisplayName(player) {
+      if (!player || !player.id) return "ID NONE";
+      const title = selectedTitleForPlayer(player);
+      const abbr = titleAbbreviation(title);
+      return `${abbr ? `[${abbr}] ` : ""}${flagEmoji(player.country)} ${player.id}`;
+    }
+
     function displayNameHtml(player) {
       if (!player || !player.id) return "ID NONE";
       const title = titleHtml(player);
@@ -2648,6 +2664,10 @@
       state.online.events.onmessage = (event) => {
         state.online.connected = true;
         const data = JSON.parse(event.data);
+        if ((data.type === "attacked" || data.type === "stunned") && isPenaltyProtectedFloor()) {
+          ignoreLowFloorPenalty(data.reason || "online attack");
+          data.type = "state";
+        }
         if (data.type === "attacked" && data.fell) state.lives = 0;
         if (data.type === "attacked" && !data.fell) {
           if (Number.isFinite(Number(data.lives))) state.lives = Number(data.lives);
@@ -3084,7 +3104,7 @@
         let hits = 0;
         const hitNames = [];
         for (const target of opponents()) {
-          if (target.floor >= minFloor && target.floor <= state.player.floor) {
+          if (!target.hidden && target.floor >= minFloor && target.floor <= state.player.floor) {
             if (target.onlineId) {
               stunRemote(target, "Boulder", BOULDER_STUN);
               hits += 1;
@@ -3158,9 +3178,10 @@
 
       if (item.type === "boulder") {
         const minFloor = Math.max(0, bot.floor - 100);
-        const hit = state.player.floor >= minFloor && state.player.floor <= bot.floor;
+        const inRange = !state.player.hidden && state.player.floor >= minFloor && state.player.floor <= bot.floor;
+        const hit = inRange && applyStun(state.player, BOULDER_STUN, "Boulder");
         addBoulderEffect(bot.floor, minFloor, hit ? 1 : 0);
-        if (hit && applyStun(state.player, BOULDER_STUN, "Boulder")) {
+        if (hit) {
           showNotice(`${bot.id} Boulder hit`);
           addChat("SYSTEM", "--", `${bot.id} Boulder: player stunned`);
         } else {
@@ -3207,7 +3228,21 @@
       state.deaths += 1;
     }
 
+    function isPenaltyProtectedFloor() {
+      return Number(state.player.floor || 0) <= 1;
+    }
+
+    function ignoreLowFloorPenalty(reason) {
+      resetFloorHold();
+      showNotice("Safe on 1F");
+      if (reason) addChat("SYSTEM", "--", `1F safety: ${reason} ignored`);
+    }
+
     function respawnAtZero(reason) {
+      if (isPenaltyProtectedFloor()) {
+        ignoreLowFloorPenalty(reason);
+        return;
+      }
       if (absorbDanger(reason)) return;
       addDeath();
       if (state.lives > 0) {
@@ -3234,6 +3269,10 @@
     }
 
     function loseLifeOrFall(reason) {
+      if (isPenaltyProtectedFloor()) {
+        ignoreLowFloorPenalty(reason);
+        return false;
+      }
       if (absorbDanger(reason)) return false;
       if (state.lives > 0) {
         addDeath();
@@ -3601,6 +3640,10 @@
 
     function updateFloorHold(now) {
       if (state.mode !== "play") return;
+      if (Number(state.player.floor || 0) <= 1) {
+        resetFloorHold(now);
+        return;
+      }
       if (isRestFloor(state.player.floor)) {
         resetFloorHold(now);
         return;
@@ -3662,7 +3705,7 @@
 
     function drawRunner(entity, x, y, color, alpha = 1, selfView = false) {
       if (entity.hidden && !selfView) return;
-      const label = `${displayName(entity)} ${entity.floor}F`;
+      const label = `${runnerDisplayName(entity)} ${entity.floor}F`;
       const cosmetic = activeCosmeticForEntity(entity);
       ctx.save();
       ctx.translate(x, y - 22);
@@ -3716,7 +3759,19 @@
       ctx.fillStyle = varColor("--text");
       ctx.font = "800 12px system-ui";
       ctx.textAlign = "center";
-      if (visibleAlpha > 0.55) ctx.fillText(performance.now() < (entity.stunnedUntil || 0) ? "STUN" : label, 0, -24);
+      if (visibleAlpha > 0.55) {
+        const tag = performance.now() < (entity.stunnedUntil || 0) ? "STUN" : label;
+        const tagWidth = Math.min(168, ctx.measureText(tag).width + 14);
+        ctx.fillStyle = "rgba(13, 18, 28, 0.78)";
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(-tagWidth / 2, -40, tagWidth, 18, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = varColor("--text");
+        ctx.fillText(tag, 0, -27);
+      }
       ctx.restore();
     }
 
