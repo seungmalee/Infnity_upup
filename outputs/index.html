@@ -30,7 +30,7 @@
       --bar: #586271;
       --bar-active: #f0bd5b;
       --player: #ff646f;
-      --bot: #b7ff45;
+      --bot: #6f3f7a;
     }
 
     * {
@@ -2946,9 +2946,9 @@
         floor,
         color,
         start: performance.now(),
-        duration: 360
+        duration: 220
       });
-      state.trails = state.trails.slice(-36);
+      state.trails = state.trails.slice(-18);
     }
 
     function addBoulderEffect(fromFloor, toFloor, hits) {
@@ -3734,21 +3734,51 @@
       ctx.beginPath();
       ctx.roundRect(-16, -16, 32, 32, 7);
       ctx.fill();
+      if (selfView) {
+        const blink = Math.sin(performance.now() / 620) > 0.93;
+        ctx.fillStyle = "#10141a";
+        if (blink) {
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = "#10141a";
+          ctx.beginPath();
+          ctx.moveTo(-9, -4);
+          ctx.lineTo(-3, -4);
+          ctx.moveTo(3, -4);
+          ctx.lineTo(9, -4);
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(-6, -5, 3.2, 0, Math.PI * 2);
+          ctx.arc(6, -5, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#f5f1e8";
+          ctx.beginPath();
+          ctx.arc(-7, -6.2, 1.1, 0, Math.PI * 2);
+          ctx.arc(5, -6.2, 1.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
       if (cosmetic === "crown") {
         ctx.fillStyle = "#f0bd5b";
         ctx.strokeStyle = "#fff3b0";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(-16, -22);
-        ctx.lineTo(-10, -35);
-        ctx.lineTo(-3, -24);
-        ctx.lineTo(4, -37);
-        ctx.lineTo(11, -24);
-        ctx.lineTo(17, -35);
-        ctx.lineTo(16, -22);
+        ctx.moveTo(-15, -22);
+        ctx.lineTo(-15, -33);
+        ctx.lineTo(-8, -27);
+        ctx.lineTo(0, -36);
+        ctx.lineTo(8, -27);
+        ctx.lineTo(15, -33);
+        ctx.lineTo(15, -22);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+        ctx.fillStyle = "#fff3b0";
+        ctx.beginPath();
+        ctx.arc(-8, -27, 2, 0, Math.PI * 2);
+        ctx.arc(0, -36, 2.4, 0, Math.PI * 2);
+        ctx.arc(8, -27, 2, 0, Math.PI * 2);
+        ctx.fill();
       }
       if (hasShield(entity)) {
         ctx.strokeStyle = "#fff3b0";
@@ -3913,7 +3943,7 @@
         if (Math.abs(trail.floor - focus) > 30) continue;
         const age = (now - trail.start) / trail.duration;
         const p = screenPosition(trail.floor, focus, width, height);
-        drawRunner({ id: trail.id, country: trail.country || "--", floor: trail.floor, hidden: false, stunnedUntil: 0 }, p.x, p.y, trail.color, (1 - age) * 0.34);
+        drawRunner({ id: trail.id, country: trail.country || "--", floor: trail.floor, hidden: false, stunnedUntil: 0 }, p.x, p.y, trail.color, (1 - age) * 0.18);
       }
 
       for (const opponent of opponents()) {
