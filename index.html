@@ -656,6 +656,11 @@
       font-size: 13px;
     }
 
+    .ranking.country-mode .rank-head,
+    .ranking.country-mode .rank-row {
+      grid-template-columns: 28px minmax(64px, 1fr) minmax(84px, auto);
+    }
+
     .rank-head {
       color: var(--muted);
       border-bottom: 1px solid var(--line);
@@ -1735,6 +1740,19 @@
         margin-top: 8px;
       }
     }
+    .ranking.country-mode .rank-head,
+    .ranking.country-mode .rank-row,
+    .ranking.country-mode .ranking .rank-row {
+      grid-template-columns: 22px minmax(34px, 1fr) max-content !important;
+    }
+
+    .ranking.country-mode .rank-floor {
+      min-width: 0;
+      overflow: visible;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      justify-self: end;
+    }
   </style>
 </head>
 <body>
@@ -1943,6 +1961,9 @@
     const FLOOR_IDLE_END = 1500;
     const FLOOR_IDLE_MAX_FLOOR = 10000;
     const BOULDER_STUN = 1000;
+    const BOULDER_DURATION = 1800;
+    const BOULDER_HIT_AT = 0.82;
+    const BOULDER_WARNING_UNTIL = 0.55;
     const MISSILE_STUN = 3000;
     const MISSILE_DURATION = 2800;
     const MISSILE_HIT_AT = 0.96;
@@ -2189,6 +2210,7 @@
 
     function saveSessionProfile() {
       if (!state.player.id) return;
+      const stunnedLeftMs = Math.max(0, Math.min(10000, Number(state.player.stunnedUntil || 0) - performance.now()));
       sessionStorage.setItem(PROFILE_KEY, JSON.stringify({
         id: state.player.id,
         country: state.player.country,
@@ -2199,7 +2221,7 @@
         hidden: state.player.hidden,
         shield: state.player.shield,
         shieldUntil: state.player.shieldUntil,
-        stunnedUntil: state.player.stunnedUntil,
+        stunnedLeftMs,
         runStartedAt: state.runStartedAt,
         bestTimeMs: state.bestTimeMs,
         lastHideAt: state.lastHideAt,
@@ -2773,6 +2795,27 @@
       return String(player.onlineId || player.key || `${player.country || "--"}:${player.id || "PLAYER"}`);
     }
 
+    function weightedFloorScore(floor) {
+      let remaining = Math.max(0, Math.floor(Number(floor || 0)));
+      let score = 0;
+      let segment = 0;
+      while (remaining > 0) {
+        const floorsInSegment = Math.min(SEGMENT_SIZE, remaining);
+        score += floorsInSegment * (segment + 1);
+        remaining -= floorsInSegment;
+        segment += 1;
+      }
+      return score * 100;
+    }
+
+    function countryScore(player) {
+      return weightedFloorScore(player.bestFloor) + Math.max(0, Number(player.kills || 0)) * KILL_GOLD_REWARD + Math.max(0, Number(player.gold || 0));
+    }
+
+    function formatScore(score) {
+      return Math.floor(Math.max(0, Number(score || 0))).toLocaleString("en-US");
+    }
+
     function buildPlayerRankings() {
       const rankMap = new Map();
       for (const player of [...state.leaderboard, state.player, ...opponents()]) {
@@ -2802,17 +2845,13 @@
       for (const player of players) {
         const country = String(player.country || "--").toUpperCase();
         const previous = countryMap.get(country);
-        const bestFloor = Number(player.bestFloor || 0);
-        const row = previous || { country, bestFloor: 0, bestTimeMs: 0, leader: player, players: 0 };
+        const score = countryScore(player);
+        const row = previous || { country, score: 0, players: 0 };
         row.players += 1;
-        if (!previous || bestFloor > row.bestFloor || (bestFloor === row.bestFloor && rankingTimeMs(player) > 0 && (!row.bestTimeMs || rankingTimeMs(player) < row.bestTimeMs))) {
-          row.bestFloor = bestFloor;
-          row.bestTimeMs = rankingTimeMs(player);
-          row.leader = player;
-        }
+        row.score += score;
         countryMap.set(country, row);
       }
-      return [...countryMap.values()].sort((a, b) => b.bestFloor - a.bestFloor || a.bestTimeMs - b.bestTimeMs);
+      return [...countryMap.values()].sort((a, b) => b.score - a.score || b.players - a.players || a.country.localeCompare(b.country));
     }
 
     function playerIsRankOne(player, players = buildPlayerRankings()) {
@@ -2951,14 +2990,17 @@
       state.trails = state.trails.slice(-18);
     }
 
-    function addBoulderEffect(fromFloor, toFloor, hits) {
+    function addBoulderEffect(fromFloor, toFloor, hits, options = {}) {
       state.effects.push({
         type: "boulder",
         fromFloor,
         toFloor,
         hits,
+        targetKind: options.targetKind || "",
+        sourceId: options.sourceId || "",
+        resolved: !options.targetKind,
         start: performance.now(),
-        duration: 900
+        duration: BOULDER_DURATION
       });
     }
 
@@ -3026,6 +3068,10 @@
     }
 
     function applyStun(target, ms, source) {
+      if (target === state.player && isPenaltyProtectedFloor()) {
+        ignoreLowFloorPenalty(source || "Stun");
+        return false;
+      }
       if (hasShield(target)) {
         clearShield(target);
         showNotice(`${target.id} blocked ${source} with Shield.`);
@@ -3045,6 +3091,23 @@
       return 0;
     }
 
+    function resolveBoulderHit(effect) {
+      if (effect.resolved) return;
+      effect.resolved = true;
+
+      if (effect.targetKind !== "player") return;
+
+      const inRange = !state.player.hidden && state.player.floor >= effect.toFloor && state.player.floor <= effect.fromFloor;
+      if (inRange && applyStun(state.player, BOULDER_STUN, "Boulder")) {
+        effect.hits = 1;
+        showNotice(`${effect.sourceId || "Bot"} Boulder hit`);
+        addChat("SYSTEM", "--", `${effect.sourceId || "Bot"} Boulder: player stunned`);
+      } else {
+        effect.hits = 0;
+        addChat("SYSTEM", "--", `${effect.sourceId || "Bot"} Boulder: dodged`);
+      }
+    }
+
     function resolveMissileHit(effect) {
       if (effect.resolved) return;
       effect.resolved = true;
@@ -3057,15 +3120,22 @@
         addChat("SYSTEM", "--", `Missile failed: ${effect.targetName}`);
         return;
       }
+      if (target.hidden) {
+        effect.hit = false;
+        effect.landedFloor = target.floor;
+        effect.targetFloor = target.floor;
+        addChat("SYSTEM", "--", `Missile missed: ${target.id || "Player"} hidden`);
+        return;
+      }
       const targetFloor = target.floor;
       const landedFloor = nearestLowerSamePositionFloor(targetFloor);
       if (effect.targetKind === "remote") {
-        attackRemote(target, `${effect.sourceId} Missile hit`);
+        stunRemote(target, `${effect.sourceId} Missile`, MISSILE_STUN);
         effect.hit = true;
         effect.landedFloor = landedFloor;
         effect.targetFloor = targetFloor;
-        showNotice(`${effect.sourceId} missile hit ${target.id}!`);
-        addChat("SYSTEM", "--", `Missile hit: ${effect.sourceId} -> ${target.id}`);
+        showNotice(`${effect.sourceId} missile stunned ${target.id}!`);
+        addChat("SYSTEM", "--", `Missile stun: ${effect.sourceId} -> ${target.id}`);
         return;
       }
       if (applyStun(target, MISSILE_STUN, "Missile")) {
@@ -3178,15 +3248,9 @@
 
       if (item.type === "boulder") {
         const minFloor = Math.max(0, bot.floor - 100);
-        const inRange = !state.player.hidden && state.player.floor >= minFloor && state.player.floor <= bot.floor;
-        const hit = inRange && applyStun(state.player, BOULDER_STUN, "Boulder");
-        addBoulderEffect(bot.floor, minFloor, hit ? 1 : 0);
-        if (hit) {
-          showNotice(`${bot.id} Boulder hit`);
-          addChat("SYSTEM", "--", `${bot.id} Boulder: player stunned`);
-        } else {
-          addChat("SYSTEM", "--", `${bot.id} Boulder: no hit`);
-        }
+        addBoulderEffect(bot.floor, minFloor, 0, { targetKind: "player", sourceId: bot.id });
+        showNotice(`${bot.id} Boulder incoming`);
+        addChat("SYSTEM", "--", `${bot.id} Boulder: incoming`);
       }
 
       if (item.type === "missile") {
@@ -3392,7 +3456,7 @@
         state.player.hidden = false;
         state.player.shield = Boolean(profile.shield);
         state.player.shieldUntil = Number(profile.shieldUntil || 0);
-        state.player.stunnedUntil = Number(profile.stunnedUntil || 0);
+      state.player.stunnedUntil = performance.now() + Math.max(0, Math.min(10000, Number(profile.stunnedLeftMs || 0)));
         state.lastHideAt = Number.isFinite(Number(profile.lastHideAt)) ? Number(profile.lastHideAt) : -HIDE_COOLDOWN;
         state.inventory = Array.isArray(profile.inventory) ? profile.inventory.slice(0, 3).map(itemFromType) : [null, null, null];
         while (state.inventory.length < 3) state.inventory.push(null);
@@ -3474,12 +3538,21 @@
       knockDownBot(victim, reason);
     }
 
+    function knockDownOverlappingOpponent(reason) {
+      if (isRestFloor(state.player.floor)) return false;
+      const victim = opponents().find((opponent) => opponent.floor === state.player.floor && !opponent.hidden);
+      if (!victim) return false;
+      knockDownOpponent(victim, reason);
+      return true;
+    }
+
     function climb(inputDir) {
       if (state.mode !== "play") return;
       if (performance.now() < state.player.stunnedUntil) {
         showNotice("You are stunned.");
         return;
       }
+      if (!state.player.hidden && knockDownOverlappingOpponent("Chase")) return;
       const expected = directionForNextFloor(state.player.floor);
       const wasHidden = state.player.hidden;
       const previousFloor = state.player.floor;
@@ -3509,8 +3582,7 @@
         if (victim) knockDownOpponent(victim, "Ambush");
         else showNotice("Ambush move");
       } else {
-        const victim = opponents().find((opponent) => opponent.floor === state.player.floor && !opponent.hidden);
-        if (victim) knockDownOpponent(victim, "Chase");
+        knockDownOverlappingOpponent("Chase");
       }
     }
 
@@ -3617,16 +3689,8 @@
           break;
         }
         if (!cameOut && bot.floor === state.player.floor && !state.player.hidden) {
-          loseLifeOrFall(`${bot.id} Chase`);
-          break;
-        }
-
-        if (cameOut && Math.abs(bot.floor - state.player.floor) <= 1 && !state.player.hidden) {
-          respawnAtZero(`${bot.id} Ambush`);
-          break;
-        } else if (bot.floor === state.player.floor && !state.player.hidden) {
-          respawnAtZero(`${bot.id} Chase`);
-          break;
+          knockDownBot(bot, "Chase");
+          continue;
         }
 
         if (bot.floor > state.player.floor + 55) bot.floor = Math.max(0, state.player.floor - 6);
@@ -3811,10 +3875,13 @@
         const t = Math.max(0, Math.min(1, (now - effect.start) / effect.duration));
 
         if (effect.type === "boulder") {
+          if (t >= BOULDER_HIT_AT) resolveBoulderHit(effect);
           const startP = screenPosition(effect.fromFloor, focus, width, height);
           const endP = screenPosition(effect.toFloor, focus, width, height);
-          const y = startP.y + (endP.y - startP.y) * t;
-          const pulse = Math.sin(t * Math.PI);
+          const fallT = Math.min(1, t / BOULDER_HIT_AT);
+          const eased = fallT * fallT;
+          const y = startP.y + (endP.y - startP.y) * eased;
+          const pulse = Math.sin(fallT * Math.PI);
           ctx.save();
           ctx.globalAlpha = 0.18 + pulse * 0.42;
           ctx.strokeStyle = "#9a9fa8";
@@ -3834,7 +3901,8 @@
           ctx.fillStyle = "#f5f1e8";
           ctx.font = "900 12px system-ui";
           ctx.textAlign = "center";
-          ctx.fillText(t < 0.35 ? "WARNING" : `ROCK ${effect.hits}`, startP.x, y - 72);
+          const rockLabel = effect.resolved ? `ROCK ${effect.hits}` : "ROCK";
+          ctx.fillText(t < BOULDER_WARNING_UNTIL ? "WARNING" : rockLabel, startP.x, y - 72);
           ctx.restore();
         }
 
@@ -4013,18 +4081,17 @@
       ui.liveLeader.textContent = liveLeader ? `LIVE #1 ${displayName(liveLeader)} ${liveLeader.floor}F` : "LIVE #1 -";
       ui.playerRankTab.classList.toggle("active", state.rankingTab === "players");
       ui.countryRankTab.classList.toggle("active", state.rankingTab === "countries");
+      ui.rankingPanel.classList.toggle("country-mode", state.rankingTab === "countries");
       ui.playerRankTab.setAttribute("aria-selected", state.rankingTab === "players" ? "true" : "false");
       ui.countryRankTab.setAttribute("aria-selected", state.rankingTab === "countries" ? "true" : "false");
 
       if (state.rankingTab === "countries") {
-        ui.rankHead.innerHTML = "<span>Rank</span><span>Country</span><span>Leader</span><span>Floor</span><span>Players</span>";
+        ui.rankHead.innerHTML = "<span>Rank</span><span>Country</span><span>Score</span>";
         ui.rankRows.innerHTML = countries.map((country, index) => (
           `<div class="rank-row">
             <span>${index === 0 ? "#1" : index + 1}</span>
             <span class="rank-id">${escapeHtml(country.country)}</span>
-            <span>${escapeHtml(country.leader.id)}</span>
-            <span class="rank-floor">${country.bestFloor}F</span>
-            <span class="rank-time">${country.players}</span>
+            <span class="rank-floor">${formatScore(country.score)}</span>
           </div>`
         )).join("");
       } else {
@@ -4063,7 +4130,7 @@
       }
 
       if (topCountryKey && state.lastCountryLeaderKey && topCountryKey !== state.lastCountryLeaderKey) {
-        addChat("SYSTEM", "--", `Country #1 retaken: ${topCountry.country} at ${topCountry.bestFloor}F, led by ${topCountry.leader.id}`);
+        addChat("SYSTEM", "--", `Country #1 retaken: ${topCountry.country} ${formatScore(topCountry.score)} pts`);
         state.lastCountryLeaderKey = topCountryKey;
       }
 
@@ -4071,7 +4138,7 @@
       if (now < state.nextRankingAnnouncementAt) return;
       state.nextRankingAnnouncementAt = now + 60000;
       if (topPlayer) addChat("SYSTEM", "--", `Player #1: ${displayName(topPlayer)} at ${topPlayer.bestFloor}F`);
-      if (topCountry) addChat("SYSTEM", "--", `Country #1: ${topCountry.country} at ${topCountry.bestFloor}F, led by ${topCountry.leader.id}`);
+      if (topCountry) addChat("SYSTEM", "--", `Country #1: ${topCountry.country} ${formatScore(topCountry.score)} pts`);
     }
 
     function openHelp() {
@@ -4120,6 +4187,7 @@
 
     function setChatExpanded(expanded) {
       ui.chatPanel.classList.toggle("expanded", expanded);
+      if (!expanded && document.activeElement === chatInput) chatInput.blur();
       if (ui.mobileControls) ui.mobileControls.classList.toggle("chat-expanded", expanded);
     }
 
@@ -4184,6 +4252,12 @@
       event.stopPropagation();
     });
 
+    document.addEventListener("pointerdown", (event) => {
+      if (!ui.chatPanel.classList.contains("expanded")) return;
+      if (event.target.closest("#chatPanel")) return;
+      setChatExpanded(false);
+    });
+
     ui.rankToggle.addEventListener("click", () => {
       setRankingCollapsed(!state.rankingCollapsed);
     });
@@ -4215,6 +4289,11 @@
     ui.helpClose.addEventListener("click", closeHelp);
     ui.helpConfirm.addEventListener("click", closeHelp);
     window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && ui.chatPanel.classList.contains("expanded")) {
+        event.preventDefault();
+        setChatExpanded(false);
+        return;
+      }
       if (event.key === "F1") {
         event.preventDefault();
         openHelp();
