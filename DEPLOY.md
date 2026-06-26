@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This project runs as a single Node server. The server serves `outputs/index.html` and synchronizes online players, chat, rankings, attacks, and connection events.
+This project runs as a single Node server for No End Rise. The server serves `outputs/index.html` and synchronizes online players, chat, rankings, attacks, and connection events.
 
 ## Local Run
 
@@ -27,6 +27,7 @@ Start Command: npm start
 ```
 
 5. After deployment, Render will provide a URL such as `https://...onrender.com`.
+6. Add `noendrise.com` as a custom domain in Render, then point the domain DNS records to Render's provided target.
 
 ## Railway Deployment
 

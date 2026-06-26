@@ -1,2 +1,3 @@
-# Infnity_upup
-Infnity_upup _ HTML Game
+# No End Rise
+
+Real-time endless stair climbing game for noendrise.com.

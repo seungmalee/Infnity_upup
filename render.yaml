@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: stair-online-game
+    name: noendrise-game
     runtime: node
     plan: free
     buildCommand: npm install
