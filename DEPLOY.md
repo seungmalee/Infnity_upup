@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This project runs as a single Node server for No End Rise. The server serves `outputs/index.html` and synchronizes online players, chat, rankings, attacks, and connection events.
+This project runs as a single Node server for Noendrise. The server serves `outputs/index.html` and synchronizes online players, chat, rankings, attacks, and connection events.
 
 ## Local Run
 
