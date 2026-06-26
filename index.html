@@ -877,7 +877,7 @@
       top: auto;
       bottom: calc(50px + env(safe-area-inset-bottom));
       display: none;
-      width: min(92vw, 282px);
+      width: min(96vw, 336px);
       grid-template-columns: 1fr;
       justify-items: center;
       gap: 0;
@@ -895,8 +895,8 @@
     }
 
     .mobile-pad {
-      grid-template-columns: repeat(3, 72px);
-      grid-template-rows: repeat(2, 64px);
+      grid-template-columns: repeat(3, 88px);
+      grid-template-rows: repeat(2, 78px);
       align-content: end;
       justify-content: start;
     }
@@ -908,8 +908,8 @@
       color: var(--text);
       box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
       min-width: 0;
-      min-height: 64px;
-      font-size: 24px;
+      min-height: 78px;
+      font-size: 30px;
       font-weight: 900;
       cursor: pointer;
       user-select: none;
@@ -1467,11 +1467,11 @@
         position: fixed;
         left: max(8px, env(safe-area-inset-left));
         right: auto;
-        top: 50%;
+        top: calc(max(8px, env(safe-area-inset-top)) + 320px);
         bottom: auto;
-        width: min(17vw, 68px);
-        padding: 6px;
-        transform: translateY(-50%);
+        width: min(14vw, 54px);
+        padding: 4px;
+        transform: none;
       }
 
       .item-bar .panel-title {
@@ -1480,7 +1480,7 @@
 
       .inventory {
         grid-template-columns: 1fr;
-        gap: 5px;
+        gap: 4px;
       }
 
       .meta,
@@ -1498,10 +1498,10 @@
       }
 
       .item-slot {
-        height: 42px;
+        height: 34px;
         justify-content: center;
-        padding: 0 4px;
-        font-size: 10px;
+        padding: 0 3px;
+        font-size: 8px;
         flex-direction: column;
         gap: 2px;
         cursor: pointer;
@@ -1520,7 +1520,7 @@
         overflow: hidden;
         text-align: center;
         color: var(--text);
-        font-size: 9px;
+        font-size: 8px;
         line-height: 1;
         white-space: nowrap;
       }
@@ -1531,8 +1531,9 @@
       }
 
       .item-key {
-        width: 18px;
-        height: 18px;
+        width: 15px;
+        height: 15px;
+        font-size: 9px;
       }
 
       .chat {
@@ -1696,7 +1697,7 @@
       }
 
       .item-slot {
-        height: 40px;
+        height: 32px;
       }
     }
 
@@ -1720,9 +1721,9 @@
       }
 
       .item-bar {
-        top: 50%;
+        top: calc(max(8px, env(safe-area-inset-top)) + 320px);
         bottom: auto;
-        width: min(18vw, 66px);
+        width: min(14vw, 52px);
       }
 
       .combo {
@@ -1753,7 +1754,7 @@
       }
 
       .mobile-controls {
-        width: min(94vw, 282px);
+        width: min(96vw, 336px);
         gap: 8px;
       }
 
@@ -1856,12 +1857,12 @@
   <section class="screen" id="joinScreen">
     <form class="join-card" id="joinForm">
       <h1>Noendrise</h1>
-      <p class="sub">Choose your ID and country, then climb as high as you can.</p>
+      <p class="sub" id="joinSub">Choose your ID and country, then climb as high as you can.</p>
 
       <label for="playerId">ID</label>
       <input id="playerId" maxlength="14" autocomplete="off" placeholder="stairking" required>
 
-      <label for="country">Country</label>
+      <label for="country" id="countryLabel">Country</label>
       <select id="country" required>
         <option value="KR">KR - South Korea</option>
         <option value="US">US - United States</option>
@@ -1875,13 +1876,19 @@
         <option value="AU">AU - Australia</option>
       </select>
 
-      <button class="start-btn" type="submit">Start Game</button>
+      <label for="language" id="languageLabel">Language</label>
+      <select id="language" required>
+        <option value="en">English</option>
+        <option value="ko">한국어</option>
+      </select>
+
+      <button class="start-btn" id="startBtn" type="submit">Start Game</button>
       <div class="ad-slot" aria-label="advertisement">
         Ads will appear here after AdSense approval.
       </div>
       <div class="site-links" aria-label="site links">
-        <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>
-        <a href="/contact.html" target="_blank" rel="noopener">Contact</a>
+        <a id="privacyLink" href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a>
+        <a id="contactLink" href="/contact.html" target="_blank" rel="noopener">Contact</a>
       </div>
     </form>
   </section>
@@ -1912,7 +1919,7 @@
     </div>
 
     <div class="item-bar">
-      <h2 class="panel-title">Items</h2>
+      <h2 class="panel-title" id="itemsTitle">Items</h2>
       <div class="inventory">
         <div class="item-slot" id="item0"><span class="item-key">1</span> Empty</div>
         <div class="item-slot" id="item1"><span class="item-key">2</span> Empty</div>
@@ -1944,11 +1951,11 @@
     </section>
 
     <section class="chat" id="chatPanel">
-      <h2 class="panel-title">Chat</h2>
+      <h2 class="panel-title" id="chatTitle">Chat</h2>
       <div class="chat-log" id="chatLog"></div>
       <form id="chatForm">
         <input id="chatInput" maxlength="70" autocomplete="off" placeholder="Type a message">
-        <button type="submit">Send</button>
+        <button id="chatSendBtn" type="submit">Send</button>
       </form>
     </section>
 
@@ -1965,9 +1972,9 @@
         <button class="help-close" id="helpClose" type="button" aria-label="Close">x</button>
       </div>
       <div class="help-body">
-        <p>Use the arrow keys to move. Press Down to hide.</p>
-        <p>Use items with the 1, 2, and 3 keys.</p>
-        <p>Press F1 to open this help again.</p>
+        <p id="helpMove">Use the arrow keys to move. Press Down to hide.</p>
+        <p id="helpItems">Use items with the 1, 2, and 3 keys.</p>
+        <p id="helpAgain">Press F1 to open this help again.</p>
       </div>
       <button class="help-confirm" id="helpConfirm" type="button">OK</button>
     </div>
@@ -2020,6 +2027,13 @@
     const chatForm = document.getElementById("chatForm");
     const chatInput = document.getElementById("chatInput");
     const ui = {
+      joinSub: document.getElementById("joinSub"),
+      countryLabel: document.getElementById("countryLabel"),
+      languageLabel: document.getElementById("languageLabel"),
+      languageSelect: document.getElementById("language"),
+      startBtn: document.getElementById("startBtn"),
+      privacyLink: document.getElementById("privacyLink"),
+      contactLink: document.getElementById("contactLink"),
       floor: document.getElementById("floor"),
       idleTimer: document.getElementById("idleTimer"),
       combo: document.getElementById("combo"),
@@ -2033,19 +2047,26 @@
       nextGoal: document.getElementById("nextGoal"),
       boostBtn: document.getElementById("boostBtn"),
       shareBtn: document.getElementById("shareBtn"),
+      itemsTitle: document.getElementById("itemsTitle"),
       titleBtn: document.getElementById("titleBtn"),
       titleModal: document.getElementById("titleModal"),
+      titleModalTitle: document.getElementById("titleModalTitle"),
       titleClose: document.getElementById("titleClose"),
       titleList: document.getElementById("titleList"),
       deathShareModal: document.getElementById("deathShareModal"),
+      deathShareTitle: document.getElementById("deathShareTitle"),
       deathShareReason: document.getElementById("deathShareReason"),
       deathShareFloor: document.getElementById("deathShareFloor"),
       deathShareBtn: document.getElementById("deathShareBtn"),
       deathContinueBtn: document.getElementById("deathContinueBtn"),
+      helpTitle: document.getElementById("helpTitle"),
+      helpMove: document.getElementById("helpMove"),
+      helpItems: document.getElementById("helpItems"),
+      helpAgain: document.getElementById("helpAgain"),
+      helpConfirm: document.getElementById("helpConfirm"),
       mobileIdleFill: document.getElementById("mobileIdleFill"),
       helpModal: document.getElementById("helpModal"),
       helpClose: document.getElementById("helpClose"),
-      helpConfirm: document.getElementById("helpConfirm"),
       itemSlots: [
         document.getElementById("item0"),
         document.getElementById("item1"),
@@ -2060,7 +2081,9 @@
       rankHead: document.getElementById("rankHead"),
       rankRows: document.getElementById("rankRows"),
       chatPanel: document.getElementById("chatPanel"),
+      chatTitle: document.getElementById("chatTitle"),
       chatLog: document.getElementById("chatLog"),
+      chatSendBtn: document.getElementById("chatSendBtn"),
       notice: document.getElementById("notice"),
       mobileControls: document.querySelector(".mobile-controls")
     };
@@ -2082,7 +2105,6 @@
     const BOULDER_STUN = 1000;
     const BOULDER_DURATION = 1800;
     const BOULDER_HIT_AT = 0.82;
-    const BOULDER_WARNING_UNTIL = 0.55;
     const MISSILE_STUN = 3000;
     const MISSILE_DURATION = 2800;
     const MISSILE_HIT_AT = 0.96;
@@ -2101,6 +2123,7 @@
     const PROFILE_KEY = "stairProfile";
     const PLAYER_KEY = "stairPlayerKey";
     const HELP_SEEN_KEY = "stairHelpSeen";
+    const LANGUAGE_KEY = "noendriseLanguage";
     const BOT_DATA = [
       ["Alex", "US"],
       ["Minji", "KR"],
@@ -2158,6 +2181,7 @@
       remotePlayers: [],
       leaderboard: [],
       rankingTab: "players",
+      language: localStorage.getItem(LANGUAGE_KEY) === "ko" ? "ko" : "en",
       nextRankingAnnouncementAt: 0,
       lastPlayerLeaderKey: "",
       lastCountryLeaderKey: "",
@@ -2186,6 +2210,197 @@
       pendingRespawnBestFloor: 0,
     };
 
+    const I18N = {
+      en: {
+        joinSub: "Choose your ID and country, then climb as high as you can.",
+        country: "Country",
+        language: "Language",
+        startGame: "Start Game",
+        privacy: "Privacy Policy",
+        contact: "Contact",
+        items: "Items",
+        ranking: "Ranking",
+        players: "Players",
+        countries: "Countries",
+        chat: "Chat",
+        send: "Send",
+        shareBest: "Share Best",
+        titleAuto: "Title: Auto",
+        titlePrefix: "Title:",
+        auto: "Auto",
+        bestTitle: "Best title",
+        chooseTitle: "Choose Title",
+        titles: "Titles",
+        decorations: "Decorations",
+        locked: "Locked",
+        help: "Help",
+        helpMove: "Use the arrow keys to move. Press Down to hide.",
+        helpItems: "Use items with the 1, 2, and 3 keys.",
+        helpAgain: "Press F1 to open this help again.",
+        ok: "OK",
+        runEnded: "Run ended",
+        fellToZero: "You fell to 0F.",
+        bestFloor: "Best Floor",
+        share: "Share",
+        continue: "Continue",
+        controlsTitle: "Controls",
+        controlsBody: "← / ↑ / →: Move, ↓: Hide, 1/2/3: Items",
+        next: "NEXT",
+        item: "ITEM",
+        life: "LIFE",
+        title: "TITLE",
+        empty: "EMPTY",
+        hideOk: "HIDE OK",
+        hideOn: "HIDE ON",
+        hide: "HIDE",
+        rest: "REST",
+        stay: "STAY",
+        safe: "SAFE",
+        showRanking: "Show ranking",
+        hideRanking: "Hide ranking",
+        rank: "Rank",
+        score: "Score",
+        floor: "Floor",
+        time: "Time",
+        liveLeader: "LIVE #1",
+        gameStarted: "Game started!",
+        connectedOnline: "Connected online.",
+        copied: "Share text copied.",
+        shared: "Shared your best floor.",
+        copyPrompt: "Copy your Noendrise score:",
+        shareText: (floor) => `I reached ${floor}F in Noendrise. Can you climb higher?`,
+        titleNames: {},
+        itemNames: { Boulder: "Boulder", Warp: "Warp", Shield: "Shield", "Hide Reset": "Hide Reset", Missile: "Missile", Wings: "Wings", Crown: "Crown" },
+        requirements: { "Player #1": "Player #1", "Country #1": "Country #1", "100 kills": "100 kills" }
+      },
+      ko: {
+        joinSub: "아이디와 국가를 고르고, 최대한 높이 올라가세요.",
+        country: "국가",
+        language: "언어",
+        startGame: "게임 시작",
+        privacy: "개인정보 처리방침",
+        contact: "문의",
+        items: "아이템",
+        ranking: "랭킹",
+        players: "플레이어",
+        countries: "국가",
+        chat: "채팅",
+        send: "전송",
+        shareBest: "최고층 공유",
+        titleAuto: "칭호: 자동",
+        titlePrefix: "칭호:",
+        auto: "자동",
+        bestTitle: "최고 칭호",
+        chooseTitle: "칭호 선택",
+        titles: "칭호",
+        decorations: "장식",
+        locked: "잠김",
+        help: "도움말",
+        helpMove: "방향키로 이동합니다. 아래 방향키를 누르면 숨습니다.",
+        helpItems: "1, 2, 3 키로 아이템을 사용합니다.",
+        helpAgain: "F1을 누르면 도움말을 다시 열 수 있습니다.",
+        ok: "확인",
+        runEnded: "도전 종료",
+        fellToZero: "0층으로 떨어졌습니다.",
+        bestFloor: "최고층",
+        share: "공유",
+        continue: "계속하기",
+        controlsTitle: "조작",
+        controlsBody: "← / ↑ / →: 이동, ↓: 숨기, 1/2/3: 아이템",
+        next: "다음",
+        item: "아이템",
+        life: "목숨",
+        title: "칭호",
+        empty: "비어 있음",
+        hideOk: "숨기 가능",
+        hideOn: "숨는 중",
+        hide: "숨기",
+        rest: "휴식",
+        stay: "대기",
+        safe: "안전",
+        showRanking: "랭킹 보이기",
+        hideRanking: "랭킹 숨기기",
+        rank: "순위",
+        score: "점수",
+        floor: "층",
+        time: "시간",
+        liveLeader: "실시간 1위",
+        gameStarted: "게임 시작!",
+        connectedOnline: "온라인에 연결되었습니다.",
+        copied: "공유 문구를 복사했습니다.",
+        shared: "최고층을 공유했습니다.",
+        copyPrompt: "Noendrise 기록을 복사하세요:",
+        shareText: (floor) => `Noendrise에서 ${floor}층까지 올라갔습니다. 더 높이 올라갈 수 있나요?`,
+        titleNames: {},
+        itemNames: { Boulder: "낙석", Warp: "워프", Shield: "방패", "Hide Reset": "숨기 초기화", Missile: "미사일", Wings: "날개", Crown: "왕관" },
+        requirements: { "Player #1": "플레이어 1위", "Country #1": "국가 1위", "100 kills": "100킬" }
+      }
+    };
+
+    function t(key, fallback = "") {
+      const lang = I18N[state.language] ? state.language : "en";
+      return I18N[lang][key] ?? I18N.en[key] ?? fallback ?? key;
+    }
+
+    function translatedItemName(name) {
+      return (I18N[state.language] && I18N[state.language].itemNames[name]) || name;
+    }
+
+    function translatedRequirement(requirement) {
+      return (I18N[state.language] && I18N[state.language].requirements[requirement]) || requirement;
+    }
+
+    function translatedTitleName(title) {
+      return (I18N[state.language] && I18N[state.language].titleNames[title]) || title;
+    }
+
+    function controlsHtml() {
+      return `<strong>${escapeHtml(t("controlsTitle"))}</strong><br>${escapeHtml(t("controlsBody"))}`;
+    }
+
+    function setLanguage(language) {
+      state.language = language === "ko" ? "ko" : "en";
+      localStorage.setItem(LANGUAGE_KEY, state.language);
+      document.documentElement.lang = state.language;
+      if (ui.languageSelect) ui.languageSelect.value = state.language;
+      applyLanguage();
+      renderChat();
+      renderHud();
+    }
+
+    function applyLanguage() {
+      if (ui.joinSub) ui.joinSub.textContent = t("joinSub");
+      if (ui.countryLabel) ui.countryLabel.textContent = t("country");
+      if (ui.languageLabel) ui.languageLabel.textContent = t("language");
+      if (ui.startBtn) ui.startBtn.textContent = t("startGame");
+      if (ui.privacyLink) ui.privacyLink.textContent = t("privacy");
+      if (ui.contactLink) ui.contactLink.textContent = t("contact");
+      if (ui.itemsTitle) ui.itemsTitle.textContent = t("items");
+      if (ui.rankingTitle) ui.rankingTitle.textContent = t("ranking");
+      if (ui.playerRankTab) ui.playerRankTab.textContent = t("players");
+      if (ui.countryRankTab) ui.countryRankTab.textContent = t("countries");
+      if (ui.chatTitle) ui.chatTitle.textContent = t("chat");
+      if (chatInput) chatInput.placeholder = state.language === "ko" ? "메시지 입력" : "Type a message";
+      if (ui.chatSendBtn) ui.chatSendBtn.textContent = t("send");
+      if (ui.shareBtn) ui.shareBtn.textContent = t("shareBest");
+      if (ui.helpTitle) ui.helpTitle.textContent = t("help");
+      if (ui.helpMove) ui.helpMove.textContent = t("helpMove");
+      if (ui.helpItems) ui.helpItems.textContent = t("helpItems");
+      if (ui.helpAgain) ui.helpAgain.textContent = t("helpAgain");
+      if (ui.helpConfirm) ui.helpConfirm.textContent = t("ok");
+      if (ui.titleModalTitle) ui.titleModalTitle.textContent = t("chooseTitle");
+      if (ui.deathShareTitle) ui.deathShareTitle.textContent = t("runEnded");
+      if (ui.deathShareReason && !state.pendingRespawnReason) ui.deathShareReason.textContent = t("fellToZero");
+      if (ui.deathShareModal) {
+        const scoreLabel = ui.deathShareModal.querySelector(".share-score span");
+        if (scoreLabel) scoreLabel.textContent = t("bestFloor");
+      }
+      if (ui.deathShareBtn) ui.deathShareBtn.textContent = t("share");
+      if (ui.deathContinueBtn) ui.deathContinueBtn.textContent = t("continue");
+      if (ui.notice && performance.now() > state.noticeUntil) ui.notice.innerHTML = controlsHtml();
+      setRankingCollapsed(state.rankingCollapsed);
+    }
+
     function flagEmoji(country) {
       const code = String(country || "").trim().toUpperCase();
       if (!/^[A-Z]{2}$/.test(code)) return "--";
@@ -2195,7 +2410,7 @@
     function displayName(player) {
       if (!player || !player.id) return "ID NONE";
       const title = selectedTitleForPlayer(player);
-      return `${title ? `${title} ` : ""}${flagEmoji(player.country)} ${player.id}`;
+      return `${title ? `${translatedTitleName(title)} ` : ""}${flagEmoji(player.country)} ${player.id}`;
     }
 
     function titleAbbreviation(title) {
@@ -2266,8 +2481,8 @@
 
     function titleRequirement(tier) {
       if (tier.type === "floor") return `${tier.floor}F`;
-      if (tier.type === "kill") return `${tier.kills} kills`;
-      if (tier.type === "death") return `${tier.deaths} deaths`;
+      if (tier.type === "kill") return state.language === "ko" ? `${tier.kills}킬` : `${tier.kills} kills`;
+      if (tier.type === "death") return state.language === "ko" ? `${tier.deaths}회 사망` : `${tier.deaths} deaths`;
       return "";
     }
 
@@ -2294,7 +2509,7 @@
     function titleHtml(player) {
       const title = selectedTitleForPlayer(player);
       const className = titleClass(title);
-      return title ? `<span class="player-title ${escapeHtml(className)}">${escapeHtml(title)}</span>` : "";
+      return title ? `<span class="player-title ${escapeHtml(className)}">${escapeHtml(translatedTitleName(title))}</span>` : "";
     }
 
     function floorTheme(floor) {
@@ -2352,6 +2567,7 @@
         deaths: state.deaths,
         gold: state.gold,
         lives: state.lives,
+        language: state.language,
         rewardedMilestones: [...state.rewardedMilestones],
         rewardedLifeMilestones: [...state.rewardedLifeMilestones],
         playerKey: state.online.playerKey,
@@ -2569,7 +2785,7 @@
     function showNotice(text) {
       state.noticeText = text;
       state.noticeUntil = performance.now() + 2600;
-        ui.notice.innerHTML = "<strong>Controls</strong><br>← / ↑ / →: Move, ↓: Hide, 1/2/3: Items";
+      ui.notice.textContent = text;
     }
 
     function playFootstep() {
@@ -2840,8 +3056,8 @@
       };
       clearInterval(state.online.syncTimer);
       state.online.syncTimer = setInterval(syncOnlineState, 900);
-      showNotice("Connected online.");
-      addChat("SYSTEM", "--", "Connected online.");
+      showNotice(t("connectedOnline"));
+      addChat("SYSTEM", "--", t("connectedOnline"));
       syncOnlineState();
     }
 
@@ -2886,9 +3102,9 @@
       sessionStorage.setItem("rankingCollapsed", String(collapsed));
       ui.rankingPanel.classList.toggle("collapsed", collapsed);
       ui.rankToggle.textContent = collapsed ? "+" : "-";
-      ui.rankToggle.setAttribute("aria-label", collapsed ? "Show ranking" : "Hide ranking");
-      ui.rankToggle.title = collapsed ? "Show ranking" : "Hide ranking";
-      ui.rankingTitle.textContent = "Ranking";
+      ui.rankToggle.setAttribute("aria-label", collapsed ? t("showRanking") : t("hideRanking"));
+      ui.rankToggle.title = collapsed ? t("showRanking") : t("hideRanking");
+      ui.rankingTitle.textContent = t("ranking");
     }
 
     function formatDuration(ms) {
@@ -2947,7 +3163,7 @@
 
     function shareText() {
       const floor = bestShareFloor();
-      return `I reached ${floor}F in Noendrise. Can you climb higher? ${shareUrl()}`;
+      return `${t("shareText")(floor)} ${shareUrl()}`;
     }
 
     async function shareBestFloor() {
@@ -2955,24 +3171,24 @@
       const text = shareText();
       const data = {
         title: "Noendrise",
-        text: `I reached ${floor}F in Noendrise. Can you climb higher?`,
+        text: t("shareText")(floor),
         url: shareUrl()
       };
       try {
         if (navigator.share) {
           await navigator.share(data);
-          showNotice("Shared your best floor.");
+          showNotice(t("shared"));
           return;
         }
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(text);
-          showNotice("Share text copied.");
+          showNotice(t("copied"));
           return;
         }
       } catch (error) {
         if (error && error.name === "AbortError") return;
       }
-      window.prompt("Copy your Noendrise score:", text);
+      window.prompt(t("copyPrompt"), text);
     }
 
     function buildPlayerRankings() {
@@ -3049,7 +3265,8 @@
       ].filter((goal) => goal.floor > floor).sort((a, b) => a.floor - b.floor);
       const nextFloor = goals[0] ? goals[0].floor : Math.ceil((floor + 1) / 100) * 100;
       const labels = [...new Set(goals.filter((goal) => goal.floor === nextFloor).map((goal) => goal.label))];
-      return { floor: nextFloor, label: labels.length ? labels.join("/") : "ITEM" };
+      const translatedLabels = labels.map((label) => label === "ITEM" ? t("item") : label === "LIFE" ? t("life") : label === "TITLE" ? t("title") : label);
+      return { floor: nextFloor, label: translatedLabels.length ? translatedLabels.join("/") : t("item") };
     }
 
     function pulseDanger(power = 0.45) {
@@ -3066,10 +3283,10 @@
 
     function cooldownText() {
       const left = hideCooldownLeft();
-      if (left <= 0) return "HIDE OK";
+      if (left <= 0) return t("hideOk");
       const min = Math.floor(left / 60000);
       const sec = Math.ceil((left % 60000) / 1000);
-      return `Hide ${min}:${String(sec).padStart(2, "0")}`;
+      return `${t("hide")} ${min}:${String(sec).padStart(2, "0")}`;
     }
 
     function hideCooldownLeft() {
@@ -3154,6 +3371,7 @@
         type: "boulder",
         fromFloor,
         toFloor,
+        targetFloor: Number.isFinite(Number(options.targetFloor)) ? Number(options.targetFloor) : toFloor,
         hits,
         targetKind: options.targetKind || "",
         sourceId: options.sourceId || "",
@@ -3256,8 +3474,9 @@
 
       if (effect.targetKind !== "player") return;
 
-      const inRange = !state.player.hidden && state.player.floor >= effect.toFloor && state.player.floor <= effect.fromFloor;
-      if (inRange && applyStun(state.player, BOULDER_STUN, "Boulder")) {
+      const targetFloor = Number.isFinite(Number(effect.targetFloor)) ? Number(effect.targetFloor) : effect.toFloor;
+      const hit = !state.player.hidden && Number(state.player.floor || 0) === targetFloor;
+      if (hit && applyStun(state.player, BOULDER_STUN, "Boulder")) {
         effect.hits = 1;
         showNotice(`${effect.sourceId || "Bot"} Boulder hit`);
         addChat("SYSTEM", "--", `${effect.sourceId || "Bot"} Boulder: player stunned`);
@@ -3407,7 +3626,9 @@
 
       if (item.type === "boulder") {
         const minFloor = Math.max(0, bot.floor - 100);
-        addBoulderEffect(bot.floor, minFloor, 0, { targetKind: "player", sourceId: bot.id });
+        const targetFloor = Math.max(0, Number(state.player.floor || 0));
+        if (targetFloor <= 1) return;
+        addBoulderEffect(bot.floor, targetFloor, 0, { targetKind: "player", sourceId: bot.id, targetFloor });
         showNotice(`${bot.id} Boulder incoming`);
         addChat("SYSTEM", "--", `${bot.id} Boulder: incoming`);
       }
@@ -3584,8 +3805,9 @@
       syncOnlineState();
     }
 
-    function startGame(id, country) {
+    function startGame(id, country, language = state.language) {
       state.mode = "play";
+      setLanguage(language);
       state.player.id = id;
       state.player.country = country;
       state.player.floor = 0;
@@ -3610,7 +3832,7 @@
     resetBots();
       joinScreen.classList.add("hidden");
       saveSessionProfile();
-      showNotice("Game started!");
+      showNotice(t("gameStarted"));
       addChat("SYSTEM", "--", `${id} started the game.`);
       if (!sessionStorage.getItem(HELP_SEEN_KEY)) {
         openHelp();
@@ -3646,6 +3868,7 @@
         state.deaths = Number(profile.deaths || 0);
         state.gold = Number(profile.gold || 0);
         state.lives = Number(profile.lives || 0);
+        setLanguage(profile.language || localStorage.getItem(LANGUAGE_KEY) || state.language);
         state.nextRankingAnnouncementAt = 0;
         state.lastPlayerLeaderKey = "";
         state.lastCountryLeaderKey = "";
@@ -4034,18 +4257,11 @@
       ctx.fillStyle = varColor("--text");
       ctx.font = "800 12px system-ui";
       ctx.textAlign = "center";
-      if (visibleAlpha > 0.55) {
-        const tag = performance.now() < (entity.stunnedUntil || 0) ? "STUN" : label;
-        const tagWidth = Math.min(168, ctx.measureText(tag).width + 14);
-        ctx.fillStyle = "rgba(13, 18, 28, 0.78)";
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(-tagWidth / 2, -40, tagWidth, 18, 6);
-        ctx.fill();
-        ctx.stroke();
+      if (visibleAlpha > 0.55 && performance.now() < (entity.stunnedUntil || 0)) {
+        ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+        ctx.shadowBlur = 5;
         ctx.fillStyle = varColor("--text");
-        ctx.fillText(tag, 0, -27);
+        ctx.fillText("STUN", 0, -27);
       }
       ctx.restore();
     }
@@ -4064,14 +4280,6 @@
           const y = startP.y + (endP.y - startP.y) * eased;
           const pulse = Math.sin(fallT * Math.PI);
           ctx.save();
-          ctx.globalAlpha = 0.18 + pulse * 0.42;
-          ctx.strokeStyle = "#9a9fa8";
-          ctx.lineWidth = 10;
-          ctx.beginPath();
-          ctx.moveTo(startP.x, startP.y - 80);
-          ctx.lineTo(endP.x, endP.y + 20);
-          ctx.stroke();
-          ctx.globalAlpha = 1;
           ctx.fillStyle = "#6b7078";
           ctx.strokeStyle = "#d8dde5";
           ctx.lineWidth = 3;
@@ -4079,11 +4287,6 @@
           ctx.arc(startP.x, y - 42, 18 + pulse * 7, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
-          ctx.fillStyle = "#f5f1e8";
-          ctx.font = "900 12px system-ui";
-          ctx.textAlign = "center";
-          const rockLabel = effect.resolved ? `ROCK ${effect.hits}` : "ROCK";
-          ctx.fillText(t < BOULDER_WARNING_UNTIL ? "WARNING" : rockLabel, startP.x, y - 72);
           ctx.restore();
         }
 
@@ -4234,22 +4437,22 @@
       const stunned = Math.max(0, state.player.stunnedUntil - performance.now());
       const shieldLeft = shieldSecondsLeft(state.player);
       ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">(${state.gold}/500G)</span>`;
-      ui.titleBtn.textContent = `Title: ${state.player.selectedTitle || "Auto"}`;
-      ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? "HIDE ON" : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? "HIDE OK" : `HIDE ${Math.ceil(hideCooldownLeft() / 1000)}s`;
+      ui.titleBtn.textContent = `${t("titlePrefix")} ${state.player.selectedTitle ? translatedTitleName(state.player.selectedTitle) : t("auto")}`;
+      ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? t("hideOn") : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? t("hideOk") : `${t("hide")} ${Math.ceil(hideCooldownLeft() / 1000)}s`;
       const nextGoal = nextGoalInfo();
-      ui.nextGoal.innerHTML = `NEXT<span>${nextGoal.floor}F ${nextGoal.label}</span>`;
+      ui.nextGoal.innerHTML = `${escapeHtml(t("next"))}<span>${nextGoal.floor}F ${escapeHtml(nextGoal.label)}</span>`;
       const idleLimit = idleLimitForFloor();
       const resting = isRestFloor(state.player.floor);
       const idleLeft = resting || state.player.hidden || stunned > 0 ? idleLimit : Math.max(0, idleLimit - (performance.now() - state.floorHold.since));
       const idleProgress = resting || state.player.hidden || stunned > 0 ? 0 : Math.min(1, Math.max(0, 1 - idleLeft / idleLimit));
       ui.idleTimer.classList.toggle("danger", !resting && idleLeft <= 1200 && !state.player.hidden && stunned <= 0);
-      ui.idleTimer.querySelector(".idle-label").textContent = resting ? "REST" : state.player.hidden ? "HIDE" : stunned > 0 ? "STUN" : "STAY";
-      ui.idleTimer.querySelector(".idle-value").textContent = resting ? "SAFE" : `${(idleLeft / 1000).toFixed(1)}s`;
+      ui.idleTimer.querySelector(".idle-label").textContent = resting ? t("rest") : state.player.hidden ? t("hide") : stunned > 0 ? "STUN" : t("stay");
+      ui.idleTimer.querySelector(".idle-value").textContent = resting ? t("safe") : `${(idleLeft / 1000).toFixed(1)}s`;
       ui.mobileIdleFill.style.width = `${Math.round(idleProgress * 100)}%`;
 
       state.inventory.forEach((item, index) => {
         ui.itemSlots[index].classList.toggle("ready", Boolean(item));
-        const fullName = item ? item.name : "EMPTY";
+        const fullName = item ? translatedItemName(item.name) : t("empty");
         const shortName = item ? item.short : "-";
         ui.itemSlots[index].innerHTML = `<span class="item-key">${index + 1}</span><span class="item-name">${escapeHtml(fullName)}</span><span class="item-short">${escapeHtml(shortName)}</span>`;
       });
@@ -4259,7 +4462,7 @@
       const liveLeader = [state.player, ...opponents()]
         .filter((player) => player.id)
         .sort((a, b) => Number(b.floor || 0) - Number(a.floor || 0))[0];
-      ui.liveLeader.textContent = liveLeader ? `LIVE #1 ${displayName(liveLeader)} ${liveLeader.floor}F` : "LIVE #1 -";
+      ui.liveLeader.textContent = liveLeader ? `${t("liveLeader")} ${displayName(liveLeader)} ${liveLeader.floor}F` : `${t("liveLeader")} -`;
       ui.playerRankTab.classList.toggle("active", state.rankingTab === "players");
       ui.countryRankTab.classList.toggle("active", state.rankingTab === "countries");
       ui.rankingPanel.classList.toggle("country-mode", state.rankingTab === "countries");
@@ -4267,7 +4470,7 @@
       ui.countryRankTab.setAttribute("aria-selected", state.rankingTab === "countries" ? "true" : "false");
 
       if (state.rankingTab === "countries") {
-        ui.rankHead.innerHTML = "<span>Rank</span><span>Country</span><span>Score</span>";
+        ui.rankHead.innerHTML = `<span>${escapeHtml(t("rank"))}</span><span>${escapeHtml(t("country"))}</span><span>${escapeHtml(t("score"))}</span>`;
         ui.rankRows.innerHTML = countries.map((country, index) => (
           `<div class="rank-row">
             <span>${index === 0 ? "#1" : index + 1}</span>
@@ -4276,7 +4479,7 @@
           </div>`
         )).join("");
       } else {
-        ui.rankHead.innerHTML = "<span>Rank</span><span>ID</span><span>Country</span><span>Floor</span><span>Time</span>";
+        ui.rankHead.innerHTML = `<span>${escapeHtml(t("rank"))}</span><span>ID</span><span>${escapeHtml(t("country"))}</span><span>${escapeHtml(t("floor"))}</span><span>${escapeHtml(t("time"))}</span>`;
         ui.rankRows.innerHTML = players.map((player, index) => (
           `<div class="rank-row">
             <span>${index === 0 ? "#1" : index + 1}</span>
@@ -4289,7 +4492,7 @@
       }
 
       if (performance.now() > state.noticeUntil) {
-        ui.notice.innerHTML = "<strong>Controls</strong><br>← / ↑ / →: Move, ↓: Hide, 1/2/3: Items";
+        ui.notice.innerHTML = controlsHtml();
       }
     }
 
@@ -4337,22 +4540,22 @@
       const currentCosmetic = state.player.selectedCosmetic || "";
       const titleRows = [
         `<button class="title-choice ${current ? "" : "active"}" type="button" data-title="">
-          <span>Auto</span><small>Best title</small>
+          <span>${escapeHtml(t("auto"))}</span><small>${escapeHtml(t("bestTitle"))}</small>
         </button>`,
         ...TITLE_TIERS.map((tier) => {
           const unlocked = titleUnlocked(tier, state.player);
           const active = current === tier.title;
           return `<button class="title-choice ${active ? "active" : ""} ${unlocked ? "" : "locked"}" type="button" data-title="${escapeHtml(tier.title)}" ${unlocked ? "" : "disabled"}>
-            <span class="title-name ${escapeHtml(tier.className || "")}">${escapeHtml(tier.title)}</span><small>${escapeHtml(titleRequirement(tier))}${unlocked ? "" : " Locked"}</small>
+            <span class="title-name ${escapeHtml(tier.className || "")}">${escapeHtml(translatedTitleName(tier.title))}</span><small>${escapeHtml(titleRequirement(tier))}${unlocked ? "" : ` ${escapeHtml(t("locked"))}`}</small>
           </button>`;
         })
       ];
       const cosmeticRows = unlockedCosmeticsForPlayer(state.player).map((cosmetic) => (
         `<button class="title-choice ${currentCosmetic === cosmetic.type ? "active" : ""} ${cosmetic.unlocked ? "" : "locked"}" type="button" data-cosmetic="${escapeHtml(cosmetic.type)}" ${cosmetic.unlocked ? "" : "disabled"}>
-          <span>${escapeHtml(cosmetic.name)}</span><small>${escapeHtml(cosmetic.requirement)}${cosmetic.unlocked ? "" : " Locked"}</small>
+          <span>${escapeHtml(translatedItemName(cosmetic.name))}</span><small>${escapeHtml(translatedRequirement(cosmetic.requirement))}${cosmetic.unlocked ? "" : ` ${escapeHtml(t("locked"))}`}</small>
         </button>`
       ));
-      ui.titleList.innerHTML = `<div class="title-section">Titles</div>${titleRows.join("")}<div class="title-section">Decorations</div>${cosmeticRows.join("")}`;
+      ui.titleList.innerHTML = `<div class="title-section">${escapeHtml(t("titles"))}</div>${titleRows.join("")}<div class="title-section">${escapeHtml(t("decorations"))}</div>${cosmeticRows.join("")}`;
     }
 
     function openTitleModal() {
@@ -4406,9 +4609,14 @@
       event.preventDefault();
       const id = document.getElementById("playerId").value.trim().replace(/\s+/g, "_");
       const country = document.getElementById("country").value;
+      const language = ui.languageSelect ? ui.languageSelect.value : state.language;
       if (!id) return;
-      startGame(id, country);
+      startGame(id, country, language);
     });
+
+    if (ui.languageSelect) {
+      ui.languageSelect.addEventListener("change", () => setLanguage(ui.languageSelect.value));
+    }
 
     chatForm.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -4485,6 +4693,7 @@
     });
 
     resetBots();
+    setLanguage(localStorage.getItem(LANGUAGE_KEY) || state.language);
     restoreSessionProfile();
     resize();
     renderChat();

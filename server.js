@@ -607,6 +607,17 @@ const server = http.createServer(async (req, res) => {
       const ms = Math.max(500, Math.min(5000, Number(body.ms || 3000)));
       const reason = String(body.reason || "Stun").slice(0, 80);
       source.lastSeen = Date.now();
+      target.lastSeen = Date.now();
+      if (Number(target.floor || 0) <= 1) {
+        const targetClient = clients.get(targetId);
+        const payload = { type: "state", reason: "1F safety", sourceId: source.onlineId, players: publicPlayers(), leaderboard, chat };
+        if (targetClient) {
+          targetClient.write(`data: ${JSON.stringify(payload)}\n\n`);
+        }
+        broadcast("state");
+        sendJson(req, res, 200, { ok: true, blocked: true });
+        return;
+      }
       const targetClient = clients.get(targetId);
       if (targetClient) {
         targetClient.write(`data: ${JSON.stringify({ type: "stunned", reason, ms, sourceId: source.onlineId, players: publicPlayers(), leaderboard, chat })}\n\n`);
