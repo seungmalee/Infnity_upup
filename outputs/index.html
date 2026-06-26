@@ -875,7 +875,7 @@
       left: 50%;
       right: auto;
       top: auto;
-      bottom: calc(50px + env(safe-area-inset-bottom));
+      bottom: calc(48px + env(safe-area-inset-bottom));
       display: none;
       width: min(96vw, 336px);
       grid-template-columns: 1fr;
@@ -2426,7 +2426,8 @@
       if (!player || !player.id) return "ID NONE";
       const title = selectedTitleForPlayer(player);
       const abbr = titleAbbreviation(title);
-      return `${abbr ? `[${abbr}] ` : ""}${flagEmoji(player.country)} ${player.id}`;
+      const country = String(player.country || "--").trim().toUpperCase().slice(0, 3) || "--";
+      return `${country}${abbr ? ` ${abbr}` : ""} ${player.id}`;
     }
 
     function displayNameHtml(player) {
@@ -3627,7 +3628,7 @@
       if (item.type === "boulder") {
         const minFloor = Math.max(0, bot.floor - 100);
         const targetFloor = Math.max(0, Number(state.player.floor || 0));
-        if (targetFloor <= 1) return;
+        if (targetFloor <= 0) return;
         addBoulderEffect(bot.floor, targetFloor, 0, { targetKind: "player", sourceId: bot.id, targetFloor });
         showNotice(`${bot.id} Boulder incoming`);
         addChat("SYSTEM", "--", `${bot.id} Boulder: incoming`);
@@ -3673,13 +3674,13 @@
     }
 
     function isPenaltyProtectedFloor() {
-      return Number(state.player.floor || 0) <= 1;
+      return Number(state.player.floor || 0) <= 0;
     }
 
     function ignoreLowFloorPenalty(reason) {
       resetFloorHold();
-      showNotice("Safe on 1F");
-      if (reason) addChat("SYSTEM", "--", `1F safety: ${reason} ignored`);
+      showNotice("Safe on 0F");
+      if (reason) addChat("SYSTEM", "--", `0F safety: ${reason} ignored`);
     }
 
     function openDeathShareModal(reason) {
@@ -4108,7 +4109,7 @@
 
     function updateFloorHold(now) {
       if (state.mode !== "play") return;
-      if (Number(state.player.floor || 0) <= 1) {
+      if (Number(state.player.floor || 0) <= 0) {
         resetFloorHold(now);
         return;
       }
@@ -4257,11 +4258,13 @@
       ctx.fillStyle = varColor("--text");
       ctx.font = "800 12px system-ui";
       ctx.textAlign = "center";
-      if (visibleAlpha > 0.55 && performance.now() < (entity.stunnedUntil || 0)) {
+      if (visibleAlpha > 0.55) {
+        const stunned = performance.now() < (entity.stunnedUntil || 0);
+        const tag = stunned ? `STUN ${label}` : label;
         ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
         ctx.shadowBlur = 5;
         ctx.fillStyle = varColor("--text");
-        ctx.fillText("STUN", 0, -27);
+        ctx.fillText(tag, 0, -27);
       }
       ctx.restore();
     }

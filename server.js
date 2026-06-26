@@ -555,11 +555,11 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const reason = String(body.reason || `${attacker.id} attacked ${target.id}.`).slice(0, 120);
-      if (Number(target.floor || 0) <= 1) {
+      if (Number(target.floor || 0) <= 0) {
         attacker.lastSeen = Date.now();
         target.lastSeen = Date.now();
         const targetClient = clients.get(targetId);
-        const payload = { type: "state", reason: "1F safety", attackerId: attacker.onlineId, fell: false, lives: target.lives || 0, players: publicPlayers(), leaderboard, chat };
+        const payload = { type: "state", reason: "0F safety", attackerId: attacker.onlineId, fell: false, lives: target.lives || 0, players: publicPlayers(), leaderboard, chat };
         if (targetClient) {
           targetClient.write(`data: ${JSON.stringify(payload)}\n\n`);
         }
@@ -608,9 +608,9 @@ const server = http.createServer(async (req, res) => {
       const reason = String(body.reason || "Stun").slice(0, 80);
       source.lastSeen = Date.now();
       target.lastSeen = Date.now();
-      if (Number(target.floor || 0) <= 1) {
+      if (Number(target.floor || 0) <= 0) {
         const targetClient = clients.get(targetId);
-        const payload = { type: "state", reason: "1F safety", sourceId: source.onlineId, players: publicPlayers(), leaderboard, chat };
+        const payload = { type: "state", reason: "0F safety", sourceId: source.onlineId, players: publicPlayers(), leaderboard, chat };
         if (targetClient) {
           targetClient.write(`data: ${JSON.stringify(payload)}\n\n`);
         }
