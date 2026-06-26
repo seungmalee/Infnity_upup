@@ -260,6 +260,75 @@
       box-shadow: 0 24px 50px rgba(0,0,0,0.35);
     }
 
+    .share-card {
+      width: min(92vw, 390px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      background: rgba(13, 18, 28, 0.98);
+      color: #eef5ff;
+      padding: 16px;
+      box-shadow: 0 24px 50px rgba(0,0,0,0.35);
+    }
+
+    .share-card h2,
+    .share-card p {
+      margin: 0;
+    }
+
+    .share-reason {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .share-score {
+      display: grid;
+      gap: 3px;
+      padding: 14px;
+      border: 1px solid rgba(240, 189, 91, 0.28);
+      border-radius: 10px;
+      background: rgba(240, 189, 91, 0.11);
+      color: var(--bar-active);
+      text-align: center;
+    }
+
+    .share-score span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .share-score strong {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .share-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .share-actions button {
+      min-height: 38px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .share-actions .primary {
+      border-color: rgba(77, 216, 166, 0.56);
+      background: rgba(77, 216, 166, 0.18);
+      color: #9ff2cf;
+    }
+
     .title-list {
       display: grid;
       gap: 7px;
@@ -442,6 +511,20 @@
       border-color: var(--line);
       background: rgba(255, 255, 255, 0.05);
       opacity: 0.78;
+    }
+
+    .share-btn {
+      pointer-events: auto;
+      width: 100%;
+      min-height: 30px;
+      margin-top: 6px;
+      border: 1px solid rgba(77, 216, 166, 0.48);
+      border-radius: 8px;
+      background: rgba(77, 216, 166, 0.14);
+      color: #9ff2cf;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
     }
 
     .auto-btn {
@@ -976,6 +1059,12 @@
         font-size: 10px;
       }
 
+      .share-btn {
+        min-height: 30px;
+        padding: 4px 6px;
+        font-size: 10px;
+      }
+
       .title-btn {
         min-height: 30px;
         padding: 4px 6px;
@@ -1260,6 +1349,14 @@
         font-size: 10px;
         line-height: 1.05;
         text-align: center;
+      }
+
+      .share-btn {
+        width: 72px;
+        min-height: 30px;
+        margin-top: 5px;
+        padding: 4px 5px;
+        font-size: 10px;
       }
 
       .auto-btn {
@@ -1804,6 +1901,7 @@
       <div class="next-goal" id="nextGoal">NEXT<span>100F ITEM</span></div>
       <button class="title-btn" id="titleBtn" type="button">Title: Auto</button>
       <button class="boost-btn" id="boostBtn" type="button" disabled>100F UP! <span class="boost-cost">(0/500G)</span></button>
+      <button class="share-btn" id="shareBtn" type="button">Share Best</button>
     </div>
 
     <div class="combo" id="combo">COMBO x0</div>
@@ -1885,6 +1983,23 @@
     </div>
   </div>
 
+  <div class="title-modal" id="deathShareModal" hidden>
+    <div class="share-card" role="dialog" aria-modal="true" aria-labelledby="deathShareTitle">
+      <div class="help-head">
+        <h2 id="deathShareTitle">Run ended</h2>
+      </div>
+      <p class="share-reason" id="deathShareReason">You fell to 0F.</p>
+      <div class="share-score">
+        <span>Best Floor</span>
+        <strong id="deathShareFloor">0F</strong>
+      </div>
+      <div class="share-actions">
+        <button class="primary" id="deathShareBtn" type="button">Share</button>
+        <button id="deathContinueBtn" type="button">Continue</button>
+      </div>
+    </div>
+  </div>
+
   <div class="mobile-controls" aria-label="Mobile controls">
     <div class="mobile-pad">
       <button class="mobile-btn up" type="button" data-mobile-action="up" aria-label="Up">^</button>
@@ -1917,10 +2032,16 @@
       onlineStatus: document.getElementById("onlineStatus"),
       nextGoal: document.getElementById("nextGoal"),
       boostBtn: document.getElementById("boostBtn"),
+      shareBtn: document.getElementById("shareBtn"),
       titleBtn: document.getElementById("titleBtn"),
       titleModal: document.getElementById("titleModal"),
       titleClose: document.getElementById("titleClose"),
       titleList: document.getElementById("titleList"),
+      deathShareModal: document.getElementById("deathShareModal"),
+      deathShareReason: document.getElementById("deathShareReason"),
+      deathShareFloor: document.getElementById("deathShareFloor"),
+      deathShareBtn: document.getElementById("deathShareBtn"),
+      deathContinueBtn: document.getElementById("deathContinueBtn"),
       mobileIdleFill: document.getElementById("mobileIdleFill"),
       helpModal: document.getElementById("helpModal"),
       helpClose: document.getElementById("helpClose"),
@@ -2061,6 +2182,8 @@
       jump: { start: 0, duration: 0 },
       trails: [],
       effects: [],
+      pendingRespawnReason: "",
+      pendingRespawnBestFloor: 0,
     };
 
     function flagEmoji(country) {
@@ -2814,6 +2937,44 @@
       return Math.floor(Math.max(0, Number(score || 0))).toLocaleString("en-US");
     }
 
+    function bestShareFloor() {
+      return Math.max(Number(state.player.bestFloor || 0), Number(state.player.floor || 0), Number(state.pendingRespawnBestFloor || 0));
+    }
+
+    function shareUrl() {
+      return location.protocol === "http:" || location.protocol === "https:" ? location.origin : "https://noendrise.com";
+    }
+
+    function shareText() {
+      const floor = bestShareFloor();
+      return `I reached ${floor}F in Noendrise. Can you climb higher? ${shareUrl()}`;
+    }
+
+    async function shareBestFloor() {
+      const floor = bestShareFloor();
+      const text = shareText();
+      const data = {
+        title: "Noendrise",
+        text: `I reached ${floor}F in Noendrise. Can you climb higher?`,
+        url: shareUrl()
+      };
+      try {
+        if (navigator.share) {
+          await navigator.share(data);
+          showNotice("Shared your best floor.");
+          return;
+        }
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          showNotice("Share text copied.");
+          return;
+        }
+      } catch (error) {
+        if (error && error.name === "AbortError") return;
+      }
+      window.prompt("Copy your Noendrise score:", text);
+    }
+
     function buildPlayerRankings() {
       const rankMap = new Map();
       for (const player of [...state.leaderboard, state.player, ...opponents()]) {
@@ -3300,6 +3461,38 @@
       if (reason) addChat("SYSTEM", "--", `1F safety: ${reason} ignored`);
     }
 
+    function openDeathShareModal(reason) {
+      state.mode = "deathShare";
+      state.pendingRespawnReason = reason || "You fell to 0F.";
+      state.pendingRespawnBestFloor = bestShareFloor();
+      state.player.hidden = false;
+      resetCombo();
+      pulseDanger(1);
+      state.climbFlash = { floor: -1, start: 0, duration: 0 };
+      if (ui.deathShareReason) ui.deathShareReason.textContent = state.pendingRespawnReason;
+      if (ui.deathShareFloor) ui.deathShareFloor.textContent = `${state.pendingRespawnBestFloor}F`;
+      if (ui.deathShareModal) ui.deathShareModal.hidden = false;
+      joinScreen.classList.add("hidden");
+      showNotice("Run ended. Share your best floor.");
+    }
+
+    function completeRespawnAtZero() {
+      const reason = state.pendingRespawnReason || "You fell to 0F.";
+      if (ui.deathShareModal) ui.deathShareModal.hidden = true;
+      state.pendingRespawnReason = "";
+      state.pendingRespawnBestFloor = 0;
+      state.mode = "play";
+      state.player.floor = 0;
+      state.runStartedAt = Date.now();
+      resetFloorHold();
+      resetRunState();
+      state.climbFlash = { floor: -1, start: 0, duration: 0 };
+      joinScreen.classList.add("hidden");
+      showNotice(reason);
+      addChat("SYSTEM", "--", `${state.player.id || "Player"} fell to 0F`);
+      syncOnlineState();
+    }
+
     function respawnAtZero(reason) {
       if (isPenaltyProtectedFloor()) {
         ignoreLowFloorPenalty(reason);
@@ -3317,17 +3510,7 @@
         syncOnlineState();
         return;
       }
-      state.mode = "play";
-      state.player.floor = 0;
-      state.runStartedAt = Date.now();
-      resetFloorHold();
-      resetRunState();
-      pulseDanger(1);
-      state.climbFlash = { floor: -1, start: 0, duration: 0 };
-      joinScreen.classList.add("hidden");
-      showNotice(reason);
-      addChat("SYSTEM", "--", `${state.player.id || "Player"} fell to 0F`);
-      syncOnlineState();
+      openDeathShareModal(reason);
     }
 
     function loseLifeOrFall(reason) {
@@ -3990,7 +4173,7 @@
         state.flash = Math.max(0, state.flash - 0.025);
       }
 
-      const focus = state.mode === "play" ? state.player.floor : 0;
+      const focus = state.mode === "play" || state.mode === "deathShare" ? state.player.floor : 0;
       const start = Math.max(0, focus - 12);
       const end = focus + 42;
       const now = performance.now();
@@ -4273,6 +4456,9 @@
     });
 
     ui.boostBtn.addEventListener("click", useGoldBoost);
+    ui.shareBtn.addEventListener("click", shareBestFloor);
+    ui.deathShareBtn.addEventListener("click", shareBestFloor);
+    ui.deathContinueBtn.addEventListener("click", completeRespawnAtZero);
     ui.titleBtn.addEventListener("click", openTitleModal);
     ui.titleClose.addEventListener("click", closeTitleModal);
     ui.titleModal.addEventListener("click", (event) => {
