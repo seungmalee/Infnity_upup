@@ -13,7 +13,7 @@ try {
 const PORT = Number(process.env.PORT || 3000);
 const ROOT = __dirname;
 const INDEX = path.join(ROOT, "outputs", "index.html");
-const KILL_GOLD_REWARD = 50;
+const KILL_GOLD_REWARD = 100;
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "stairgame";
 const ALLOWED_ORIGINS = new Set(

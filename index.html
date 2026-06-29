@@ -2155,6 +2155,7 @@
     const MISSILE_DURATION = 2800;
     const MISSILE_HIT_AT = 0.96;
     const KILL_GOLD_REWARD = 100;
+    const GOLD_BOOST_COST = 500;
     const COMBO_GOLD_STEP = 30;
     const COMBO_GOLD_REWARD = 10;
     const COMBO_ITEM_STEP = 50;
@@ -3852,8 +3853,8 @@
     function useGoldBoost() {
       if (state.mode !== "play") return;
       clearZeroFloorLock();
-      if (state.gold < 500) {
-      showNotice("Spent 500G: moved up 100F.");
+      if (state.gold < GOLD_BOOST_COST) {
+        showNotice(`Need ${GOLD_BOOST_COST}G for 100F UP.`);
         return;
       }
       if (performance.now() < state.player.stunnedUntil) {
@@ -3861,7 +3862,7 @@
         return;
       }
       const previousFloor = state.player.floor;
-      state.gold -= 500;
+      state.gold -= GOLD_BOOST_COST;
       state.player.floor += 100;
       resetFloorHold();
       updateBestFloorRecord();
@@ -3870,7 +3871,9 @@
       state.climbFlash = { floor: state.player.floor, start: performance.now(), duration: 640 };
       checkItemReward(previousFloor, state.player.floor);
       checkLifeReward(previousFloor, state.player.floor);
-      showNotice("Spent 500G: moved up 100F.");
+      showNotice(`Spent ${GOLD_BOOST_COST}G: moved up 100F.`);
+      saveSessionProfile();
+      renderHud();
       syncOnlineState();
     }
 
@@ -4014,6 +4017,7 @@
     }
 
     function knockDownOverlappingOpponent(reason) {
+      if (isPenaltyProtectedFloor()) return false;
       if (isRestFloor(state.player.floor)) return false;
       const victim = opponents().find((opponent) => opponent.floor === state.player.floor && !opponent.hidden);
       if (!victim) return false;
@@ -4508,10 +4512,10 @@
       ui.kills.textContent = `K ${state.kills}`;
       ui.gold.textContent = `G ${state.gold}`;
       ui.lives.textContent = `L ${state.lives}`;
-      ui.boostBtn.disabled = state.gold < 500 || state.mode !== "play";
+      ui.boostBtn.disabled = state.gold < GOLD_BOOST_COST || state.mode !== "play";
       const stunned = Math.max(0, state.player.stunnedUntil - performance.now());
       const shieldLeft = shieldSecondsLeft(state.player);
-      ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">(${state.gold}/500G)</span>`;
+      ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">(${state.gold}/${GOLD_BOOST_COST}G)</span>`;
       ui.titleBtn.textContent = `${t("titlePrefix")} ${state.player.selectedTitle ? translatedTitleName(state.player.selectedTitle) : t("auto")}`;
       ui.cooldown.textContent = stunned > 0 ? `ST ${Math.ceil(stunned / 1000)}s` : state.player.hidden ? t("hideOn") : shieldLeft > 0 ? `SH ${shieldLeft}s` : canHide() ? t("hideOk") : `${t("hide")} ${Math.ceil(hideCooldownLeft() / 1000)}s`;
       const nextGoal = nextGoalInfo();
