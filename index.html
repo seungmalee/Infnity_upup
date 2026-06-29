@@ -3520,6 +3520,7 @@
       if (applyStun(target, MISSILE_STUN, "Missile")) {
         target.floor = landedFloor;
         target.hidden = false;
+        if (target === state.player) clearZeroFloorLock();
         if (target === state.player) pulseDanger(1);
         effect.hit = true;
         effect.landedFloor = landedFloor;
@@ -3536,6 +3537,7 @@
 
     function useItem(index) {
       if (state.mode !== "play") return;
+      clearZeroFloorLock();
       if (performance.now() < state.player.stunnedUntil) {
         showNotice("Cannot use this while stunned.");
         return;
@@ -3683,6 +3685,24 @@
       if (reason) addChat("SYSTEM", "--", `0F safety: ${reason} ignored`);
     }
 
+    function clearZeroFloorLock() {
+      if (!isPenaltyProtectedFloor()) return false;
+      let cleared = false;
+      if (state.player.stunnedUntil > 0) {
+        state.player.stunnedUntil = 0;
+        cleared = true;
+      }
+      if (state.player.hidden) {
+        state.player.hidden = false;
+        cleared = true;
+      }
+      if (cleared) {
+        resetFloorHold();
+        saveSessionProfile();
+      }
+      return cleared;
+    }
+
     function openDeathShareModal(reason) {
       state.mode = "deathShare";
       state.pendingRespawnReason = reason || "You fell to 0F.";
@@ -3708,6 +3728,7 @@
       state.runStartedAt = Date.now();
       resetFloorHold();
       resetRunState();
+      clearZeroFloorLock();
       state.climbFlash = { floor: -1, start: 0, duration: 0 };
       joinScreen.classList.add("hidden");
       showNotice(reason);
@@ -3784,6 +3805,7 @@
 
     function useGoldBoost() {
       if (state.mode !== "play") return;
+      clearZeroFloorLock();
       if (state.gold < 500) {
       showNotice("Spent 500G: moved up 100F.");
         return;
@@ -3889,6 +3911,7 @@
         } else {
           showNotice(`${state.player.floor}F record restored.`);
         }
+        clearZeroFloorLock();
         joinScreen.classList.add("hidden");
         addChat("SYSTEM", "--", `${state.player.id} restored the session.`);
         saveSessionProfile();
@@ -3913,6 +3936,7 @@
 
     function tryHide() {
       if (state.mode !== "play") return;
+      clearZeroFloorLock();
       if (performance.now() < state.player.stunnedUntil) {
         showNotice("Cannot use this while stunned.");
         return;
@@ -3953,6 +3977,7 @@
 
     function climb(inputDir) {
       if (state.mode !== "play") return;
+      clearZeroFloorLock();
       if (performance.now() < state.player.stunnedUntil) {
         showNotice("You are stunned.");
         return;
@@ -4110,6 +4135,7 @@
     function updateFloorHold(now) {
       if (state.mode !== "play") return;
       if (Number(state.player.floor || 0) <= 0) {
+        clearZeroFloorLock();
         resetFloorHold(now);
         return;
       }
