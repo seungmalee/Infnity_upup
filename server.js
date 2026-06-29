@@ -328,20 +328,50 @@ function serveStatic(req, res) {
     res.end("Forbidden");
     return;
   }
-  fs.readFile(filePath, (error, data) => {
-    if (error) {
-      res.writeHead(404, securityHeaders(req));
-      res.end("Not found");
-      return;
-    }
-    const ext = path.extname(filePath).toLowerCase();
+  const sendFile = (targetPath) => {
+    fs.readFile(targetPath, (error, data) => {
+      if (error) {
+        const outputFallback = !pathname.startsWith("/outputs/")
+          ? path.resolve(ROOT, "outputs", `.${pathname}`)
+          : "";
+        if (outputFallback && outputFallback.startsWith(`${path.join(ROOT, "outputs")}${path.sep}`)) {
+          fs.readFile(outputFallback, (fallbackError, fallbackData) => {
+            if (fallbackError) {
+              res.writeHead(404, securityHeaders(req));
+              res.end("Not found");
+              return;
+            }
+            sendStaticData(outputFallback, fallbackData);
+          });
+          return;
+        }
+        res.writeHead(404, securityHeaders(req));
+        res.end("Not found");
+        return;
+      }
+      sendStaticData(targetPath, data);
+    });
+  };
+
+  const sendStaticData = (targetPath, data) => {
+    const ext = path.extname(targetPath).toLowerCase();
     const type = ext === ".html" ? "text/html; charset=utf-8"
       : ext === ".js" ? "text/javascript; charset=utf-8"
       : ext === ".css" ? "text/css; charset=utf-8"
+      : ext === ".png" ? "image/png"
+      : ext === ".jpg" || ext === ".jpeg" ? "image/jpeg"
+      : ext === ".webp" ? "image/webp"
+      : ext === ".svg" ? "image/svg+xml"
+      : ext === ".json" || ext === ".webmanifest" ? "application/json; charset=utf-8"
       : "application/octet-stream";
-    res.writeHead(200, securityHeaders(req, { "Content-Type": type, "Cache-Control": "no-store" }));
+    const cacheControl = ext === ".html"
+      ? "public, max-age=300"
+      : "public, max-age=31536000, immutable";
+    res.writeHead(200, securityHeaders(req, { "Content-Type": type, "Cache-Control": cacheControl }));
     res.end(data);
-  });
+  };
+
+  sendFile(filePath);
 }
 
 function siteOrigin(req) {
@@ -374,6 +404,24 @@ function serveSitemap(req, res) {
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${origin}/about.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${origin}/how-to-play.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>${origin}/faq.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>${origin}/privacy.html</loc>
