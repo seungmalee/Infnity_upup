@@ -418,6 +418,18 @@ function serveSitemap(req, res) {
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>${origin}/items.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${origin}/rankings.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>${origin}/faq.html</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
