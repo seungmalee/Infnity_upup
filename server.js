@@ -363,6 +363,7 @@ function serveStatic(req, res) {
       : ext === ".webp" ? "image/webp"
       : ext === ".svg" ? "image/svg+xml"
       : ext === ".json" || ext === ".webmanifest" ? "application/json; charset=utf-8"
+      : ext === ".txt" ? "text/plain; charset=utf-8"
       : "application/octet-stream";
     const cacheControl = ext === ".html"
       ? "public, max-age=300"
