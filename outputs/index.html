@@ -156,6 +156,13 @@
       margin: 10px 0 0;
     }
 
+    .adfit-slot {
+      display: flex;
+      justify-content: center;
+      margin: 14px auto 0;
+      min-height: 250px;
+    }
+
     h1 {
       margin: 0 0 6px;
       font-size: 28px;
@@ -1891,6 +1898,7 @@
     gtag('js', new Date());
     gtag('config', 'G-RFM82XJJ0E');
   </script>
+  <script type="text/javascript" src="//t1.kakaocdn.net/kas/static/ba.min.js" async></script>
 </head>
 <body>
   <canvas id="game" aria-label="game canvas"></canvas>
@@ -1926,6 +1934,12 @@
       <button class="start-btn" id="startBtn" type="submit">Start Game</button>
       <div class="ad-slot" aria-label="advertisement">
         Ads will appear here after AdSense approval.
+      </div>
+      <div class="adfit-slot" aria-label="Kakao AdFit advertisement">
+        <ins class="kakao_ad_area" style="display:none;"
+          data-ad-unit="DAN-XxJeqx4fpHrIPxbd"
+          data-ad-width="300"
+          data-ad-height="250"></ins>
       </div>
       <div class="site-links" aria-label="site links">
         <a id="aboutLink" href="/about.html" target="_blank" rel="noopener">About</a>
