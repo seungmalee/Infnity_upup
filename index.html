@@ -3865,7 +3865,10 @@
     }
 
     function useGoldBoost() {
-      if (state.mode !== "play") return;
+      if (state.mode !== "play") {
+        showNotice("Start or continue the run before using 100F UP.");
+        return;
+      }
       clearZeroFloorLock();
       if (state.gold < GOLD_BOOST_COST) {
         showNotice(`Need ${GOLD_BOOST_COST}G for 100F UP.`);
@@ -4526,7 +4529,7 @@
       ui.kills.textContent = `K ${state.kills}`;
       ui.gold.textContent = `G ${state.gold}`;
       ui.lives.textContent = `L ${state.lives}`;
-      ui.boostBtn.disabled = state.gold < GOLD_BOOST_COST || state.mode !== "play";
+      ui.boostBtn.disabled = false;
       const stunned = Math.max(0, state.player.stunnedUntil - performance.now());
       const shieldLeft = shieldSecondsLeft(state.player);
       ui.boostBtn.innerHTML = `<span class="boost-main">100F UP!</span><span class="boost-cost">(${state.gold}/${GOLD_BOOST_COST}G)</span>`;
@@ -4756,7 +4759,10 @@
       });
     });
 
-    ui.boostBtn.addEventListener("click", useGoldBoost);
+    ui.boostBtn.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      useGoldBoost();
+    });
     ui.shareBtn.addEventListener("click", shareBestFloor);
     ui.deathShareBtn.addEventListener("click", shareBestFloor);
     ui.deathContinueBtn.addEventListener("click", completeRespawnAtZero);
