@@ -28,7 +28,6 @@ const RATE_LIMITS = {
   api: { limit: 240, windowMs: RATE_LIMIT_WINDOW_MS },
   join: { limit: 30, windowMs: RATE_LIMIT_WINDOW_MS },
   state: { limit: 180, windowMs: RATE_LIMIT_WINDOW_MS },
-  chat: { limit: 30, windowMs: RATE_LIMIT_WINDOW_MS },
   action: { limit: 120, windowMs: RATE_LIMIT_WINDOW_MS },
   events: { limit: 60, windowMs: RATE_LIMIT_WINDOW_MS }
 };
@@ -49,7 +48,6 @@ const rateBuckets = new Map();
 let dbPromise = null;
 let records = null;
 let leaderboard = [];
-const chat = [];
 
 async function getRecords() {
   if (!MONGODB_URI || !MongoClient) return null;
@@ -297,7 +295,6 @@ function broadcast(type = "state", extra = {}) {
     type,
     players: publicPlayers(),
     leaderboard,
-    chat,
     ...extra
   });
   for (const [onlineId, res] of clients) {
@@ -526,7 +523,7 @@ const server = http.createServer(async (req, res) => {
       players.set(onlineId, player);
       await saveRecord(player, true);
       broadcast("state");
-      sendJson(req, res, 200, { onlineId, players: publicPlayers(), leaderboard, chat });
+      sendJson(req, res, 200, { onlineId, players: publicPlayers(), leaderboard });
       return;
     }
 
@@ -580,28 +577,6 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (req.method === "POST" && url.pathname === "/api/chat") {
-      if (!checkRateLimit(req, "chat")) {
-        rejectRateLimited(req, res);
-        return;
-      }
-      const body = await readBody(req);
-      const player = players.get(String(body.onlineId || ""));
-      if (!player) {
-        sendJson(req, res, 404, { error: "unknown player" });
-        return;
-      }
-      const text = String(body.text || "").trim().slice(0, 70);
-      if (text) {
-        chat.push({ id: player.id, country: player.country, text });
-        while (chat.length > 60) chat.shift();
-        player.lastSeen = Date.now();
-        broadcast("chat");
-      }
-      sendJson(req, res, 200, { ok: true });
-      return;
-    }
-
     if (req.method === "POST" && url.pathname === "/api/attack") {
       if (!checkRateLimit(req, "action")) {
         rejectRateLimited(req, res);
@@ -620,7 +595,7 @@ const server = http.createServer(async (req, res) => {
         attacker.lastSeen = Date.now();
         target.lastSeen = Date.now();
         const targetClient = clients.get(targetId);
-        const payload = { type: "state", reason: "0F safety", attackerId: attacker.onlineId, fell: false, lives: target.lives || 0, players: publicPlayers(), leaderboard, chat };
+        const payload = { type: "state", reason: "0F safety", attackerId: attacker.onlineId, fell: false, lives: target.lives || 0, players: publicPlayers(), leaderboard };
         if (targetClient) {
           targetClient.write(`data: ${JSON.stringify(payload)}\n\n`);
         }
@@ -644,7 +619,7 @@ const server = http.createServer(async (req, res) => {
       await saveRecord(attacker, true);
       await saveRecord(target, true);
       const targetClient = clients.get(targetId);
-      const payload = { type: "attacked", reason, attackerId: attacker.onlineId, fell, lives: target.lives || 0, players: publicPlayers(), leaderboard, chat };
+      const payload = { type: "attacked", reason, attackerId: attacker.onlineId, fell, lives: target.lives || 0, players: publicPlayers(), leaderboard };
       if (targetClient) {
         targetClient.write(`data: ${JSON.stringify(payload)}\n\n`);
       }
@@ -671,7 +646,7 @@ const server = http.createServer(async (req, res) => {
       target.lastSeen = Date.now();
       if (Number(target.floor || 0) <= 0) {
         const targetClient = clients.get(targetId);
-        const payload = { type: "state", reason: "0F safety", sourceId: source.onlineId, players: publicPlayers(), leaderboard, chat };
+        const payload = { type: "state", reason: "0F safety", sourceId: source.onlineId, players: publicPlayers(), leaderboard };
         if (targetClient) {
           targetClient.write(`data: ${JSON.stringify(payload)}\n\n`);
         }
@@ -681,7 +656,7 @@ const server = http.createServer(async (req, res) => {
       }
       const targetClient = clients.get(targetId);
       if (targetClient) {
-        targetClient.write(`data: ${JSON.stringify({ type: "stunned", reason, ms, sourceId: source.onlineId, players: publicPlayers(), leaderboard, chat })}\n\n`);
+        targetClient.write(`data: ${JSON.stringify({ type: "stunned", reason, ms, sourceId: source.onlineId, players: publicPlayers(), leaderboard })}\n\n`);
       }
       broadcast("state");
       sendJson(req, res, 200, { ok: true });
@@ -721,7 +696,7 @@ const server = http.createServer(async (req, res) => {
         Connection: "keep-alive"
       }));
       clients.set(onlineId, res);
-      res.write(`data: ${JSON.stringify({ type: "state", players: publicPlayers(), leaderboard, chat })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: "state", players: publicPlayers(), leaderboard })}\n\n`);
       req.on("close", () => {
         if (clients.get(onlineId) === res) {
           const leaving = players.get(onlineId);

@@ -1,10 +1,10 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Noendrise - Real-Time Online Stair Climbing Game</title>
-  <meta name="description" content="Play Noendrise, a free real-time browser stair climbing game with online rankings, country leaderboards, items, chat, and mobile controls.">
+  <meta name="description" content="Play Noendrise, a free real-time browser stair climbing game with online rankings, country leaderboards, items, system notices, and mobile controls.">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://noendrise.com/">
   <link rel="alternate" href="https://noendrise.com/" hreflang="en">
@@ -19,7 +19,7 @@
   <meta property="og:image:alt" content="Noendrise online stair climbing game screen with rankings and mobile controls.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Noendrise - Real-Time Online Stair Climbing Game">
-  <meta name="twitter:description" content="Play a free browser climbing game with live rankings, country competition, items, and chat.">
+  <meta name="twitter:description" content="Play a free browser climbing game with live rankings, country competition, items, and system notices.">
   <meta name="twitter:image" content="https://noendrise.com/noendrise-desktop-screenshot.png">
   <script type="application/ld+json">
     {
@@ -27,7 +27,7 @@
       "@type": "WebSite",
       "name": "Noendrise",
       "url": "https://noendrise.com/",
-      "description": "A free real-time online stair climbing browser game with rankings, country leaderboards, items, and chat.",
+      "description": "A free real-time online stair climbing browser game with rankings, country leaderboards, items, and system notices.",
       "inLanguage": "en"
     }
   </script>
@@ -38,7 +38,7 @@
       "name": "Noendrise",
       "url": "https://noendrise.com/",
       "image": "https://noendrise.com/noendrise-desktop-screenshot.png",
-      "description": "Noendrise is a real-time online stair climbing game where players climb floor by floor, use items, hide from attacks, chat, and compete on global and country leaderboards.",
+      "description": "Noendrise is a real-time online stair climbing game where players climb floor by floor, use items, hide from attacks, receive system notices, and compete on global and country leaderboards.",
       "applicationCategory": "Game",
       "operatingSystem": "Web browser",
       "gamePlatform": ["Web browser", "Mobile web"],
@@ -233,7 +233,7 @@
     .top-left,
     .idle-timer,
     .ranking,
-    .chat,
+    .system-feed,
     .item-bar,
     .notice {
       border: 1px solid var(--line);
@@ -837,7 +837,7 @@
       text-overflow: clip;
     }
 
-    .chat {
+    .system-feed {
       grid-column: 3;
       grid-row: 4;
       width: 100%;
@@ -849,7 +849,7 @@
       pointer-events: auto;
     }
 
-    .chat-log {
+    .system-log {
       flex: 1;
       overflow: auto;
       display: flex;
@@ -859,29 +859,29 @@
       font-size: 13px;
     }
 
-    .chat-row {
+    .system-row {
       line-height: 1.35;
       color: var(--text);
       overflow-wrap: anywhere;
     }
 
-    .chat-name {
+    .system-name {
       color: var(--bar-active);
       font-weight: 900;
     }
 
-    .chat form {
+    .system-feed form {
       display: flex;
       gap: 8px;
       margin-top: 10px;
     }
 
-    .chat input {
+    .system-feed input {
       height: clamp(32px, 4.8vh, 38px);
       min-width: 0;
     }
 
-    .chat button {
+    .system-feed button {
       width: clamp(44px, 5vw, 58px);
       border: 0;
       border-radius: 8px;
@@ -1006,7 +1006,7 @@
       transition: width 90ms linear;
     }
 
-    .mobile-controls.chat-expanded {
+    .mobile-controls.system-expanded {
       display: none !important;
     }
 
@@ -1021,32 +1021,32 @@
       .top-left,
       .ranking,
       .item-bar,
-      .chat,
+      .system-feed,
       .notice {
         min-width: 0;
       }
 
-      .chat {
+      .system-feed {
         height: 100%;
         min-height: 0;
         padding: 8px;
       }
 
-      .chat-log {
+      .system-log {
         min-height: 0;
         font-size: 12px;
       }
 
-      .chat form {
+      .system-feed form {
         gap: 6px;
         margin-top: 6px;
       }
 
-      .chat input {
+      .system-feed input {
         height: 32px;
       }
 
-      .chat button {
+      .system-feed button {
         width: 46px;
         font-size: 11px;
       }
@@ -1171,19 +1171,19 @@
         padding-bottom: 8px;
       }
 
-      .chat {
+      .system-feed {
         padding: 7px;
       }
 
-      .chat-log {
+      .system-log {
         gap: 3px;
       }
 
-      .chat form {
+      .system-feed form {
         margin-top: 5px;
       }
 
-      .chat input {
+      .system-feed input {
         height: 28px;
       }
 
@@ -1209,7 +1209,7 @@
       .top-left,
       .item-bar,
       .ranking,
-      .chat,
+      .system-feed,
       .notice {
         min-width: 0;
         padding: 6px;
@@ -1272,29 +1272,29 @@
         font-size: 9px;
       }
 
-      .chat {
+      .system-feed {
         height: 100%;
         min-height: 0;
       }
 
-      .chat-log {
+      .system-log {
         min-height: 0;
         font-size: 10px;
         gap: 3px;
       }
 
-      .chat form {
+      .system-feed form {
         gap: 5px;
         margin-top: 5px;
       }
 
-      .chat input {
+      .system-feed input {
         height: 27px;
         padding: 0 7px;
         font-size: 10px;
       }
 
-      .chat button {
+      .system-feed button {
         width: 38px;
         font-size: 10px;
       }
@@ -1526,7 +1526,7 @@
       .meta,
       .rank-head,
       .rank-row,
-      .chat-log,
+      .system-log,
       .notice {
         font-size: 12px;
       }
@@ -1576,7 +1576,7 @@
         font-size: 9px;
       }
 
-      .chat {
+      .system-feed {
         position: fixed;
         left: max(8px, env(safe-area-inset-left));
         right: max(8px, env(safe-area-inset-right));
@@ -1589,11 +1589,11 @@
         pointer-events: auto;
       }
 
-      .chat .panel-title {
+      .system-feed .panel-title {
         display: none;
       }
 
-      .chat-log {
+      .system-log {
         flex: 1 1 auto;
         min-height: 0;
         font-size: 11px;
@@ -1602,7 +1602,7 @@
         overflow: hidden;
       }
 
-      .chat-row {
+      .system-row {
         display: none;
         white-space: nowrap;
         overflow: hidden;
@@ -1610,21 +1610,21 @@
         line-height: 1.45;
       }
 
-      .chat-row:last-child {
+      .system-row:last-child {
         display: block;
       }
 
-      .chat form {
+      .system-feed form {
         display: none;
       }
 
-      .chat.expanded {
+      .system-feed.expanded {
         height: min(34vh, 210px);
         max-height: calc(100dvh - 188px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         padding: 9px;
       }
 
-      .chat.expanded .chat-log {
+      .system-feed.expanded .system-log {
         flex: 1 1 auto;
         min-height: 0;
         overflow: auto;
@@ -1634,22 +1634,22 @@
         padding-right: 4px;
       }
 
-      .chat.expanded .chat-row {
+      .system-feed.expanded .system-row {
         display: block;
         white-space: normal;
       }
 
-      .chat.expanded form {
+      .system-feed.expanded form {
         display: flex;
         flex: 0 0 auto;
         margin-top: 8px;
       }
 
-      .chat input {
+      .system-feed input {
         height: 34px;
       }
 
-      .chat button {
+      .system-feed button {
         width: clamp(42px, 13vw, 48px);
         font-size: 12px;
       }
@@ -1706,21 +1706,21 @@
         max-height: 34vh;
       }
 
-      .chat {
+      .system-feed {
         height: clamp(76px, 22vh, 124px);
         padding: 8px;
       }
 
-      .chat form {
+      .system-feed form {
         gap: 6px;
         margin-top: 6px;
       }
 
-      .chat input {
+      .system-feed input {
         height: 30px;
       }
 
-      .chat button {
+      .system-feed button {
         width: 44px;
         font-size: 11px;
       }
@@ -1750,7 +1750,7 @@
       .item-bar,
       .ranking,
       .notice,
-      .chat,
+      .system-feed,
       .idle-timer,
       .combo {
         grid-column: 1;
@@ -1803,8 +1803,8 @@
       }
 
 
-      /* chat mobile rollback */
-      .chat {
+      /* system notices mobile rollback */
+      .system-feed {
         position: fixed;
         left: max(8px, env(safe-area-inset-left));
         right: max(8px, env(safe-area-inset-right));
@@ -1818,12 +1818,12 @@
         overflow: hidden;
       }
 
-      .chat .panel-title,
-      .chat form {
+      .system-feed .panel-title,
+      .system-feed form {
         display: none;
       }
 
-      .chat-log {
+      .system-log {
         flex: 1 1 auto;
         min-height: 0;
         overflow: hidden;
@@ -1832,7 +1832,7 @@
         font-size: 11px;
       }
 
-      .chat-row {
+      .system-row {
         display: none;
         white-space: nowrap;
         overflow: hidden;
@@ -1840,18 +1840,18 @@
         line-height: 1.5;
       }
 
-      .chat-row:last-child {
+      .system-row:last-child {
         display: block;
       }
 
-      .chat.expanded {
+      .system-feed.expanded {
         height: min(34vh, 210px);
         max-height: min(34vh, calc(100dvh - 188px - env(safe-area-inset-top) - env(safe-area-inset-bottom)), 210px);
         padding: 9px;
         overflow: hidden;
       }
 
-      .chat.expanded .chat-log {
+      .system-feed.expanded .system-log {
         flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
@@ -1862,14 +1862,14 @@
         font-size: 12px;
       }
 
-      .chat.expanded .chat-row {
+      .system-feed.expanded .system-row {
         display: block;
         white-space: normal;
         overflow: visible;
         text-overflow: clip;
       }
 
-      .chat.expanded form {
+      .system-feed.expanded form {
         display: flex;
         flex: 0 0 auto;
         gap: 8px;
@@ -1888,6 +1888,32 @@
       white-space: nowrap;
       font-variant-numeric: tabular-nums;
       justify-self: end;
+    }
+
+
+    .system-feed {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      backdrop-filter: none;
+      box-shadow: none;
+      padding: 0;
+      pointer-events: none;
+    }
+
+    .system-feed .panel-title,
+    .system-feed form {
+      display: none !important;
+    }
+
+    .system-log {
+      color: var(--text);
+      padding: 0;
+      scrollbar-width: none;
+    }
+
+    .system-log::-webkit-scrollbar {
+      display: none;
     }
   </style>
   <!-- Google tag (gtag.js) -->
@@ -2010,13 +2036,9 @@
       </div>
     </section>
 
-    <section class="chat" id="chatPanel">
-      <h2 class="panel-title" id="chatTitle">Chat</h2>
-      <div class="chat-log" id="chatLog"></div>
-      <form id="chatForm">
-        <input id="chatInput" maxlength="70" autocomplete="off" placeholder="Type a message">
-        <button id="chatSendBtn" type="submit">Send</button>
-      </form>
+    <section class="system-feed" id="systemPanel">
+      <h2 class="panel-title" id="systemTitle">System</h2>
+      <div class="system-log" id="systemLog"></div>
     </section>
 
     <div class="notice" id="notice">
@@ -2084,8 +2106,6 @@
     const ctx = canvas.getContext("2d");
     const joinScreen = document.getElementById("joinScreen");
     const joinForm = document.getElementById("joinForm");
-    const chatForm = document.getElementById("chatForm");
-    const chatInput = document.getElementById("chatInput");
     const ui = {
       joinSub: document.getElementById("joinSub"),
       countryLabel: document.getElementById("countryLabel"),
@@ -2140,10 +2160,9 @@
       liveLeader: document.getElementById("liveLeader"),
       rankHead: document.getElementById("rankHead"),
       rankRows: document.getElementById("rankRows"),
-      chatPanel: document.getElementById("chatPanel"),
-      chatTitle: document.getElementById("chatTitle"),
-      chatLog: document.getElementById("chatLog"),
-      chatSendBtn: document.getElementById("chatSendBtn"),
+      systemPanel: document.getElementById("systemPanel"),
+      systemTitle: document.getElementById("systemTitle"),
+      systemLog: document.getElementById("systemLog"),
       notice: document.getElementById("notice"),
       mobileControls: document.querySelector(".mobile-controls")
     };
@@ -2258,7 +2277,7 @@
         events: null,
         syncTimer: 0
       },
-      chat: [
+      systemMessages: [
         { id: "SYSTEM", country: "--", text: "Climb the same map and compete with items." }
       ],
       flash: 0,
@@ -2283,8 +2302,7 @@
         ranking: "Ranking",
         players: "Players",
         countries: "Countries",
-        chat: "Chat",
-        send: "Send",
+        system: "System",
         shareBest: "Share Best",
         titleAuto: "Title: Auto",
         titlePrefix: "Title:",
@@ -2345,8 +2363,7 @@
         ranking: "랭킹",
         players: "플레이어",
         countries: "국가",
-        chat: "채팅",
-        send: "전송",
+        system: "시스템",
         shareBest: "최고층 공유",
         titleAuto: "칭호: 자동",
         titlePrefix: "칭호:",
@@ -2425,7 +2442,7 @@
       document.documentElement.lang = state.language;
       if (ui.languageSelect) ui.languageSelect.value = state.language;
       applyLanguage();
-      renderChat();
+      renderSystemMessages();
       renderHud();
     }
 
@@ -2440,9 +2457,7 @@
       if (ui.rankingTitle) ui.rankingTitle.textContent = t("ranking");
       if (ui.playerRankTab) ui.playerRankTab.textContent = t("players");
       if (ui.countryRankTab) ui.countryRankTab.textContent = t("countries");
-      if (ui.chatTitle) ui.chatTitle.textContent = t("chat");
-      if (chatInput) chatInput.placeholder = state.language === "ko" ? "메시지 입력" : "Type a message";
-      if (ui.chatSendBtn) ui.chatSendBtn.textContent = t("send");
+      if (ui.systemTitle) ui.systemTitle.textContent = t("system");
       if (ui.shareBtn) ui.shareBtn.textContent = t("shareBest");
       if (ui.helpTitle) ui.helpTitle.textContent = t("help");
       if (ui.helpMove) ui.helpMove.textContent = t("helpMove");
@@ -2907,17 +2922,17 @@
       noise.stop(now + 0.085);
     }
 
-    function addChat(id, country, text) {
-      state.chat.push({ id, country, text });
-      state.chat = state.chat.slice(-40);
-      renderChat();
+    function addSystemMessage(id, country, text) {
+      state.systemMessages.push({ id, country, text });
+      state.systemMessages = state.systemMessages.slice(-40);
+      renderSystemMessages();
     }
 
-    function renderChat() {
-      ui.chatLog.innerHTML = state.chat.map((row) => (
-        `<div class="chat-row"><span class="chat-name">[${escapeHtml(row.country)}] ${escapeHtml(row.id)}</span> ${escapeHtml(row.text)}</div>`
+    function renderSystemMessages() {
+      ui.systemLog.innerHTML = state.systemMessages.map((row) => (
+        `<div class="system-row"><span class="system-name">[${escapeHtml(row.country)}] ${escapeHtml(row.id)}</span> ${escapeHtml(row.text)}</div>`
       )).join("");
-      ui.chatLog.scrollTop = ui.chatLog.scrollHeight;
+      ui.systemLog.scrollTop = ui.systemLog.scrollHeight;
     }
 
     function opponents() {
@@ -2988,10 +3003,6 @@
           bestTimeMs: Number(player.bestTimeMs || 0),
           record: true
         }));
-      }
-      if (Array.isArray(data.chat)) {
-        state.chat = data.chat.slice(-60);
-        renderChat();
       }
     }
 
@@ -3096,7 +3107,7 @@
           resetCombo();
           resetFloorHold();
           showNotice(`${data.reason || "Attack"}: Life -1 / ${state.lives}`);
-          addChat("SYSTEM", "--", `${data.reason || "Attack"}: Life -1 / ${state.lives}`);
+          addSystemMessage("SYSTEM", "--", `${data.reason || "Attack"}: Life -1 / ${state.lives}`);
           syncOnlineState();
           data.type = "state";
         }
@@ -3119,7 +3130,7 @@
       clearInterval(state.online.syncTimer);
       state.online.syncTimer = setInterval(syncOnlineState, 900);
       showNotice(t("connectedOnline"));
-      addChat("SYSTEM", "--", t("connectedOnline"));
+      addSystemMessage("SYSTEM", "--", t("connectedOnline"));
       syncOnlineState();
     }
 
@@ -3140,10 +3151,10 @@
         const targetName = result.target.id || target.id || "TARGET";
         if (result.target.fell) {
           showNotice(`${targetName} fell to 0F`);
-          addChat("SYSTEM", "--", `${targetName} fell to 0F`);
+          addSystemMessage("SYSTEM", "--", `${targetName} fell to 0F`);
         } else {
           showNotice(`${targetName}: Life -1 / ${result.target.lives}`);
-          addChat("SYSTEM", "--", `${targetName}: Life -1 / ${result.target.lives}`);
+          addSystemMessage("SYSTEM", "--", `${targetName}: Life -1 / ${result.target.lives}`);
         }
       }
       saveSessionProfile();
@@ -3477,7 +3488,7 @@
       const index = emptyIndex >= 0 ? emptyIndex : 0;
       state.inventory[index] = item;
       showNotice(`${item.name} acquired!`);
-      addChat("SYSTEM", "--", `${state.player.id || "Player"} ${item.name} acquired an item.`);
+      addSystemMessage("SYSTEM", "--", `${state.player.id || "Player"} ${item.name} acquired an item.`);
       saveSessionProfile();
     }
 
@@ -3501,7 +3512,7 @@
           state.rewardedLifeMilestones.add(rewardKey);
           state.lives += 1;
           showNotice(`${milestone * LIFE_REWARD_INTERVAL}F bonus: Life +1`);
-          addChat("SYSTEM", "--", `${state.player.id || "Player"}  gained Life +1.`);
+          addSystemMessage("SYSTEM", "--", `${state.player.id || "Player"}  gained Life +1.`);
         }
       }
     }
@@ -3514,7 +3525,7 @@
       if (hasShield(target)) {
         clearShield(target);
         showNotice(`${target.id} blocked ${source} with Shield.`);
-        addChat("SYSTEM", "--", `${target.id} blocked ${source} with Shield.`);
+        addSystemMessage("SYSTEM", "--", `${target.id} blocked ${source} with Shield.`);
         return false;
       }
       target.stunnedUntil = performance.now() + ms;
@@ -3541,10 +3552,10 @@
       if (hit && applyStun(state.player, BOULDER_STUN, "Boulder")) {
         effect.hits = 1;
         showNotice(`${effect.sourceId || "Bot"} Boulder hit`);
-        addChat("SYSTEM", "--", `${effect.sourceId || "Bot"} Boulder: player stunned`);
+        addSystemMessage("SYSTEM", "--", `${effect.sourceId || "Bot"} Boulder: player stunned`);
       } else {
         effect.hits = 0;
-        addChat("SYSTEM", "--", `${effect.sourceId || "Bot"} Boulder: dodged`);
+        addSystemMessage("SYSTEM", "--", `${effect.sourceId || "Bot"} Boulder: dodged`);
       }
     }
 
@@ -3557,14 +3568,14 @@
           ? state.remotePlayers.find((player) => player.onlineId === effect.targetId)
           : state.bots.find((bot) => (bot.key || bot.id) === effect.targetId);
       if (!target) {
-        addChat("SYSTEM", "--", `Missile failed: ${effect.targetName}`);
+        addSystemMessage("SYSTEM", "--", `Missile failed: ${effect.targetName}`);
         return;
       }
       if (target.hidden) {
         effect.hit = false;
         effect.landedFloor = target.floor;
         effect.targetFloor = target.floor;
-        addChat("SYSTEM", "--", `Missile missed: ${target.id || "Player"} hidden`);
+        addSystemMessage("SYSTEM", "--", `Missile missed: ${target.id || "Player"} hidden`);
         return;
       }
       const targetFloor = target.floor;
@@ -3575,7 +3586,7 @@
         effect.landedFloor = landedFloor;
         effect.targetFloor = targetFloor;
         showNotice(`${effect.sourceId} missile stunned ${target.id}!`);
-        addChat("SYSTEM", "--", `Missile stun: ${effect.sourceId} -> ${target.id}`);
+        addSystemMessage("SYSTEM", "--", `Missile stun: ${effect.sourceId} -> ${target.id}`);
         return;
       }
       if (applyStun(target, MISSILE_STUN, "Missile")) {
@@ -3587,12 +3598,12 @@
         effect.landedFloor = landedFloor;
         effect.targetFloor = targetFloor;
         showNotice(`${effect.sourceId} missile hit ${target.id || "Player"}!`);
-        addChat("SYSTEM", "--", `Missile hit: ${effect.sourceId} -> ${target.id || "Player"}, fell from ${targetFloor}F to ${landedFloor}F`);
+        addSystemMessage("SYSTEM", "--", `Missile hit: ${effect.sourceId} -> ${target.id || "Player"}, fell from ${targetFloor}F to ${landedFloor}F`);
       } else {
         effect.hit = false;
         effect.landedFloor = targetFloor;
         effect.targetFloor = targetFloor;
-        addChat("SYSTEM", "--", `Missile blocked: ${target.id || "Player"}`);
+        addSystemMessage("SYSTEM", "--", `Missile blocked: ${target.id || "Player"}`);
       }
     }
 
@@ -3629,7 +3640,7 @@
         }
         addBoulderEffect(state.player.floor, minFloor, hits);
         showNotice(`Boulder used: ${hits} hit`);
-        addChat("SYSTEM", "--", `Boulder: ${hits ? hitNames.join(", ") : "no hit"}`);
+        addSystemMessage("SYSTEM", "--", `Boulder: ${hits ? hitNames.join(", ") : "no hit"}`);
       }
 
       if (item.type === "warp") {
@@ -3660,7 +3671,7 @@
         const target = randomUpperTarget(state.player);
         if (!target) {
           showNotice("No target above");
-          addChat("SYSTEM", "--", "Missile failed: no upper target");
+          addSystemMessage("SYSTEM", "--", "Missile failed: no upper target");
           saveSessionProfile();
           return;
         }
@@ -3694,7 +3705,7 @@
         if (targetFloor <= 0) return;
         addBoulderEffect(bot.floor, targetFloor, 0, { targetKind: "player", sourceId: bot.id, targetFloor });
         showNotice(`${bot.id} Boulder incoming`);
-        addChat("SYSTEM", "--", `${bot.id} Boulder: incoming`);
+        addSystemMessage("SYSTEM", "--", `${bot.id} Boulder: incoming`);
       }
 
       if (item.type === "missile") {
@@ -3704,7 +3715,7 @@
 
       if (item.type === "shield") {
         setShield(bot);
-        addChat("SYSTEM", "--", `${bot.id} used Shield for 5s`);
+        addSystemMessage("SYSTEM", "--", `${bot.id} used Shield for 5s`);
       }
 
       if (item.type === "warp") {
@@ -3713,13 +3724,13 @@
         bot.bestFloor = Math.max(bot.bestFloor || 0, bot.floor);
         bot.hidden = false;
         addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
-        addChat("SYSTEM", "--", `${bot.id} warped +100F`);
+        addSystemMessage("SYSTEM", "--", `${bot.id} warped +100F`);
       }
 
       if (item.type === "hideReset") {
         bot.hidden = true;
         bot.nextMoveAt = now + 900 + Math.random() * 1200;
-        addChat("SYSTEM", "--", `${bot.id} is hidden`);
+        addSystemMessage("SYSTEM", "--", `${bot.id} is hidden`);
       }
     }
 
@@ -3728,7 +3739,7 @@
       clearShield(state.player);
       state.player.hidden = false;
       showNotice(`Shield blocked: ${reason}`);
-      addChat("SYSTEM", "--", `${state.player.id || "Player"} blocked the attack with Shield.`);
+      addSystemMessage("SYSTEM", "--", `${state.player.id || "Player"} blocked the attack with Shield.`);
       return true;
     }
 
@@ -3743,7 +3754,7 @@
     function ignoreLowFloorPenalty(reason) {
       resetFloorHold();
       showNotice("Safe on 0F");
-      if (reason) addChat("SYSTEM", "--", `0F safety: ${reason} ignored`);
+      if (reason) addSystemMessage("SYSTEM", "--", `0F safety: ${reason} ignored`);
     }
 
     function clearZeroFloorLock() {
@@ -3793,7 +3804,7 @@
       state.climbFlash = { floor: -1, start: 0, duration: 0 };
       joinScreen.classList.add("hidden");
       showNotice(reason);
-      addChat("SYSTEM", "--", `${state.player.id || "Player"} fell to 0F`);
+      addSystemMessage("SYSTEM", "--", `${state.player.id || "Player"} fell to 0F`);
       syncOnlineState();
     }
 
@@ -3810,7 +3821,7 @@
         state.player.hidden = false;
         pulseDanger(0.45);
         showNotice(`Life -1 / ${state.lives}`);
-        addChat("SYSTEM", "--", `${state.player.id || "Player"}: Life -1`);
+        addSystemMessage("SYSTEM", "--", `${state.player.id || "Player"}: Life -1`);
         syncOnlineState();
         return;
       }
@@ -3830,7 +3841,7 @@
         state.player.hidden = false;
         pulseDanger(0.5);
         showNotice(`${reason}: Life -1 / ${state.lives}`);
-        addChat("SYSTEM", "--", `${state.player.id || "Player"}: ${reason} Life -1`);
+        addSystemMessage("SYSTEM", "--", `${state.player.id || "Player"}: ${reason} Life -1`);
         syncOnlineState();
         return true;
       }
@@ -3856,7 +3867,7 @@
       const targetId = target.onlineId || (targetKind === "bot" ? target.key : target.id);
       addMissileEffect(fromEntity.floor, target.floor, targetId, target.floor, false, targetKind, fromEntity.id || "YOU", target.id);
       showNotice(`${target.id} targeted with Missile!`);
-      addChat("SYSTEM", "--", `${fromEntity.id || "YOU"} Missile fired -> ${target.id}`);
+      addSystemMessage("SYSTEM", "--", `${fromEntity.id || "YOU"} Missile fired -> ${target.id}`);
     }
     function addKillReward() {
       state.gold += KILL_GOLD_REWARD;
@@ -3922,7 +3933,7 @@
       joinScreen.classList.add("hidden");
       saveSessionProfile();
       showNotice(t("gameStarted"));
-      addChat("SYSTEM", "--", `${id} started the game.`);
+      addSystemMessage("SYSTEM", "--", `${id} started the game.`);
       if (!sessionStorage.getItem(HELP_SEEN_KEY)) {
         openHelp();
         sessionStorage.setItem(HELP_SEEN_KEY, "1");
@@ -3979,7 +3990,7 @@
         }
         clearZeroFloorLock();
         joinScreen.classList.add("hidden");
-        addChat("SYSTEM", "--", `${state.player.id} restored the session.`);
+        addSystemMessage("SYSTEM", "--", `${state.player.id} restored the session.`);
         saveSessionProfile();
         connectOnline();
         return true;
@@ -3996,7 +4007,7 @@
       state.kills += 1;
       addKillReward();
       showNotice(`${bot.id} ${reason} / +${KILL_GOLD_REWARD}g`);
-      addChat("SYSTEM", "--", `${bot.id} ${reason}`);
+      addSystemMessage("SYSTEM", "--", `${bot.id} ${reason}`);
       saveSessionProfile();
     }
 
@@ -4026,7 +4037,7 @@
       if (!victim) return;
       if (victim.onlineId) {
         showNotice(`${victim.id} ${reason}`);
-        addChat("SYSTEM", "--", `${victim.id} ${reason}`);
+        addSystemMessage("SYSTEM", "--", `${victim.id} ${reason}`);
         attackRemote(victim, `${state.player.id || "Player"}: ${reason}`);
         return;
       }
@@ -4084,7 +4095,7 @@
     }
 
     function handleKey(event) {
-      if (document.activeElement === chatInput) return;
+
       if (event.repeat) {
         const repeatCode = event.code || event.key;
         if (["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft", "Down", "Right", "Up", "Left", "Digit1", "Digit2", "Digit3", "Numpad1", "Numpad2", "Numpad3"].includes(repeatCode)) {
@@ -4605,20 +4616,20 @@
       if (topCountryKey && !state.lastCountryLeaderKey) state.lastCountryLeaderKey = topCountryKey;
 
       if (topPlayerKey && state.lastPlayerLeaderKey && topPlayerKey !== state.lastPlayerLeaderKey) {
-        addChat("SYSTEM", "--", `Player #1 retaken: ${displayName(topPlayer)} at ${topPlayer.bestFloor}F`);
+        addSystemMessage("SYSTEM", "--", `Player #1 retaken: ${displayName(topPlayer)} at ${topPlayer.bestFloor}F`);
         state.lastPlayerLeaderKey = topPlayerKey;
       }
 
       if (topCountryKey && state.lastCountryLeaderKey && topCountryKey !== state.lastCountryLeaderKey) {
-        addChat("SYSTEM", "--", `Country #1 retaken: ${topCountry.country} ${formatScore(topCountry.score)} pts`);
+        addSystemMessage("SYSTEM", "--", `Country #1 retaken: ${topCountry.country} ${formatScore(topCountry.score)} pts`);
         state.lastCountryLeaderKey = topCountryKey;
       }
 
       if (!state.nextRankingAnnouncementAt) state.nextRankingAnnouncementAt = now + 60000;
       if (now < state.nextRankingAnnouncementAt) return;
       state.nextRankingAnnouncementAt = now + 60000;
-      if (topPlayer) addChat("SYSTEM", "--", `Player #1: ${displayName(topPlayer)} at ${topPlayer.bestFloor}F`);
-      if (topCountry) addChat("SYSTEM", "--", `Country #1: ${topCountry.country} ${formatScore(topCountry.score)} pts`);
+      if (topPlayer) addSystemMessage("SYSTEM", "--", `Player #1: ${displayName(topPlayer)} at ${topPlayer.bestFloor}F`);
+      if (topCountry) addSystemMessage("SYSTEM", "--", `Country #1: ${topCountry.country} ${formatScore(topCountry.score)} pts`);
     }
 
     function openHelp() {
@@ -4665,11 +4676,6 @@
       ui.titleModal.hidden = true;
     }
 
-    function setChatExpanded(expanded) {
-      ui.chatPanel.classList.toggle("expanded", expanded);
-      if (!expanded && document.activeElement === chatInput) chatInput.blur();
-      if (ui.mobileControls) ui.mobileControls.classList.toggle("chat-expanded", expanded);
-    }
 
     function chooseTitle(title) {
       const nextTitle = String(title || "");
@@ -4714,35 +4720,6 @@
       ui.languageSelect.addEventListener("change", () => setLanguage(ui.languageSelect.value));
     }
 
-    chatForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const text = chatInput.value.trim();
-      if (!text || !state.player.id) return;
-      if (state.online.connected) {
-        postOnline("/api/chat", { onlineId: state.online.onlineId, text });
-      } else {
-        addChat(state.player.id, state.player.country, text);
-      }
-      chatInput.value = "";
-      if (window.matchMedia("(max-width: 760px)").matches) setChatExpanded(false);
-    });
-
-    ui.chatPanel.addEventListener("click", () => {
-      if (!window.matchMedia("(max-width: 760px)").matches) return;
-      setChatExpanded(true);
-      setTimeout(() => chatInput.focus(), 0);
-    });
-
-    chatForm.addEventListener("click", (event) => {
-      event.stopPropagation();
-    });
-
-    document.addEventListener("pointerdown", (event) => {
-      if (!ui.chatPanel.classList.contains("expanded")) return;
-      if (event.target.closest("#chatPanel")) return;
-      setChatExpanded(false);
-    });
-
     ui.rankToggle.addEventListener("click", () => {
       setRankingCollapsed(!state.rankingCollapsed);
     });
@@ -4780,11 +4757,6 @@
     ui.helpClose.addEventListener("click", closeHelp);
     ui.helpConfirm.addEventListener("click", closeHelp);
     window.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && ui.chatPanel.classList.contains("expanded")) {
-        event.preventDefault();
-        setChatExpanded(false);
-        return;
-      }
       if (event.key === "F1") {
         event.preventDefault();
         openHelp();
@@ -4795,7 +4767,7 @@
     setLanguage(localStorage.getItem(LANGUAGE_KEY) || state.language);
     restoreSessionProfile();
     resize();
-    renderChat();
+    renderSystemMessages();
     if (window.matchMedia("(max-width: 760px)").matches) {
       state.rankingCollapsed = false;
     }
