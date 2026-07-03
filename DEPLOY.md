@@ -59,3 +59,9 @@ You can also delete by visible ID, optionally scoped to country:
 ```powershell
 Invoke-RestMethod -Method Post -Uri "https://noendrise.com/api/admin/delete-record" -ContentType "application/json" -Body '{"token":"YOUR_TOKEN","id":"PLAYER","country":"KR"}'
 ```
+
+Delete every saved ranking record:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri "https://noendrise.com/api/admin/delete-record" -ContentType "application/json" -Body '{"token":"YOUR_TOKEN","deleteAll":true}'
+```

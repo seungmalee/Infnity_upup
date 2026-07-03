@@ -259,10 +259,13 @@ function checkAdminToken(body) {
 async function deleteRecord(body) {
   const collection = await getRecords();
   if (!collection) return { deletedCount: 0, error: "database unavailable" };
+  const deleteAll = body.deleteAll === true;
   const playerKey = cleanPlayerKey(body.playerKey || "");
   const id = cleanId(body.id || "");
   const country = body.country ? cleanCountry(body.country) : "";
-  const filter = playerKey
+  const filter = deleteAll
+    ? {}
+    : playerKey
     ? { playerKey }
     : id
       ? { id, ...(country ? { country } : {}) }
@@ -270,9 +273,9 @@ async function deleteRecord(body) {
   if (!filter) return { deletedCount: 0, error: "missing playerKey or id" };
   const result = await collection.deleteMany(filter);
   for (const [onlineId, player] of players) {
-    const keyMatches = playerKey && cleanPlayerKey(player.playerKey) === playerKey;
-    const idMatches = !playerKey && cleanId(player.id) === id && (!country || cleanCountry(player.country) === country);
-    if (keyMatches || idMatches) {
+    const keyMatches = !deleteAll && playerKey && cleanPlayerKey(player.playerKey) === playerKey;
+    const idMatches = !deleteAll && !playerKey && cleanId(player.id) === id && (!country || cleanCountry(player.country) === country);
+    if (deleteAll || keyMatches || idMatches) {
       players.delete(onlineId);
       clients.delete(onlineId);
     }
