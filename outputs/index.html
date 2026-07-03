@@ -2943,6 +2943,7 @@
           .filter((player) => player.onlineId && player.onlineId !== state.online.onlineId)
           .map((player) => ({
             ...player,
+            playerKey: String(player.playerKey || ""),
             id: String(player.id || "PLAYER"),
             country: String(player.country || "--"),
             floor: Number(player.floor || 0),
@@ -2980,6 +2981,7 @@
       if (Array.isArray(data.leaderboard)) {
         state.leaderboard = data.leaderboard.map((player) => ({
           ...player,
+          playerKey: String(player.playerKey || ""),
           id: String(player.id || "PLAYER"),
           country: String(player.country || "--"),
           floor: Number(player.floor || 0),
@@ -3192,7 +3194,8 @@
     }
 
     function playerRankKey(player) {
-      return String(player.onlineId || player.key || `${player.country || "--"}:${player.id || "PLAYER"}`);
+      if (player === state.player && state.online.playerKey) return String(state.online.playerKey);
+      return String(player.playerKey || player.onlineId || player.key || `${player.country || "--"}:${player.id || "PLAYER"}`);
     }
 
     function weightedFloorScore(floor) {
@@ -3770,8 +3773,10 @@
       state.mode = "deathShare";
       state.pendingRespawnReason = reason || "You fell to 0F.";
       state.pendingRespawnBestFloor = bestShareFloor();
+      state.player.floor = 0;
       state.player.hidden = false;
       resetCombo();
+      resetFloorHold();
       pulseDanger(1);
       state.climbFlash = { floor: -1, start: 0, duration: 0 };
       if (ui.deathShareReason) ui.deathShareReason.textContent = state.pendingRespawnReason;
@@ -3779,6 +3784,7 @@
       if (ui.deathShareModal) ui.deathShareModal.hidden = false;
       joinScreen.classList.add("hidden");
       showNotice("Run ended. Share your best floor.");
+      syncOnlineState();
     }
 
     function completeRespawnAtZero() {
@@ -3787,7 +3793,6 @@
       state.pendingRespawnReason = "";
       state.pendingRespawnBestFloor = 0;
       state.mode = "play";
-      state.player.floor = 0;
       state.runStartedAt = Date.now();
       resetFloorHold();
       resetRunState();

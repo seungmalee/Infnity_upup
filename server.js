@@ -168,6 +168,7 @@ function clampPlayerNumber(value, previous, maxIncrease, maxValue) {
 
 function publicRecord(record) {
   return {
+    playerKey: cleanPlayerKey(record.playerKey),
     id: cleanId(record.id),
     country: cleanCountry(record.country),
     floor: clampNumber(record.currentFloor || 0),
@@ -194,7 +195,7 @@ async function refreshLeaderboard() {
     return leaderboard;
   }
   const rows = await collection
-    .find({}, { projection: { _id: 0, playerKey: 0 } })
+    .find({}, { projection: { _id: 0 } })
     .sort({ bestFloor: -1, updatedAt: -1 })
     .limit(25)
     .toArray();
@@ -282,6 +283,7 @@ function readBody(req) {
 function publicPlayers() {
   return [...players.values()].map((player) => ({
     onlineId: player.onlineId,
+    playerKey: cleanPlayerKey(player.playerKey),
     id: player.id,
     country: player.country,
     floor: player.floor,
