@@ -1893,11 +1893,11 @@
 
     .system-feed {
       border: 0;
-      border-radius: 0;
-      background: transparent;
-      backdrop-filter: none;
-      box-shadow: none;
-      padding: 0;
+      border-radius: 6px;
+      background: rgba(9, 12, 18, 0.48);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+      padding: 8px 10px;
       pointer-events: none;
     }
 
@@ -1910,6 +1910,7 @@
       color: var(--text);
       padding: 0;
       scrollbar-width: none;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.78);
     }
 
     .system-log::-webkit-scrollbar {
@@ -2800,13 +2801,11 @@
       };
     }
 
-    function resetBots(count = randomBotCount()) {
-      const now = performance.now();
-      const usedNames = new Set();
-      state.botTargetCount = count;
-      state.nextBotPopulationAt = nextBotPopulationTime(now);
-      state.bots = Array.from({ length: count }, (_, index) => createBot(index, now, usedNames));
-      state.nextBotRenameAt = nextBotRenameTime(now);
+    function resetBots() {
+      state.botTargetCount = 0;
+      state.nextBotPopulationAt = 0;
+      state.nextBotRenameAt = 0;
+      state.bots = [];
     }
 
     function syncBotCount(count) {
@@ -2932,11 +2931,6 @@
     }
 
     function opponents() {
-      if (!state.online.enabled) return state.bots;
-      if (state.serverPopulation < BOT_REMOVE_POPULATION) {
-        if (!state.botTargetCount) updateBotPopulation(performance.now());
-        return [...state.remotePlayers, ...state.bots.slice(0, state.botTargetCount)];
-      }
       state.bots = [];
       return state.remotePlayers;
     }
@@ -3586,15 +3580,16 @@
         return;
       }
       if (applyStun(target, MISSILE_STUN, "Missile")) {
-        target.floor = landedFloor;
         target.hidden = false;
-        if (target === state.player) clearZeroFloorLock();
-        if (target === state.player) pulseDanger(1);
+        if (target === state.player) {
+          resetFloorHold();
+          pulseDanger(0.55);
+        }
         effect.hit = true;
-        effect.landedFloor = landedFloor;
+        effect.landedFloor = targetFloor;
         effect.targetFloor = targetFloor;
-        showNotice(`${effect.sourceId} missile hit ${target.id || "Player"}!`);
-        addSystemMessage("SYSTEM", "--", `Missile hit: ${effect.sourceId} -> ${target.id || "Player"}, fell from ${targetFloor}F to ${landedFloor}F`);
+        showNotice(`${effect.sourceId} missile stunned ${target.id || "Player"}!`);
+        addSystemMessage("SYSTEM", "--", `Missile stun: ${effect.sourceId} -> ${target.id || "Player"}`);
       } else {
         effect.hit = false;
         effect.landedFloor = targetFloor;
@@ -4145,65 +4140,7 @@
     }
 
     function updateBots(now) {
-      if (state.mode !== "play") return;
-      if (state.online.enabled && state.serverPopulation >= BOT_REMOVE_POPULATION) {
-        state.bots = [];
-        return;
-      }
-      updateBotPopulation(now);
-      rotateBotNames(now);
-      for (const bot of state.bots) {
-        const nearPlayer = Math.abs(bot.floor - state.player.floor) <= 45;
-        if (nearPlayer || Math.random() < 0.004 + bot.itemAggression * 0.012) botUseItem(bot, now);
-        if (now < bot.nextMoveAt || now < bot.stunnedUntil) continue;
-        const delay = bot.baseSpeed * bot.rhythm + Math.random() * (820 - bot.skill * 360);
-        bot.nextMoveAt = now + delay;
-
-        if (Math.random() < bot.hesitation) {
-          bot.nextMoveAt += 450 + Math.random() * 950;
-          continue;
-        }
-
-        if (Math.random() < bot.hideChance && !bot.hidden) {
-          bot.hidden = true;
-          bot.nextMoveAt += 900 + Math.random() * 1300;
-          continue;
-        }
-
-        const previousFloor = bot.floor;
-        if (Math.random() < bot.mistake) {
-          bot.floor = Math.max(0, bot.floor - 1);
-          bot.hidden = false;
-          addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
-          continue;
-        }
-        bot.floor += 1;
-        bot.bestFloor = Math.max(bot.bestFloor || 0, bot.floor);
-        bot.jump = { start: now, duration: JUMP_DURATION };
-        addTrail(bot, previousFloor, getComputedStyle(document.documentElement).getPropertyValue("--bot").trim());
-        const cameOut = bot.hidden;
-        bot.hidden = false;
-
-        if (isRestFloor(state.player.floor)) {
-          continue;
-        }
-
-        if (cameOut && Math.abs(bot.floor - state.player.floor) <= 1 && !state.player.hidden) {
-          loseLifeOrFall(`${bot.id} Ambush`);
-          break;
-        }
-        if (!cameOut && bot.floor === state.player.floor && !state.player.hidden) {
-          knockDownBot(bot, "Chase");
-          continue;
-        }
-
-        if (bot.floor > state.player.floor + 55) bot.floor = Math.max(0, state.player.floor - 6);
-        if (bot.floor < state.player.floor - 24) {
-          bot.floor = state.player.floor + 8 + Math.floor(Math.random() * 24);
-          bot.hidden = false;
-          bot.nextMoveAt = now + 650 + Math.random() * 1300;
-        }
-      }
+      state.bots = [];
     }
 
     function updateFloorHold(now) {
