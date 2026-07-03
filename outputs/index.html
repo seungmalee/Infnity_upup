@@ -2285,6 +2285,7 @@
       effects: [],
       pendingRespawnReason: "",
       pendingRespawnBestFloor: 0,
+      respawnLockUntil: 0,
     };
 
     const I18N = {
@@ -2971,7 +2972,8 @@
         if (own && Number.isFinite(Number(own.bestTimeMs)) && Number(own.bestTimeMs) > 0) state.bestTimeMs = Number(own.bestTimeMs);
         if (own && Number.isFinite(Number(own.floor))) {
           const serverFloor = Math.max(0, Number(own.floor || 0));
-          if (serverFloor > state.player.floor) {
+          const canRestoreServerFloor = state.mode !== "deathShare" && performance.now() > state.respawnLockUntil;
+          if (canRestoreServerFloor && serverFloor > state.player.floor) {
             state.player.floor = serverFloor;
             resetFloorHold();
           }
@@ -3773,6 +3775,7 @@
       state.mode = "deathShare";
       state.pendingRespawnReason = reason || "You fell to 0F.";
       state.pendingRespawnBestFloor = bestShareFloor();
+      state.respawnLockUntil = performance.now() + 2500;
       state.player.floor = 0;
       state.player.hidden = false;
       resetCombo();
@@ -3792,7 +3795,9 @@
       if (ui.deathShareModal) ui.deathShareModal.hidden = true;
       state.pendingRespawnReason = "";
       state.pendingRespawnBestFloor = 0;
+      state.respawnLockUntil = performance.now() + 2500;
       state.mode = "play";
+      state.player.floor = 0;
       state.runStartedAt = Date.now();
       resetFloorHold();
       resetRunState();
