@@ -16,6 +16,7 @@ const INDEX = path.join(ROOT, "outputs", "index.html");
 const KILL_GOLD_REWARD = 100;
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const MONGODB_DB = process.env.MONGODB_DB || "stairgame";
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
 const ALLOWED_ORIGINS = new Set(
   String(process.env.ALLOWED_ORIGINS || "")
     .split(",")
@@ -248,6 +249,37 @@ async function saveRecord(player, force = false) {
   );
   player.lastSavedAt = now;
   await refreshLeaderboard();
+}
+
+function checkAdminToken(body) {
+  const token = String((body && body.token) || "");
+  return Boolean(ADMIN_TOKEN) && token === ADMIN_TOKEN;
+}
+
+async function deleteRecord(body) {
+  const collection = await getRecords();
+  if (!collection) return { deletedCount: 0, error: "database unavailable" };
+  const playerKey = cleanPlayerKey(body.playerKey || "");
+  const id = cleanId(body.id || "");
+  const country = body.country ? cleanCountry(body.country) : "";
+  const filter = playerKey
+    ? { playerKey }
+    : id
+      ? { id, ...(country ? { country } : {}) }
+      : null;
+  if (!filter) return { deletedCount: 0, error: "missing playerKey or id" };
+  const result = await collection.deleteMany(filter);
+  for (const [onlineId, player] of players) {
+    const keyMatches = playerKey && cleanPlayerKey(player.playerKey) === playerKey;
+    const idMatches = !playerKey && cleanId(player.id) === id && (!country || cleanCountry(player.country) === country);
+    if (keyMatches || idMatches) {
+      players.delete(onlineId);
+      clients.delete(onlineId);
+    }
+  }
+  await refreshLeaderboard();
+  broadcast("state");
+  return { deletedCount: result.deletedCount || 0 };
 }
 
 function sendJson(req, res, status, data) {
@@ -487,6 +519,17 @@ const server = http.createServer(async (req, res) => {
 
     if (url.pathname.startsWith("/api/") && !checkRateLimit(req, "api")) {
       rejectRateLimited(req, res);
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/admin/delete-record") {
+      const body = await readBody(req);
+      if (!checkAdminToken(body)) {
+        sendJson(req, res, 403, { error: "admin token required" });
+        return;
+      }
+      const result = await deleteRecord(body);
+      sendJson(req, res, result.error ? 400 : 200, { ok: !result.error, ...result });
       return;
     }
 

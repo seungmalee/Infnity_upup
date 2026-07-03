@@ -45,3 +45,17 @@ npm start
 - Chat, ranking, floor, kills, lives, and game state are synchronized.
 - If the server restarts, live player and chat state may reset.
 - For long-term operation, connect a persistent database or cache such as MongoDB, Redis, or another managed storage service.
+
+## Admin Record Delete
+
+Set an `ADMIN_TOKEN` environment variable on the server. Then delete a saved ranking record with:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri "https://noendrise.com/api/admin/delete-record" -ContentType "application/json" -Body '{"token":"YOUR_TOKEN","playerKey":"PLAYER_KEY"}'
+```
+
+You can also delete by visible ID, optionally scoped to country:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri "https://noendrise.com/api/admin/delete-record" -ContentType "application/json" -Body '{"token":"YOUR_TOKEN","id":"PLAYER","country":"KR"}'
+```
