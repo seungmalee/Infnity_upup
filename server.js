@@ -285,6 +285,19 @@ async function deleteRecord(body) {
   return { deletedCount: result.deletedCount || 0 };
 }
 
+async function wipeRecords() {
+  const collection = await getRecords();
+  if (!collection) return { deletedCount: 0, error: "database unavailable" };
+  const before = await collection.countDocuments({});
+  const result = await collection.deleteMany({});
+  const after = await collection.countDocuments({});
+  players.clear();
+  clients.clear();
+  await refreshLeaderboard();
+  broadcast("state");
+  return { before, deletedCount: result.deletedCount || 0, after };
+}
+
 function sendJson(req, res, status, data) {
   const body = JSON.stringify(data);
   res.writeHead(status, securityHeaders(req, {
@@ -532,6 +545,21 @@ const server = http.createServer(async (req, res) => {
         return;
       }
       const result = await deleteRecord(body);
+      sendJson(req, res, result.error ? 400 : 200, { ok: !result.error, ...result });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/admin/wipe-records") {
+      const body = await readBody(req);
+      if (!checkAdminToken(body)) {
+        sendJson(req, res, 403, { error: "admin token required" });
+        return;
+      }
+      if (body.confirm !== "WIPE") {
+        sendJson(req, res, 400, { error: "confirm must be WIPE" });
+        return;
+      }
+      const result = await wipeRecords();
       sendJson(req, res, result.error ? 400 : 200, { ok: !result.error, ...result });
       return;
     }
