@@ -108,10 +108,21 @@ function isLocalOrigin(origin) {
   return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin || "");
 }
 
+function isSameHostOrigin(req, origin) {
+  try {
+    const originUrl = new URL(origin);
+    const requestHost = String(req.headers["x-forwarded-host"] || req.headers.host || "").toLowerCase();
+    return /^https?:$/.test(originUrl.protocol) && originUrl.host.toLowerCase() === requestHost;
+  } catch (error) {
+    return false;
+  }
+}
+
 function isAllowedOrigin(req) {
   const origin = req.headers.origin;
   if (!origin) return true;
   if (ALLOWED_ORIGINS.has(origin)) return true;
+  if (isSameHostOrigin(req, origin)) return true;
   if (!process.env.ALLOWED_ORIGINS && isLocalOrigin(origin)) return true;
   return false;
 }
