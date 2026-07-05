@@ -422,6 +422,7 @@ function serveStatic(req, res) {
       : ext === ".svg" ? "image/svg+xml"
       : ext === ".json" || ext === ".webmanifest" ? "application/json; charset=utf-8"
       : ext === ".txt" ? "text/plain; charset=utf-8"
+      : ext === ".xml" ? "application/xml; charset=utf-8"
       : "application/octet-stream";
     const cacheControl = ext === ".html"
       ? "public, max-age=300"
@@ -477,6 +478,12 @@ function serveSitemap(req, res) {
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>${origin}/guide.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>${origin}/items.html</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
@@ -493,6 +500,18 @@ function serveSitemap(req, res) {
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>${origin}/fair-play.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${origin}/terms.html</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>${origin}/privacy.html</loc>
